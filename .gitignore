@@ -1,0 +1,8 @@
+/bats/
+/bats.log/
+/**/.relax/
+/**/build/
+/**/Releases/
+/**/artifact/
+/**/xcuserdata/
+/**/resign

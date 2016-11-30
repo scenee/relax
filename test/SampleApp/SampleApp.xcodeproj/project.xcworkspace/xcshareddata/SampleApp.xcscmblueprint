@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "503C0EE40C0C2A305F195351BE9DE9AF6C4A2897",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "0904F6D3D506AD1482C4C67D931F711F346FAA0C" : 9223372036854775807,
+    "503C0EE40C0C2A305F195351BE9DE9AF6C4A2897" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "268A3ED7-4FF1-4DA2-A3A5-9B4906226F1B",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "0904F6D3D506AD1482C4C67D931F711F346FAA0C" : "..",
+    "503C0EE40C0C2A305F195351BE9DE9AF6C4A2897" : "relax\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "SampleApp",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "test\/sample-project\/SampleApp\/SampleApp.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:SCENEE\/Creuset.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0904F6D3D506AD1482C4C67D931F711F346FAA0C"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SCENEE\/relax.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "503C0EE40C0C2A305F195351BE9DE9AF6C4A2897"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+#!/usr/bin/env bash -eu
+# Usage: relax [--version] [--config <Relfile>] <command>
+
+export VERSION="0.1.0"
+export PROVISIONING_DST_DIR=~/Library/MobileDevice/Provisioning\ Profiles
+export ARCHIVED_ENTITLEMENTS_XCENT=archived-expanded-entitlements.xcent
+export REL_CONFIG="Relfile"
+
+export CMDPATH=$(test -L ${BASH_SOURCE[0]:-$0} && echo $(readlink ${BASH_SOURCE[0]:-$0}) || echo $0)
+export ME=$(basename $CMDPATH)
+export HERE="${PWD}"
+export REL_RELEASE_ROOT="Releases"
+export REL_DATA_DIR=".relax"
+export REL_TEMP_ROOT="$TMPDIR/$ME"
+export REL_CACHE_DIR="~/Library/Caches/Relax"
+
+find_source_path() {
+	cd "$(dirname "${BASH_SOURCE[0]:-$0}")"
+	cd "$(dirname "$(readlink "${BASH_SOURCE[0]:-$0}")")"
+	cd "$PWD/.."
+	echo $PWD
+}
+
+export SOURCE_PATH="$(find_source_path)"
+export PATH="$SOURCE_PATH/libexec:$PATH"
+export LIBEXEC_DIR="$SOURCE_PATH/libexec"
+
+################
+### Includes ###
+################
+
+source color
+source util
+source util-build
+source util-config
+
+##############
+### Const  ###
+##############
+
+export BAK_EXT="bak.relax"
+
+#################
+### Functions ###
+#################
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} [option] <command> ...
+
+	Options:
+	    -v		: Be verbose when executing commands
+	    -h		: Show help
+
+	Commands:
+	    add		Add a provisioning profile
+	    archive	Create an archive file
+	    build	Make a framework bundle from a static library
+	    export	Export an ipa file
+	    help	Show help
+	    init	Set up $ME 
+	    package	Make artifact package 
+	    resign	Resign an .ipa file
+	    show	Print the latest archive/ipa file path.
+	    upload	Upload an ipa file to a distribution service(i.e. Crashlytics Beta)
+	    validate	Print the embedded provisioning profile and entitlements of an app
+	EOM
+}
+
+### Main ###
+
+if [ $# = 0 ]; then
+	usage
+	fin
+fi
+
+
+case $1 in
+-v)
+	LOG_LEVEL=$LOG_LEVEL_VERBOSE
+	shift
+	;;
+-vvv)
+	LOG_LEVEL=$LOG_LEVEL_DEBUG,$LOG_LEVEL_VERBOSE
+	set -x
+	shift
+	;;
+-h|--help)
+	usage
+	fin
+	;;
+esac
+
+if [ $# = 0 ]; then
+	usage
+	fin
+fi
+
+command=$1
+shift
+case $command in 
+help)
+	if [ $# == 0 ]
+	then
+		usage
+	else 
+		command=$1
+		shift
+		command_path="$(command -v "relax-$command" || true)"
+		if ! [ -n "$command_path" ]; then
+			die "No such command \`$command'"
+		fi
+
+		bash -f "$command_path" -h
+		fin
+	fi
+	;;
+"")
+	usage
+	fin
+	;;
+* )
+	command_path="$(command -v "relax-$command" || true)"
+	if ! [ -n "$command_path" ]; then
+		die "No such command \`$command'"
+	fi
+
+	TRAP "clean_temp; teardown;"
+	make_temp
+
+	export REL_CONFIG_PATH="$(config_find)"
+	export REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+	case $command in
+	build|archive|export)
+		config_load "$REL_CONFIG_PATH"
+		;;
+	*)
+		;;
+	esac
+
+	"$command_path" "$@"
+	;;	
+esac

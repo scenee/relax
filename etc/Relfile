@@ -1,0 +1,95 @@
+#
+# Relax configuration YAML
+#
+
+---
+
+# Required 'xcodeproj' OR 'workspace'
+xcodeproj: WORKSPACE
+workspace: XCODEPROJ
+
+development: # Required
+  scheme: SCHEME # Required
+  sdk:           SDK  # Required. i.e. iphoneos, iphoneos10.0
+  configuration: CONFIGURATION # Required, i.e. Release
+
+  bundle_identifier: com.example.{{ PRODUCT_NAME }} # Optional. Change the default bundle identifier in a project
+  team_id: J3D7L9FHSS # Optional
+
+  pre-hook: "logi \"$ARROW Update Build Number\"; agvtool next-version -all"
+
+  provisioning_profile: "Scenee Wild Card Dev"
+
+  ## Bundle version format
+  # %V: Version number
+  # %v: Bundle number
+  # %C: Build configuration
+  # %R: SCM commit ref
+  # %B: SCM branch name
+  #######################
+  bundle_version_format:  %R-%C
+  export_options:
+    # Describes how Xcode should export the archive. 
+    # Available options: app-store, package, ad-hoc, enterprise, development, and developer-id. 
+    # The list of options varies based on the type of archive. Defaults to development.
+    method:  development # Required. 
+
+    # For App Store exports, should the package include symbols? Defaults to YES.
+    upload_symbols: true # Optional.
+
+    # For non-App Store exports, should Xcode re-compile the app from bitcode? Defaults to YES.
+    compileBitcode: true # Optional.
+
+    # TODO: For non-App Store exports, if the app uses On Demand Resources and this is YES, asset packs are embedded in the app bundle so that the app can be tested without a server to host asset packs. Defaults to YES unless onDemandResourcesAssetPacksBaseURL is specified.
+    #embedOnDemandResourcesAssetPacksInBundle: true # Optional.
+
+    # The Developer Portal team to use for this export. Defaults to the team used to build the archive.
+    team_id: XXXXXX # Optional.
+
+    # For App Store exports, should the package include bitcode? Defaults to YES.
+    uploadBitcode : true # Optional.
+
+    # For non-App Store exports, should Xcode thin the package for one or more device variants? Available options: <none> (Xcode produces a non-thinned universal app), <thin-for-all-variants> (Xcode produces a universal app and all available thinned variants), or a model identifier for a specific device (e.g. "iPhone7,1"). Defaults to <none>.
+    thinning : "iPhone7,1"
+
+    # TODO: For non-App Store exports, users can download your app over the web by opening your distribution manifest file in a web browser. To generate a distribution manifest, the value of this key should be a dictionary with three sub-keys: appURL, displayImageURL, fullSizeImageURL. The additional sub-key assetPackManifestURL is required when using on demand resources.
+    # manifest : Dictionary
+
+    # TODO: For non-App Store exports, if the app uses On Demand Resources and embedOnDemandResourcesAssetPacksInBundle isn't YES, this should be a base URL specifying where asset packs are going to be hosted. This configures the app to download asset packs from the specified URL.
+    # onDemandResourcesAssetPacksBaseURL : String
+
+    # TODO: For non-App Store exports, if the app is using CloudKit, this configures the "com.apple.developer.icloud-container-environment" entitlement. Available options: Development and Production. Defaults to Development.
+    #iCloudContainerEnvironment:
+
+
+adhoc:
+  scheme: SCHEME
+  team: uiekk
+
+appstore:
+  scheme: SCHEME
+  team: uiekk
+
+enterprise:
+  scheme: SCHEME
+  team: uiekk_enterprise
+
+...
+---
+
+log_formatter: xcpretty # Optional
+
+crashlytics:
+  token:  __TOKEN__
+  secret: __SECRET__
+  group:  __GROUP__
+
+testfairy:
+  api_key: __API_KEY__
+  metrics: __METRICS__
+  groups: __GROUPS__
+  video: __VIDEO__
+  notfiy: __NOTIFY__
+...
+
+# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬

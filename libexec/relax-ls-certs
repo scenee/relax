@@ -1,0 +1,30 @@
+#!/usr/bin/env bash -eu
+# Summary: List all valid certificates
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} ls-certs
+
+	List all valid certificates.
+
+	EOM
+}
+
+ls_certs () {
+	/usr/bin/security find-identity -v -p codesigning | \
+	sed -n "s/ *[0-9]*) [[:alnum:]]* \"\(iPhone \)\(.*\)\"/\1\2/p" | \
+	sort -u
+}
+
+while [[ $# != 0 ]]; do
+	arg=$1
+	shift
+	case $arg in
+	-h)
+		usage
+		fin
+		;;
+	esac
+done
+
+ls_certs

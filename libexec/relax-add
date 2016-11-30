@@ -1,0 +1,70 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `add` command
+
+usage_add () {
+	cat <<-EOM
+	usage: ${ME} add [option] <provisioning-profile>
+	options:
+	    -f	A provisioning profile will be force added.
+	EOM
+}
+
+# add_provisioning_profile [-f]  <provisioning-profile>
+add_provisioning_profile () {
+
+	local is_force=false
+	while [ $# -ne 1 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		-f)
+			is_force=true
+			;;
+		esac
+	done
+	
+	local provisioning_file="$1"
+
+	if ! [ -z $provisioning_file ] && ! [ -f $provisioning_file ]; then
+		die "Not found $provisioning_file "
+	fi
+
+
+	if ! $is_force; then
+		local temp_provisioning_plist="$REL_TEMP_DIR/provisioning.plist"
+
+		security cms -D -i "$provisioning_file" > $temp_provisioning_plist
+
+		provisioning_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $temp_provisioning_plist)
+		provisioning_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $temp_provisioning_plist)
+
+		local stored_provisionig_file="$PROVISIONING_DST_DIR/$provisioning_uuid.mobileprovision" 
+		if [ -f "$stored_provisionig_file" ]; then
+			logi "Already existing. Use -f option if you still encounter a codesign problem."
+			fin
+		fi
+	fi
+
+	logi "$ARROW Installing Provisioning profile: $provisioning_file"
+	cp "$provisioning_file" "$stored_provisionig_file"
+	logi "Done."
+}
+
+if test $# = 0; then
+	usage_add
+	fin
+fi
+
+case $1 in
+-h)
+	usage_add
+	fin
+	;;
+esac
+
+add_provisioning_profile "$@"
+
+if test $? = 0; then
+	logi "${GREEN}Success${NC}"
+fi

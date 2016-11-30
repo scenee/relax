@@ -1,0 +1,50 @@
+#
+# Relax configuration YAML
+#
+
+xcodeproj: SampleApp
+
+development:
+  scheme: SampleApp
+  sdk: iphoneos
+  configuration: Debug
+  build_settings:
+    - OTHER_SWIFT_FLAGS: "-DMOCK"
+  export_options:
+    method: development
+
+adhoc:
+  scheme: SampleApp
+  bundle_identifier: com.scenee.SampleApp
+  bundle_version_format:  %R-%C
+  provisioning_profile: "Scenee Wild Card Dev"
+  export_options:
+    method: ad-hoc 
+    #thinning : 'iPhone7,1'
+    #compileBitcode: false
+
+enterprise:
+  scheme: SampleApp
+  bundle_identifier: com.scenee.SampleApp
+  bundle_version_format:  %R-%C
+  team_id: TGKEN7XA5C
+  export_options:
+    method: enterprise
+
+
+appstore:
+  scheme: SampleApp
+  export_options:
+    method: appstore
+    upload_symbols: true
+    #uploadSymbols: true
+    #uploadBitcode: true
+
+framework:
+  scheme: SampleFramework
+
+staticlib:
+  scheme: SampleLib
+
+log_formatter: xcpretty
+# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬

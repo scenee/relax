@@ -1,0 +1,123 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: utility functions
+
+# Util variables
+export REL_TEMP_DIR=
+export LOG_LEVEL=
+export LOG_LEVEL_DEBUG=DEBUG
+export LOG_LEVEL_VERBOSE=VERBOSE
+export ARROW="${BLUE}==>${NC}${BOLD}"
+export ERR=${RED}Error:${NC}
+export WARN=${YELLOW}Warning:${NC}
+export NOTE=${BOLD}Note:${NC}
+
+#############
+### Utils ###
+#############
+
+pop_all() {
+	local arr=($(dirs))
+	local pc=${#arr[@]}
+	if test $pc -gt 1;
+	then
+		for i in $(seq $(( $pc - 1)));
+		do
+			popd > /dev/null;
+		done
+	fi
+}
+
+TRAP() {
+	local cmd=$1
+	trap "${cmd}" EXIT
+	trap "${cmd} die \"Interrupted\"" INT
+	trap "${cmd} die \"Terminate\"" TERM
+}
+	
+
+make_temp () {
+	if ! test -d "$REL_TEMP_ROOT"; then
+		mkdir -p $REL_TEMP_ROOT
+	fi
+	REL_TEMP_DIR=$(mktemp -d $REL_TEMP_ROOT/XXXXXX)
+	export REL_TEMP_DIR
+}
+
+clean_temp () {
+	#echo "Remove Temp files. $REL_TEMP_DIR"
+	if [[ ! -z $REL_TEMP_DIR ]] && [[ -d $REL_TEMP_DIR ]]; then
+		rm -rf $REL_TEMP_DIR
+	fi
+}
+
+teardown () {
+	pop_all
+	if [ -f $REL_CONFIG ]; then
+		for bak in $(find $HERE -name *.$BAK_EXT)
+		do
+			cp $bak ${bak%.$BAK_EXT}
+			rm $bak
+		done
+	fi
+}
+
+fin () {
+	if [ $# -gt 0 ]; then
+		echo -e "$@"
+	fi
+	exit 0
+}
+
+die () {
+	die_with_status 1 "$@"
+}
+
+die_with_status () {
+	status=$1
+	shift
+
+	if test $# = 1 && test "$1" = "Interrupted"; then
+		printf >&2 "$*\n"
+		echo -e "${RED}Cancelled${NC}"
+		exit "$status"
+	fi
+
+	printf >&2 "$ERR $*\n"
+	echo -e "${RED}Failed${NC}"
+	exit "$status"
+}
+
+###############
+### Logging ###
+###############
+
+__log () {
+	if [[ $# != 0 ]]; then
+		echo -e "$@${NC}"
+	else
+		if [[ -p /dev/stdin ]]; then
+			cat -
+		fi
+	fi
+}
+
+logv () {
+	if [[ ${LOG_LEVEL:-undefined} =~ .*"$LOG_LEVEL_VERBOSE".* ]]; then
+		__log "$@"
+	fi
+}
+
+
+logd () {
+	if [[ ${LOG_LEVEL:-undefined} =~ .*"$LOG_LEVEL_DEBUG".* ]]; then
+		__log "$@"
+	fi
+}
+
+logi () {
+	__log "$@"
+}
+
+declare -x -f fin die die_with_status
+declare -x -f logi logv logd __log
+declare -x -f make_temp pop_all clean_temp TRAP

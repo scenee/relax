@@ -1,0 +1,96 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `show` command
+# completions
+
+LATEST_IPA=
+LATEST_EXPORT_DIR=
+LATEST_ARCHIVE=
+
+usage_show() {
+	cat <<-EOM
+	usage: ${ME} show <release> <item>
+
+	Print the latest artifacts
+
+	Items:
+	    build:	Print the latest build directory
+	    archive:	Open the latest archive file
+	    ipa:	Print the latest IPA 
+	EOM
+}
+
+read_latest_ipa () {
+	local ipa_link=$data_root/LATEST_IPA
+	if ! test -L  $ipa_link; then
+		die "Not found the latest IPA file"
+	fi
+	readlink $ipa_link
+}
+
+read_archive () {
+	local archive_link=$data_root/LATEST_ARCHIVE
+	if ! test -L  $archive_link; then
+		die "Not found the latest archive"
+	fi
+	readlink $archive_link
+}
+
+read_latest_dir() {
+	local dir_link=$data_root/LATEST_EXPORT_DIR
+	if ! test -L  $dir_link; then
+		die "Not found the latest exported dir"
+	fi
+	readlink $dir_link
+}
+
+
+release=
+
+if test $# == 0; then
+	usage_show
+else
+	while [ $# -ne 0 ];  do
+		arg=$1
+		shift
+		case $arg in
+		-h|--help)
+			usage_show
+			fin
+			;;
+		--complete)
+			echo "build archive ipa"
+			fin
+			;;
+		*)
+			release=$arg
+			break
+			;;
+		esac
+	done
+
+	if test ${release:-undefined} = undefined; then
+		usage_show
+		fin
+	fi
+
+	data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
+
+	while [ $# -ne 0 ];  do
+		arg=$1
+		shift
+		case $arg in
+		ipa)
+			read_latest_ipa
+			;;
+		build)
+			read_latest_dir
+			;;
+		archive)
+			read_archive
+			;;
+		*)
+			usage_show
+			;;
+		esac
+	done
+fi

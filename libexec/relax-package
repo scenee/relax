@@ -1,0 +1,51 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `package` command
+
+usage_package() {
+	cat <<-EOM
+	usage: ${ME} package <release> <package_path>
+	EOM
+}
+
+make_package() {
+	if test $# != 2; then
+		usage_package
+		fin
+	fi
+
+	local release=$1
+	local package_dir=$2
+
+	### Make artifacts
+
+	logi "$ARROW Clean up $package_dir"
+
+	rm -rf "$package_dir" > /dev/null 2>&1
+	mkdir -p "$package_dir" > /dev/null 2>&1
+
+	cp "$(relax-show $release ipa)" "$package_dir"
+
+	archive="$(relax-show $release archive)"
+	zipname="$(basename "$archive")".zip
+
+	logi "$ARROW Install ipa and xcarchive"
+	logi "Package Directory: $HERE/$package_dir"
+
+	ditto -c -k --sequesterRsrc --keepParent "$archive" "$package_dir/$zipname"
+
+	ls "$package_dir"
+}
+
+if [ $# = 0 ]
+then
+	usage_package
+else 
+	case $1 in
+	-h|--help)
+		usage_export
+		fin
+		;;
+	esac
+
+	make_package "$@"
+fi

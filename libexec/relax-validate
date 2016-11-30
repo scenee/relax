@@ -1,0 +1,208 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `validate` command
+
+usage_validate () {
+	cat <<-EOM
+	usage: ${ME} validate <ipa|app|archive>
+
+	Print the codesign and mobileprovision information.
+	You can print the embedded provisioning profile with '-v' options.
+	i.e. relax -v validate <product>
+
+	EOM
+}
+
+prepare_validate () {
+	: # Do nothing now
+}
+
+
+validate_app () {
+	local app_path=$1
+
+	local success=false
+	if test ! -d "${app_path}"; then
+		die "Not found ${app_path}"
+	fi
+
+	local app_name="${1##*/}"
+	local product_name=
+	if [[ "$app_name" =~ (.*)\.app  ]]; then
+		product_name="${BASH_REMATCH[1]}";
+	fi
+	logi "$ARROW Validating $product_name..."
+
+	logi "$ARROW Verifying code signing"
+
+	codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" | tee $REL_TEMP_DIR/codesign_info
+	if codesign --verify --no-strict -vvvv "${app_path}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
+		success=true
+	else
+		success=false
+	fi
+
+	local cs_app_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/^Identifier=\(.*\)/\1/p")
+	local cs_team_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/TeamIdentifier=\(.*\)/\1/p")
+
+	# Check Framework codesignning
+	if [[ -d ${app_path}/Frameworks ]]; then
+		local fm_name fm_team_id fm_temp_codesign_info
+		for framework in $(find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1); do
+			fm_name=${framework##*/}
+
+			if codesign --verify --no-strict -vvvv "${app_path}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
+				success=true
+			else
+				success=false
+			fi
+
+			fm_temp_codesign_info=$(mktemp "$REL_TEMP_DIR/codesign_info.XXXXXX")
+
+			codesign -dv "${framework}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" | tee $fm_temp_codesign_info | logv
+
+			fm_team_id=$(cat $fm_temp_codesign_info | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
+
+			if [[ $cs_team_id = $fm_team_id ]]; then
+				logv "$fm_name matched $cs_team_id."
+				success=true
+			else
+				logi "$ERR: Found an invalid Framework signed by a different Team ID($fm_team_id): $fm_name"
+				success=false
+			fi
+		done
+		logi "$ARROW All Embedded Frameworks matched \"$cs_team_id\"."
+	fi
+
+	if [[ $success != true ]]; then
+		die "Failed codesign verification."
+	fi
+	
+	logi "$ARROW Checking Entitlements and Provisioning"
+
+	# Show entitlement
+	logi "$ARROW Entitlements"
+	if codesign -d --entitlements :- "${app_path}" 2>/dev/null | grep ".*" | logi; test ${PIPESTATUS[1]} -eq 1; then
+		success=false
+		logi "$ERR Not found the Entitlements"
+	else
+		:
+	fi
+
+	# Show embedded provisioning profile
+	logi "$ARROW Embedded provisioning profile"
+	local mobileprovision=$REL_TEMP_DIR/embedded.mobileprovision
+	security cms -D -i "${app_path}/embedded.mobileprovision" > $mobileprovision
+	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
+	local mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $mobileprovision)
+	local mp_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $mobileprovision)
+	local mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" $mobileprovision)
+	local mp_team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $mobileprovision)
+	local mp_cdate=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $mobileprovision)
+	local mp_edate=$(/usr/libexec/PlistBuddy -c "Print :ExpirationDate" $mobileprovision)
+	cat <<-EOM | logi
+	Name: $mp_name
+	UUID: $mp_uuid
+	Team: $mp_team($mp_team_id)
+	Creation Date: $mp_cdate
+	Expiration Date: $mp_edate
+	EOM
+
+	# Check if archived-expanded-entitlements.xcent matches the signed entitlements
+	if [[ $app_path =~ xcarchive ]]; then
+		logi "$ARROW Check archived-expanded-entitlements in ${app_path##*/}"
+		local xcent="$app_path/archived-expanded-entitlements.xcent"
+		if [ -f $xcent ]; then
+			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" $xcent)
+			logi "Signed entitlements: $cs_team_id.$cs_app_id"
+			logi "Archived expanded entitlements: $xcent_app_id"
+			if [ "$cs_team_id.$cs_app_id" != "$xcent_app_id" ]; then
+				success=false
+				die "Not match the signed entitlements and the archived expanded entitlements"
+			fi
+		fi
+	fi
+
+	logi "$ARROW Check bundle identifier duplicates in ${app_path##*/}"
+	for i in $(find $app_path -name Info.plist); do
+		local new_id bundle_ids bundle_path app_name
+		if /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" $i 2>&1 | grep -qv "Does Not Exist"; then
+			new_id="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" $i)"
+			bundle_path=${i##$app_path}
+			app_name=${app_path##*/}
+			logv "${app_name}${bundle_path%/*}: $new_id (${app_name}${bundle_path})" 
+			if [[ $bundle_ids =~ $new_id ]]; then
+				is_success=false
+				logi "$ERR A duplicated bundle identifier($new_id) is found in $i"
+			fi
+			bundle_ids+="$new_id"
+		fi
+	done
+
+	# Check match codesign Team Identifier and a Team ID for the entitlements and the provisioning profile
+	if [[ $mp_team_id != $cs_team_id ]]; then
+		success=false
+		logi "$ERR Team identifier($mp_team_id) of the embedded provisioning profile doesn't match one of the signed certificate($cs_team_id)"
+	fi
+
+	if [[ $success = true ]]; then
+		logi "${GREEN}Validation Successful${NC}"
+	else
+		die "Validation Failed"
+	fi
+}
+
+validate_product () {
+	if [[ $# != 1 ]];then
+		usage_validate
+		fin
+	fi
+
+	local product_path="${1%/}"
+	local app_paths
+	if [[ "$product_path" =~ .*\.app  ]]; then
+		logd "app: $product_path"
+
+		[[ -d $product_path ]] ||  die "Not found $product_path"
+
+		app_paths=( "$1" )
+
+	elif [[ "$product_path" =~ (.*)\.xcarchive  ]]; then
+		logd "archive: $product_path"
+
+		[[ -d $product_path ]] ||  die "Not found $product_path"
+
+		app_paths=( $(find "$1" -name *.app) )
+
+	elif [[ "$product_path" =~ (.*)\.ipa ]]; then
+		logd "ipa: $product_path"
+
+		[[ -f $product_path ]] || die "Not found $1"
+
+		unzip -q "$1" -d $REL_TEMP_DIR
+		app_paths=( $(find "$REL_TEMP_DIR/Payload" -name *.app) )
+	else
+		die "Not found $1"
+	fi
+
+	if [[ ${#app_paths[@]} != 1 ]]; then
+		die "Found multiple .app directories: ${app_paths[@]}"
+	fi
+	validate_app "${app_paths[0]}"
+}
+
+if test $# = 0; then
+	usage_validate
+	fin
+fi
+
+# provide relax completions
+case $1 in
+-h|--help)
+	usage_validate
+	fin
+	;;
+esac
+
+prepare_validate
+
+validate_product "$@"

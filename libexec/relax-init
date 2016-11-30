@@ -1,0 +1,117 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `init` command
+
+usage_init () {
+	cat <<-EOM
+	usage: ${ME} init
+	EOM
+}
+
+generate_relfile () {
+	logi "$ARROW Creating Relfile"
+
+	cat <<-EOF > $REL_TEMP_DIR/Relfile
+	#
+	# Relax configuration YAML
+	#
+	
+	EOF
+
+	# Check xcworkproj existance
+	if ls | grep xcworkspace > /dev/null; then
+		workspace=$(ls | grep xcworkspace)
+		logi "Found workspace: ${workspace}"
+
+		if [[ $workspace =~ (.*).xcworkspace ]]; then
+			workspace_name=${BASH_REMATCH[1]}
+			echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
+			echo "" >> $REL_TEMP_DIR/Relfile
+		fi
+	else
+		if ls | grep xcodeproj > /dev/null; then
+			xcodeproj=$(ls | grep xcodeproj)
+
+			logi "Found project: ${xcodeproj}"
+
+			if [[ $xcodeproj =~ (.*).xcodeproj ]]; then
+				xcodeproj_name=${BASH_REMATCH[1]}
+				echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
+				echo "" >> $REL_TEMP_DIR/Relfile
+			fi
+		else
+			die "Not found .xcodeproj/.xcworkspace file"
+		fi
+	fi
+
+	# Set up Scheme
+
+	## Get scheme list
+	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
+	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
+		> $REL_TEMP_DIR/xcode-build-schemes
+	source $REL_TEMP_DIR/xcode-build-schemes
+
+	## Generate Relfile configuration
+	scheme="${xcode_schemes[0]}"
+	cat <<-EOF >> $REL_TEMP_DIR/Relfile
+	development:
+	  scheme: ${scheme}
+	  configuration: Debug
+	  export_options:
+	    method: development
+
+	adhoc:
+	  scheme: ${scheme}
+	  #bundle_version_format:  %R-%C
+	  #team_id: TEAM_ID
+	  #bundle_identifier: CUSTOM_BUNDLE_ID
+	  export_options:
+	    method: ad-hoc
+
+	appstore:
+	  scheme: ${scheme}
+	  export_options:
+	    method: appstore
+
+	EOF
+
+	echo "#log_formatter: xcpretty" >> $REL_TEMP_DIR/Relfile
+
+	cp $REL_TEMP_DIR/Relfile ./Relfile
+
+	logi "Done"
+}
+
+print_completion_path () {
+	completion="$SOURCE_PATH/completions/relax.${SHELL##*/}"
+	echo "$completion"
+}
+
+check_toolchain () {
+	which /usr/libexec/PlistBuddy > /dev/null || die "Not found /usr/libexec/PlistBuddy"
+}
+
+while [ $# -ne 0 ];
+do
+	arg=$1
+	shift
+	case $arg in
+	completion|completions)
+		print_completion_path
+		fin
+		;;
+	-h|--help|*)
+		usage_init
+		fin
+		;;
+	esac
+done
+
+if ! test -f $PWD/$REL_CONFIG; then
+
+	check_toolchain
+
+	generate_relfile
+else
+	fin "Found an existing Relfile"
+fi

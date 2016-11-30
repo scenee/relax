@@ -1,0 +1,132 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `upload` command
+# completions
+
+usage_upload () {
+	cat <<-EOM
+	Usage: ${ME} upload <services> [-f <release-note>] ipa_file
+
+	Services:
+	    crashlytics
+	    testfairy
+
+	Options:
+	    -f release_note	Specify a release note file
+	EOM
+}
+
+# upload_crashlytics <ipa> <release-note>
+upload_crashlytics () {
+	local crashlytics_path
+	find $HERE -name Crashlytics.framework | \
+	while IFS= read -f file; do
+		crashlytics_path=${file}
+		break
+	done
+
+	local ipa_file="$1"
+	local release_note_file=$2
+
+	logi ""
+	logi "$ARROW Start uploading ipa file to Crashlytics"
+	logi "----------Release Note---------------"
+	cat "$release_note_file"
+	logi "-------------------------------------"
+
+	local upload_command="$crashlytics_path/submit \
+	  $REL_CONFIG_crashlytics_api_token\
+	  $REL_CONFIG_crashlytics_secret\
+	  -ipaPath $ipa_file \
+	  -groupAliases $REL_CONFIG_crashlytics_group \
+	  -notesPath $release_note_file"
+
+	logi "${upload_command}"
+
+	eval "${upload_command}"
+}
+
+upload_testfairy () {
+	local ipa_file="$1"
+	local release_note_file=$2
+
+	logi "$ARROW Start uploading ipa file to TestFairy"
+
+	curl https://app.testfairy.com/api/upload \
+	  -F file=@"$ipa_file" \
+	  -F api_key=$TESTFAIRY_API_KEY \
+	  # -F symbols_file=@"$DSYM_FILE" \
+	  -F metrics=$TESTFAIRY_METRICS \
+	  -F notify=$TESTFAIRY_NOTIFY \
+	  -F video=$TESTFAIRY_VIDEO \
+	  -F testers_groups="$TESTFAIRY_GROUPS"\
+	  -F comment="$note" # | tee -a ; test ${PIPESTATUS[0]} -eq 0
+}
+
+
+if [ $# = 0 ]
+then
+	usage_upload
+	fin
+fi
+
+service=
+release_note_file=
+ipa_file==
+while [ $# -ne 0 ];  do
+	arg=$1
+	shift
+	case $arg in
+	-h|--help)
+		usage_upload
+		fin
+		;;
+	--complete)
+		echo "crashlytics testfairy"
+		fin
+		;;
+	-f)
+		if [[ ! -f $1 ]]; then
+			die "Not found $1"
+		fi
+		release_note_file=$1
+		shift
+		;;
+	*)
+		if [[ $0 =~ upload ]]; then
+			services=$arg
+		else
+			ipa_file=$arg
+			if [[ ! -f "$ipa_file" ]]; then 
+				die "Not found $ipa_file"
+			fi
+		fi
+		;;
+	esac
+done
+
+if [[ -z $release_note_file ]]; then
+	release_note_file="$REL_TEMP_DIR/release_note"
+	echo $(git log -1 --decorate) > "$release_note_file"
+fi
+
+if [[ -z $ipa_file ]]; then
+	usage_upload
+	fin
+fi
+
+config_load "$REL_CONFIG_PATH"
+load_xcode_build_settings $REL_CONFIG_scheme
+
+target=$1
+shift
+case $service in
+crashlytics)
+	upload_crashlytics "$ipa_file" "$release_note_file"
+	;;
+testfairy)
+	upload_testfairy "$ipa_file" "$release_note_file"
+	;;
+*)
+	usage_upload
+	;;
+esac
