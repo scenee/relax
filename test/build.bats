@@ -10,7 +10,7 @@ load test_helper
 
 @test "relax build staticlib" {
   cd test/SampleApp
-  run relax build staticlib --framework
+  run relax build staticlib --framework Sample
   assert_success
 }
 

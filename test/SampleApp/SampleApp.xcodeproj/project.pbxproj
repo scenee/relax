@@ -34,7 +34,7 @@
 		1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSampleLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleLib.h; sourceTree = "<group>"; };
 		1A29A7EB1DE5134C00E9E2DE /* SampleLib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleLib.m; sourceTree = "<group>"; };
-		1A3E89851DDFC39B00609422 /* SampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A3E89851DDFC39B00609422 /* Sample App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sample App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A3E89881DDFC39B00609422 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1A3E898A1DDFC39B00609422 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		1A3E898D1DDFC39B00609422 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 		1A3E89861DDFC39B00609422 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1A3E89851DDFC39B00609422 /* SampleApp.app */,
+				1A3E89851DDFC39B00609422 /* Sample App.app */,
 				1AF19FDC1DE474E600C6318E /* SampleFramework.framework */,
 				1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */,
 			);
@@ -153,9 +153,9 @@
 			productReference = 1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		1A3E89841DDFC39A00609422 /* SampleApp */ = {
+		1A3E89841DDFC39A00609422 /* Sample App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1A3E89971DDFC39B00609422 /* Build configuration list for PBXNativeTarget "SampleApp" */;
+			buildConfigurationList = 1A3E89971DDFC39B00609422 /* Build configuration list for PBXNativeTarget "Sample App" */;
 			buildPhases = (
 				1A3E89811DDFC39A00609422 /* Sources */,
 				1A3E89821DDFC39A00609422 /* Frameworks */,
@@ -165,9 +165,9 @@
 			);
 			dependencies = (
 			);
-			name = SampleApp;
+			name = "Sample App";
 			productName = SampleApp;
-			productReference = 1A3E89851DDFC39B00609422 /* SampleApp.app */;
+			productReference = 1A3E89851DDFC39B00609422 /* Sample App.app */;
 			productType = "com.apple.product-type.application";
 		};
 		1AF19FDB1DE474E600C6318E /* SampleFramework */ = {
@@ -228,7 +228,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1A3E89841DDFC39A00609422 /* SampleApp */,
+				1A3E89841DDFC39A00609422 /* Sample App */,
 				1AF19FDB1DE474E600C6318E /* SampleFramework */,
 				1A29A7E71DE5134B00E9E2DE /* SampleLib */,
 			);
@@ -508,7 +508,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1A3E89971DDFC39B00609422 /* Build configuration list for PBXNativeTarget "SampleApp" */ = {
+		1A3E89971DDFC39B00609422 /* Build configuration list for PBXNativeTarget "Sample App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1A3E89981DDFC39B00609422 /* Debug */,

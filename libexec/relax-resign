@@ -24,19 +24,19 @@ __find_mobileprovision () {
 # resign_app <certificate> <mobileprovision> <app-path>
 resign_app () {
 	if [ $# != 3 ]; then
-		die "resign_app: bad argument"
+		die "resign_app: bad argument "$@""
 	fi
 
-	local certificate=$1
-	local _mobileprovision=$2
-	local app_path=$3
+	local certificate="$1"
+	local mobileprovision="$2"
+	local app_path="$3"
 	local entitlements=$REL_TEMP_DIR/entitlements
 	local entitlements_xcent=$REL_TEMP_DIR/entitlements_xcent
 
-	if [[ ! -f "$_mobileprovision" ]]; then
-		_mobileprovision="$(__find_mobileprovision "$_mobileprovision")"
-		if [[ ! -f "$_mobileprovision" ]]; then
-			die "Not found $_mobileprovision"
+	if [[ ! -f "$mobileprovision" ]]; then
+		mobileprovision="$(__find_mobileprovision "$mobileprovision")"
+		if [[ ! -f "$mobileprovision" ]]; then
+			die "Not found $mobileprovision"
 		fi
 	fi
 
@@ -51,7 +51,7 @@ resign_app () {
 	# Get the resign TEAM ID from mobileprovision
 	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
 
-	security cms -D -i "$_mobileprovision" > $temp_mobileprovision
+	security cms -D -i "$mobileprovision" > $temp_mobileprovision
 
 	local resign_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
 
@@ -76,7 +76,7 @@ resign_app () {
 	fi
 
 	# Replace the embedded provisioning profile
-	cp "$_mobileprovision" "$app_path"/embedded.mobileprovision
+	cp "$mobileprovision" "$app_path"/embedded.mobileprovision
 
 	logi "$ARROW Resigning ${app_path##*/}"
 
@@ -86,7 +86,9 @@ resign_app () {
 	set +e
 
 	if  [[ -d ${app_path}/Frameworks ]]; then
-		for framework in $(find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1); do
+		find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1 |\
+		while IFS= read framework
+		do
 			/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$framework" 1>&3 2>&3
 			if [[ $? != 0 ]]; then
 				die "$(cat $stdtemp)"

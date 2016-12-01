@@ -15,26 +15,27 @@ usage_upload () {
 	EOM
 }
 
-# upload_crashlytics <ipa> <release-note>
+# upload_crashlytics <ipa> <release-note-file>
+# https://docs.fabric.io/apple/beta/build-tools.html
 upload_crashlytics () {
-	local crashlytics_path
-	find $HERE -name Crashlytics.framework | \
-	while IFS= read -f file; do
-		crashlytics_path=${file}
-		break
-	done
+
+	local crashlytics_path=$(find $HERE -name "Crashlytics.framework" | \
+	while IFS= read file; do
+		if $file/submit | grep -q error; then
+			:
+		else
+			echo "$file"
+			break
+		fi
+	done)
 
 	local ipa_file="$1"
-	local release_note_file=$2
+	local release_note_file="$2"
 
-	logi ""
-	logi "$ARROW Start uploading ipa file to Crashlytics"
-	logi "----------Release Note---------------"
-	cat "$release_note_file"
-	logi "-------------------------------------"
+	logi "$ARROW Uploading to Crashlytics"
 
-	local upload_command="$crashlytics_path/submit \
-	  $REL_CONFIG_crashlytics_api_token\
+	local upload_command="$crashlytics_path/submit\
+	  $REL_CONFIG_crashlytics_token\
 	  $REL_CONFIG_crashlytics_secret\
 	  -ipaPath $ipa_file \
 	  -groupAliases $REL_CONFIG_crashlytics_group \
@@ -42,24 +43,28 @@ upload_crashlytics () {
 
 	logi "${upload_command}"
 
-	eval "${upload_command}"
+	#eval "${upload_command}"
 }
 
+# upload_testfairy <ipa> <release-note-file>
+# See https://docs.testfairy.com/index.html
 upload_testfairy () {
 	local ipa_file="$1"
-	local release_note_file=$2
+	local release_note_file="$2"
 
-	logi "$ARROW Start uploading ipa file to TestFairy"
+	local comment=$( cat $release_note_file  )
+
+	logi "$ARROW Uploading to TestFairy"
 
 	curl https://app.testfairy.com/api/upload \
 	  -F file=@"$ipa_file" \
-	  -F api_key=$TESTFAIRY_API_KEY \
+	  -F api_key=$REL_CONFIG_testfairy_api_key\
 	  # -F symbols_file=@"$DSYM_FILE" \
-	  -F metrics=$TESTFAIRY_METRICS \
-	  -F notify=$TESTFAIRY_NOTIFY \
-	  -F video=$TESTFAIRY_VIDEO \
-	  -F testers_groups="$TESTFAIRY_GROUPS"\
-	  -F comment="$note" # | tee -a ; test ${PIPESTATUS[0]} -eq 0
+	  -F metrics=$REL_CONFIG_testfairy_metrics\
+	  -F notify=$REL_CONFIG_testfairy_notify\
+	  -F video=$REL_CONFIG_testfairy_video \
+	  -F testers_groups="$REL_CONFIG_testfairy_groups"\
+	  -F comment="$comment"
 }
 
 
@@ -92,8 +97,8 @@ while [ $# -ne 0 ];  do
 		shift
 		;;
 	*)
-		if [[ $0 =~ upload ]]; then
-			services=$arg
+		if [[ $# != 0 ]]; then
+			service=$arg
 		else
 			ipa_file=$arg
 			if [[ ! -f "$ipa_file" ]]; then 
@@ -114,11 +119,11 @@ if [[ -z $ipa_file ]]; then
 	fin
 fi
 
-config_load "$REL_CONFIG_PATH"
-load_xcode_build_settings $REL_CONFIG_scheme
+logi "$ARROW Start uploading ipa file: $ipa_file"
+logi "----------Release Note---------------"
+cat "$release_note_file"
+logi "-------------------------------------"
 
-target=$1
-shift
 case $service in
 crashlytics)
 	upload_crashlytics "$ipa_file" "$release_note_file"

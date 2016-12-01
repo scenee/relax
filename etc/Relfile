@@ -3,20 +3,25 @@
 #
 
 ---
-
 # Required 'xcodeproj' OR 'workspace'
 xcodeproj: WORKSPACE
 workspace: XCODEPROJ
 
-development: # Required
+release1: # Required
   scheme: SCHEME # Required
+
   sdk:           SDK  # Required. i.e. iphoneos, iphoneos10.0
+
   configuration: CONFIGURATION # Required, i.e. Release
 
-  bundle_identifier: com.example.{{ PRODUCT_NAME }} # Optional. Change the default bundle identifier in a project
+  bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
+
   team_id: J3D7L9FHSS # Optional
 
   pre-hook: "logi \"$ARROW Update Build Number\"; agvtool next-version -all"
+
+  build_settings:
+    - OTHER_SWIFT_FLAGS: "-DMOCK"
 
   provisioning_profile: "Scenee Wild Card Dev"
 
@@ -28,6 +33,7 @@ development: # Required
   # %B: SCM branch name
   #######################
   bundle_version_format:  %R-%C
+
   export_options:
     # Describes how Xcode should export the archive. 
     # Available options: app-store, package, ad-hoc, enterprise, development, and developer-id. 
@@ -62,21 +68,11 @@ development: # Required
     #iCloudContainerEnvironment:
 
 
-adhoc:
+release2:
   scheme: SCHEME
-  team: uiekk
-
-appstore:
-  scheme: SCHEME
-  team: uiekk
-
-enterprise:
-  scheme: SCHEME
-  team: uiekk_enterprise
 
 ...
 ---
-
 log_formatter: xcpretty # Optional
 
 crashlytics:

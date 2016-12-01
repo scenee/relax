@@ -9,11 +9,12 @@ usage_archive () {
 	EOM
 }
 
-# find_xcscheme <scheme>
-find_xcscheme ()  {
-	for f in $(find $HERE -name ${1}.xcscheme)
+# __find_xcscheme <scheme>
+__find_xcscheme ()  {
+	find $HERE -name "$1.xcscheme" \
+	| while IFS= read file
 	do
-		if echo "$f" | grep "xcodeproj"; then
+		if echo "$file" | grep "xcodeproj"; then
 			break
 		fi
 	done
@@ -31,23 +32,21 @@ set_archive_config () {
 		die "$FUNCNAME(): not found $xcscheme_path"
 	fi
 
-	sed -i ."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$configuration\"/" "$xcscheme_path"
 	logi "$ARROW Set \""$configuration"\" to BuildConfiguration in xcscheme"
+	sed -i ."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$configuration\"/" "$xcscheme_path"
 }
 
-# make_archive
+# make_archive <archive_path>
 make_archive () {
-	local archive_path="$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive"
-
-	rm -fr $PRODUCT_BUILD_ROOT
-	if [ ! -d $archive_path ]; then mkdir -p "$archive_path"; fi
+	local archive_path="$1"
+	shift
 
 	### Update 'Configuration' in a xcscheme ###
-	XCSCHEME_PATH=$(find_xcscheme $scheme)
-	if [ ! -z $XCSCHEME_PATH ]; then
-		logd "xcscheme file path: $XCSCHEME_PATH"
+	XCSCHEME_PATH="$(__find_xcscheme "$scheme")"
+	if [[ -n "$XCSCHEME_PATH" ]]; then
+		logi "xcscheme file path: $XCSCHEME_PATH"
 		set_archive_config "$XCSCHEME_PATH" "$configuration"
-		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/$(basename "$XCSCHEME_PATH")"
+		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##/*}"
 	fi
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
@@ -58,31 +57,16 @@ make_archive () {
 
 	logi "$ARROW Archiving $scheme ($configuration) for $sdk SDK"
 
-	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_VERSION" "$INFO_PLIST_PATH"
-
 	### Finish update Info plist ###
-	cp "$INFO_PLIST_PATH" "$PRODUCT_BUILD_ROOT/$(basename "$INFO_PLIST_PATH")"
-
-
-	local options=""
-	if test "${REL_CONFIG_workspace:-undefined}" = "undefined"; then
-		options="-project $REL_CONFIG_xcodeproj.xcodeproj -scheme $scheme"
-	else
-		options="-workspace $REL_CONFIG_workspace.xcworkspace -scheme $scheme"
+	if [[ -n $INFO_PLIST_PATH ]]; then
+		cp "$INFO_PLIST_PATH" "$PRODUCT_BUILD_ROOT/$(basename "$INFO_PLIST_PATH")"
 	fi
 
-	local params=($options -sdk "$sdk")
-
-	params=("${params[@]}" -archivePath "$archive_path")
-
-	if ! $is_default_configuration; then
-		params=("${params[@]}" -configuration "$configuration")
-	fi
-
-	params=("${params[@]}" ONLY_ACTIVE_ARCH=NO)
+	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -archivePath "$archive_path")
+	while read p; do params+=( "$p" ); done < $params_file
 
 	# See https://developer.apple.com/library/content/technotes/tn2215/_index.html
-	params=("${params[@]}" INSTALL_PATH="\$(LOCAL_APPS_DIR)")
+	params+=(INSTALL_PATH="\$(LOCAL_APPS_DIR)")
 
 	## If there is a Pods project, PRODUCT_BUNDLE_IDENTIFIER will
 	## cause 'App installation failed' by the reason why 'Bundle identifiers
@@ -98,25 +82,7 @@ make_archive () {
 	#    value to "Automatic" in the build settings editor.¬
 	# params=("${params[@]}"  DEVELOPMENT_TEAM="$team_id")
 
-	if test "${build_settings:-undefined}" != undefined; then
-		if test ${#build_settings[@]} -gt 0; then
-			for s in "${build_settings[@]}"; do
-				params=("${params[@]}" "${s//\{\}/ }")
-			done
-		fi
-	fi
-
-	if [[ -n $provisioning_profile ]]; then
-		params=("${params[@]}"  PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile")
-	fi
-
-	# Should use development signing for archive. Refer to this session, 
-	# https://developer.apple.com/videos/play/wwdc2016/401/.
-	# But it's not working when exporint ana adhoc IPA file.
-	# I confirmed It's working well in Xcode 7.3.1.
-	params=("${params[@]}"  CODE_SIGN_IDENTITY="iPhone Developer")
-
-	xcodebuild -showBuildSettings "${params[@]}" > $PRODUCT_BUILD_ROOT/build-settings-${sdk}-${configuration}
+	xcodebuild -showBuildSettings "${params[@]}" > "$PRODUCT_BUILD_ROOT/build-settings-${sdk}-${configuration}"
 
 	params=("${params[@]}" "$@" clean archive)
 	
@@ -124,14 +90,14 @@ make_archive () {
 	logi "Run: xcodebuild ${params[@]}"
 	logi "Log: $logfile"
 
-	if [[ ${LOG_LEVEL:-undefined} =~ .*"$LOG_LEVEL_VERBOSE".* ]]; then
+	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		if [ -z $REL_LOG_FORMATTER ]; then
-			xcodebuild "${params[@]}" 2>&1 | tee $logfile; test ${PIPESTATUS[0]} -eq 0 || return 1
+			xcodebuild "${params[@]}" 2>&1 | tee "$logfile"; test ${PIPESTATUS[0]} -eq 0 || return 1
 		else
-			xcodebuild "${params[@]}" 2>&1 | tee $logfile | ${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
+			xcodebuild "${params[@]}" 2>&1 | tee "$logfile" | ${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
 		fi
 	else
-		xcodebuild "${params[@]}" 2>&1 >$logfile || return 1
+		xcodebuild "${params[@]}" 2>&1 >"$logfile" || return 1
 	fi
 
 	logi "Archived: $archive_path"
@@ -185,6 +151,7 @@ setup_build $release
 
 data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
 mkdir -p "$data_root"
+
 LATEST_ARCHIVE="$data_root/LATEST_ARCHIVE"
 
-make_archive "$@"
+make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"

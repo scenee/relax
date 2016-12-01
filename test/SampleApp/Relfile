@@ -5,35 +5,36 @@
 xcodeproj: SampleApp
 
 development:
-  scheme: SampleApp
+  scheme: Sample App
   sdk: iphoneos
   configuration: Debug
   build_settings:
     - OTHER_SWIFT_FLAGS: "-DMOCK"
+    - OTHER_LINKER_FLAGS: "-ObjC"
   export_options:
     method: development
 
 adhoc:
-  scheme: SampleApp
-  bundle_identifier: com.scenee.SampleApp
+  scheme: Sample App
+  bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
   bundle_version_format:  %R-%C
-  provisioning_profile: "Scenee Wild Card Dev"
+  provisioning_profile: "Scenee Wild Card Dev" # Please replace your valid profile name.
   export_options:
     method: ad-hoc 
-    #thinning : 'iPhone7,1'
+    thinning : iPhone7,1
     #compileBitcode: false
 
 enterprise:
-  scheme: SampleApp
-  bundle_identifier: com.scenee.SampleApp
+  scheme: Sample App
+  bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
   bundle_version_format:  %R-%C
-  team_id: TGKEN7XA5C
+  team_id: TGKEN7XA5C # Please replace your enterpise team id.
   export_options:
     method: enterprise
 
 
 appstore:
-  scheme: SampleApp
+  scheme: Sample App
   export_options:
     method: appstore
     upload_symbols: true

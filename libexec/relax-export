@@ -4,9 +4,10 @@
 
 usage_export () {
 	cat <<-EOM
-	usage: ${ME} export <release> <archive-path>|--latest
-	options:
-	    --latest		: Use the latest archive file instead of a archive path
+	usage: ${ME} export <release> [<archive-path>]
+
+	If you don't specify an archive, it will export the last one of
+	a release type.
 	EOM
 }
 
@@ -68,14 +69,17 @@ export_generate_optoin_list() {
 }
 
 export_archive () {
-	local archive_path=$1
-	shift
+	if [[ $# != 1 ]]; then
+		die "export_archive: bad argument"
+	fi
 
+	logi "$ARROW Exporting $1"
+
+	local export_path="${1%/*}"
 	local export_option_plist=$EXPORT_OPTIONS_PLIST
-	local export_path=$(dirname $archive_path)
 
-	cp -a $archive_path $REL_TEMP_DIR/xcarchive
-	local archive_path=$REL_TEMP_DIR/xcarchive
+	local archive_path="$REL_TEMP_DIR/xcarchive"
+	cp -a "$1" "$archive_path"
 
 	export_generate_optoin_list
 	
@@ -99,45 +103,47 @@ export_archive () {
 	fi
 
 	if test -d "$archive_path/dSYMs"; then
-		logi "$ARROW Export dSYMs"
+		logi "$ARROW Fetching dSYMs"
 	
-		local dsym_file=$export_path/"$PROJECT_NAME".dSYMs.zip
-		ditto -c -k --sequesterRsrc --keepParent "$archive_path/dSYMs" $dsym_file
+		local dsym_file="$export_path/$PRODUCT_NAME.dSYMs.zip"
+		ditto -c -k --sequesterRsrc --keepParent "$archive_path/dSYMs" "$dsym_file"
 
-		logi "Exported dSYMs.zip: $dsym_file"
+		logi "dSYMs.zip: $dsym_file"
 	fi
 
-	logi "$ARROW Export IPA"
+	logi "$ARROW Creating IPA"
 
-	if [ -f "$export_path/$PROJECT_NAME.ipa" ]; then 
+	if [ -f "$export_path/$PRODUCT_NAME.ipa" ]; then 
 		logi "Found the same IPA file so it is removed."
-		rm -rf "$export_path/$PROJECT_NAME.ipa"
+		rm -rf "$export_path/$PRODUCT_NAME.ipa"
 	fi
 
-	params=(-exportArchive -archivePath "$archive_path" -exportPath "$export_path")
-	params=(${params[@]} -exportOptionsPlist "$export_option_plist")
+	local params=()
+	params+=(-exportArchive -archivePath "$archive_path" -exportPath "$export_path")
+	params+=(-exportOptionsPlist "$export_option_plist")
 
 	### Deprecated
-	#	params=(${params[@]} -exportFormat ipa)
-	#	params=(${params[@]} -exportProvisioningProfile "$provisioning_name")
+	#params=(-exportFormat ipa)
+	#params+=(-exportProvisioningProfile "$provisioning_name")
 
 	logfile="$export_path/export.log"
-	logi "Run: \`xcodebuild ${params[@]}\`"
-	logi "Log: $logfile"
+	logi "Run: xcodebuild ${params[@]}"
+	logi "Log: ${logfile}"
 
-	if [[ "${LOG_LEVEL:-undefined}" =~ .*"$LOG_LEVEL_VERBOSE".* ]]; then
-		xcodebuild "${params[@]}" 2>&1 | tee $logfile; test ${PIPESTATUS[0]} -eq 0 || return 1
+	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
+		xcodebuild "${params[@]}" 2>&1 | tee "${logfile}"; test ${PIPESTATUS[0]} -eq 0 || return 1
 	else
-		xcodebuild "${params[@]}" > $logfile 2>&1 || return 1
+		xcodebuild "${params[@]}" > "${logfile}" 2>&1 || return 1
 	fi
 
 	# update a symbolic link of the latest archive
-	if [[ ! -n $(find $export_path -name "*.ipa") ]]; then
+	find "$export_path" -name "*.ipa"
+	if [[ ! -n $(find "$export_path" -name "*.ipa") ]]; then
 		die "Not found IPA file in $export_path"
 	fi
 
-	local ipa_path=$(find $export_path -maxdepth 1 -mindepth 1 -name "*.ipa" | head -1)
-	logi "Exported IPA: $ipa_path"
+	local ipa_path=$(find "$export_path" -maxdepth 1 -mindepth 1 -name "*.ipa" | head -1)
+	logi "IPA: $ipa_path"
 
 	rm -f "$LATEST_IPA"
 	ln -fs "$ipa_path" "$LATEST_IPA"
@@ -172,20 +178,14 @@ do
 		fin
 		;;
 	--complete)
-		prev=$1
-		shift
-		comp="--latest"
-		if ! [[ $comp =~ $prev ]]; then
-			echo "$comp"
-		fi
 		fin
-		;;
-	--latest)
-		target_archive_file="$(relax-show $release archive)"
 		;;
 	*)
 		if [[ $arg =~ (.).xcarchive ]]; then
 			target_archive_file="$arg"
+			if [[ ! -d $target_archive_file ]]; then
+				die "Not found $target_archive_file "
+			fi
 		else
 			release=$arg
 		fi
@@ -198,22 +198,16 @@ if test ${release:-undefined} = undefined; then
 	fin
 fi
 
+if [[ -z "$target_archive_file" ]]; then
+	target_archive_file="$(relax-show $release archive)"
+	if [[ ! -d $target_archive_file ]]; then
+		die "Not found the last archive. Please archive '$release'"
+	fi
+fi
+
+
 trap 'teardown_build' EXIT INT TERM
 setup_build $release
 prepare_export
 
-if test -z "$target_archive_file"; then
-	die "Please build an archive file for $release."
-fi
-
-if test $# = 1;
-then
-	export_archive "$@"
-else
-	if test -z $target_archive_file; then
-		usage_export
-		fin
-	else
-		export_archive "$target_archive_file"
-	fi
-fi
+export_archive "$target_archive_file"

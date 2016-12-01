@@ -18,7 +18,7 @@ prepare_validate () {
 
 
 validate_app () {
-	local app_path=$1
+	local app_path="$1"
 
 	local success=false
 	if test ! -d "${app_path}"; then
@@ -32,10 +32,12 @@ validate_app () {
 	fi
 	logi "$ARROW Validating $product_name..."
 
-	logi "$ARROW Verifying code signing"
+	logi "$ARROW Check CodeSigning"
 
+	logv "$ARROW Verifying $app_name"
 	codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" | tee $REL_TEMP_DIR/codesign_info
-	if codesign --verify --no-strict -vvvv "${app_path}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
+	codesign --verify --no-strict -vvvv "${app_path}" 2>&1 | logv;
+	if [[ $? = 0 ]]; then
 		success=true
 	else
 		success=false
@@ -47,10 +49,13 @@ validate_app () {
 	# Check Framework codesignning
 	if [[ -d ${app_path}/Frameworks ]]; then
 		local fm_name fm_team_id fm_temp_codesign_info
-		for framework in $(find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1); do
-			fm_name=${framework##*/}
+		find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1 2>/dev/null |\
+		while IFS= read framework
+		do
+			fm_name="${framework##*/}"
 
-			if codesign --verify --no-strict -vvvv "${app_path}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
+			logv "$ARROW Verifying $fm_name"
+			if codesign --verify --no-strict -vvvv "${framework}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
 				success=true
 			else
 				success=false
@@ -70,13 +75,13 @@ validate_app () {
 				success=false
 			fi
 		done
-		logi "$ARROW All Embedded Frameworks matched \"$cs_team_id\"."
+		logi "All Embedded Frameworks matched \"$cs_team_id\"."
 	fi
 
 	if [[ $success != true ]]; then
 		die "Failed codesign verification."
 	fi
-	
+
 	logi "$ARROW Checking Entitlements and Provisioning"
 
 	# Show entitlement
@@ -92,7 +97,6 @@ validate_app () {
 	logi "$ARROW Embedded provisioning profile"
 	local mobileprovision=$REL_TEMP_DIR/embedded.mobileprovision
 	security cms -D -i "${app_path}/embedded.mobileprovision" > $mobileprovision
-	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
 	local mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $mobileprovision)
 	local mp_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $mobileprovision)
 	local mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" $mobileprovision)
@@ -106,6 +110,26 @@ validate_app () {
 	Creation Date: $mp_cdate
 	Expiration Date: $mp_edate
 	EOM
+	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
+
+	# Show Info.plist
+	logi "$ARROW Show Info.plist"
+	local info_plist_path info_version info_bundle_version info_bundle_identifier
+	info_plist_path="$REL_TEMP_DIR/Info.plist"
+	plutil -convert xml1 "${app_path}/Info.plist" -o "$info_plist_path"
+	info_version=$(print_info_plist version "$info_plist_path")
+	info_bundle_version=$(print_info_plist bundle_version "$info_plist_path")
+	info_bundle_identifier=$(print_info_plist bundle_identifier "$info_plist_path")
+	cat <<-EOM | logi
+	Version: ${info_version}(${info_bundle_version})
+	Bundle Identifier: ${info_bundle_identifier}
+	EOM
+	cat "${info_plist_path}" | logv
+	
+	if ! [[ $cs_app_id =~ $info_bundle_identifier ]]; then
+		success=false
+		logi "Not match CodeSigining and Info.plist bundle identifier"
+	fi
 
 	# Check if archived-expanded-entitlements.xcent matches the signed entitlements
 	if [[ $app_path =~ xcarchive ]]; then
@@ -122,20 +146,25 @@ validate_app () {
 		fi
 	fi
 
-	logi "$ARROW Check bundle identifier duplicates in ${app_path##*/}"
-	for i in $(find $app_path -name Info.plist); do
+	logi "$ARROW Check duplicates of all bundle identifiers in ${app_path##*/}"
+	find "$app_path" -name "Info.plist" -mindepth 2 |\
+	while IFS= read info
+	do
 		local new_id bundle_ids bundle_path app_name
-		if /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" $i 2>&1 | grep -qv "Does Not Exist"; then
-			new_id="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" $i)"
-			bundle_path=${i##$app_path}
+		local bundle_info_plist_path="$REL_TEMP_DIR/Info.plist"
+		plutil -convert xml1 "$info" -o "$bundle_info_plist_path"
+		logd "$bundle_info_plist_path"
+		new_id="$(print_info_plist bundle_identifier "$bundle_info_plist_path")"
+		if [[ -n $new_id ]]; then
+			bundle_path=${info##$app_path}
 			app_name=${app_path##*/}
-			logv "${app_name}${bundle_path%/*}: $new_id (${app_name}${bundle_path})" 
+			logi "${app_name}${bundle_path}: $new_id"
 			if [[ $bundle_ids =~ $new_id ]]; then
-				is_success=false
-				logi "$ERR A duplicated bundle identifier($new_id) is found in $i"
+				success=false
+				logi "$ERR A duplicated bundle identifier($new_id) is found in $info"
 			fi
-			bundle_ids+="$new_id"
 		fi
+		bundle_ids+="$new_id"
 	done
 
 	# Check match codesign Team Identifier and a Team ID for the entitlements and the provisioning profile
@@ -158,20 +187,20 @@ validate_product () {
 	fi
 
 	local product_path="${1%/}"
-	local app_paths
+	local app_path
 	if [[ "$product_path" =~ .*\.app  ]]; then
 		logd "app: $product_path"
 
 		[[ -d $product_path ]] ||  die "Not found $product_path"
 
-		app_paths=( "$1" )
+		app_path="$1"
 
 	elif [[ "$product_path" =~ (.*)\.xcarchive  ]]; then
 		logd "archive: $product_path"
 
 		[[ -d $product_path ]] ||  die "Not found $product_path"
 
-		app_paths=( $(find "$1" -name *.app) )
+		app_path="$(find "$1" -name *.app)"
 
 	elif [[ "$product_path" =~ (.*)\.ipa ]]; then
 		logd "ipa: $product_path"
@@ -179,15 +208,15 @@ validate_product () {
 		[[ -f $product_path ]] || die "Not found $1"
 
 		unzip -q "$1" -d $REL_TEMP_DIR
-		app_paths=( $(find "$REL_TEMP_DIR/Payload" -name *.app) )
+		app_path="$(find "$REL_TEMP_DIR/Payload" -name *.app)"
 	else
 		die "Not found $1"
 	fi
 
-	if [[ ${#app_paths[@]} != 1 ]]; then
-		die "Found multiple .app directories: ${app_paths[@]}"
+	if [[ ! -d "${app_path}" ]]; then
+		die "Not found an app file: ${app_path}"
 	fi
-	validate_app "${app_paths[0]}"
+	validate_app "${app_path}"
 }
 
 if test $# = 0; then

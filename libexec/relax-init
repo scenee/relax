@@ -87,10 +87,6 @@ print_completion_path () {
 	echo "$completion"
 }
 
-check_toolchain () {
-	which /usr/libexec/PlistBuddy > /dev/null || die "Not found /usr/libexec/PlistBuddy"
-}
-
 while [ $# -ne 0 ];
 do
 	arg=$1
@@ -108,9 +104,6 @@ do
 done
 
 if ! test -f $PWD/$REL_CONFIG; then
-
-	check_toolchain
-
 	generate_relfile
 else
 	fin "Found an existing Relfile"

@@ -2,17 +2,17 @@
 
 load test_helper
 
-@test "relax export development --latest" {
+@test "relax export development" {
   cd test/SampleApp
-  run relax -v export development --latest
+  run relax export development
   assert_success
 }
 
 @test "relax export enterprise <development-archive>" {
   cd test/SampleApp
-  run relax -v export enterprise $(relax show development archive)
+  run relax export enterprise "$(relax show development archive)"
   assert_success
-  run relax validate $(relax show enterprise ipa)
+  run relax validate "$(relax show enterprise ipa)"
   assert_success
   [[ "${output}" =~ "TGKEN7XA5C" ]]
 }

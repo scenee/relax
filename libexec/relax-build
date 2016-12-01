@@ -4,7 +4,7 @@
 
 usage_build() {
 	cat <<-EOM
-	usage: ${ME} build <release> [--framework] [-c <configuration>]
+	usage: ${ME} build <release> [--framework <name>] [-c <configuration>]
 	options:
 	    --framework		: Make a framework bundle from a static library
 	    -c			: Specify a configuration
@@ -13,59 +13,57 @@ usage_build() {
 
 # build_project <scheme> <sdk> <configuration>
 build_project () {
-	if test $# != 3; then
-		die "build_project: bad argument"
+	if [[ $# != 3 ]]; then
+		die "build_project: bad argument \"$@\""
 	fi
+	
+	local _scheme=$1
+	local _sdk=$2
+	local _configuration=$3
 
-	local scheme="${1}"
-	local sdk="${2}"
-	local config="${3}"
+	logi "$ARROW Build $TARGETNAME ($_configuration) for $_sdk SDK"
 
-	logi "$ARROW Build $TARGETNAME ($config) for $sdk SDK"
-
-	# Will rebuild the static library as specified
-	#     build_static_library sdk
-
-	local params_str="
-	-project "${PROJECT_FILE_PATH##*/}"
-	-scheme "${scheme}"
-	-configuration "${config}"
-	-sdk "${sdk}"
-	ONLY_ACTIVE_ARCH=NO
-	DEVELOPMENT_TEAM="$team_id"
-	"
 	local params=()
+	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
+	while read p; do params+=( "$p" ); done < $params_file
 
-	while read -r line; do params+=($line); done <<< "$params_str"
+	#params=(-project "${PROJECT_FILE_PATH##*/}" -scheme "${_scheme}")
 
-	local build_suffix=$(echo "${sdk}-${config}" | tr "[:upper:]" "[:lower:]")
-	local build_settings=build-settings-$build_suffix
-	local build_log="$PRODUCT_BUILD_ROOT/build_$build_suffix.log"
+	local build_suffix=$(echo "${_configuration}-${_sdk}")
+	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
+	local log_file="$PRODUCT_BUILD_ROOT/$build_suffix.log"
 
-	params=("${params[@]}"  CODE_SIGN_IDENTITY="iPhone Developer")
-	params=("${params[@]}"  clean build)
+	xcodebuild -showBuildSettings "${params[@]}" > "$build_settings_file" 
 
-	xcodebuild -showBuildSettings "${params[@]}" > "$PRODUCT_BUILD_ROOT/$build_settings"
+	params+=( clean build )
 
 	logi "Run: xcodebuild ${params[@]}"
-	logi "Log: $build_log"
+	logi "Log: $log_file"
 
-	if [[ "${LOG_LEVEL:-undefined}" =~ .*"$LOG_LEVEL_VERBOSE".* ]]; then
+	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		if [ -z $REL_LOG_FORMATTER ]; then
-			xcodebuild "${params[@]}" 2>&1 | tee $build_log; test ${PIPESTATUS[0]} -eq 0 || die
+			xcodebuild "${params[@]}" 2>&1 | tee "$log_file"; test ${PIPESTATUS[0]} -eq 0 || xargs die
 		else
-			xcodebuild "${params[@]}" 2>&1 | tee $build_log | $REL_LOG_FORMATTER; test ${PIPESTATUS[0]} -eq 0 || die
+			xcodebuild "${params[@]}" 2>&1 | tee "$log_file" | $REL_LOG_FORMATTER; test ${PIPESTATUS[0]} -eq 0 || xargs die
 		fi
 	else
-		xcodebuild "${params[@]}" >$build_log 2>&1 || die
+		xcodebuild "${params[@]}" >"$log_file" 2>&1 || die
 	fi
 
-	load_xcode_build_settings "$scheme" -configuration "$config" -sdk "$sdk"
-	cp -a "$CODESIGNING_FOLDER_PATH" "$PRODUCT_BUILD_ROOT"/
-	if [ -d "$CODESIGNING_FOLDER_PATH.dSYM" ]; then
-		cp -a "$CODESIGNING_FOLDER_PATH.dSYM" "$PRODUCT_BUILD_ROOT"/
+	load_xcode_build_settings "$params_file"
+
+	local product_path=$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME
+	logi "Built Product: $product_path"
+
+	ls "$BUILT_PRODUCTS_DIR" | logd
+
+	cp -a "$product_path" "$PRODUCT_BUILD_ROOT"/
+
+	local dSYM="$BUILT_PRODUCTS_DIR/$DWARF_DSYM_FILE_NAME"
+
+	if [ -d $dSYM ]; then
+		cp -a "$dSYM" "$PRODUCT_BUILD_ROOT"/
 	fi
-	logi "Product: $PRODUCT_BUILD_ROOT/${FULL_PRODUCT_NAME}"
 }
 
 # make_framework <iphoneos-product-path> <iphonesimulator-product-path> <location>
@@ -101,15 +99,11 @@ make_framework () {
 }
 
 
-# build_framework <scheme> <sdk> <configuration>
+# build_framework <framework_name>
 build_framework () {
-	if test $# = 1; then
+	if test $# != 1; then
 		die "build_framework: bad argument"
 	fi
-
-	local scheme="${1}"
-	local sdk="${2}"
-	local config="${3}"
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
 		logi "$ARROW Clean DerivedData of $TARGETNAME"
@@ -124,10 +118,11 @@ build_framework () {
 	export BUILD_CMD_SEMAPHORE=1
 	
 	local static_lib="lib${PROJECT_NAME}.a"
-	local current_sdk=""
+	local current_sdk sdk_platform other_platform sdk_version 
+	local build_project other_built_product
+	local framework_location
 	
-	# 1 - Extract the platform (iphoneos/iphonesimulator) from the SDK name
-	local sdk_platform=""
+	# 1 - Detect the platform (iphoneos/iphonesimulator) from the SDK name
 	if [[ "$sdk" =~ ([A-Za-z]+) ]]; then
 		sdk_platform=${BASH_REMATCH[1]}
 	else
@@ -135,42 +130,34 @@ build_framework () {
 	fi
 
 	# 2 - Extract the version from the SDK
-
-	local sdk_version=""
 	if [[ "$sdk" =~ ([0-9]+.*$) ]]; then
 		sdk_version=${BASH_REMATCH[1]}
 	fi
 
-	current_sdk="${sdk_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$config"
-
-	local built_product="$CODESIGNING_FOLDER_PATH"
-	logi "${built_product}"
-
-	## Build the other platform.
-	# 3 - Determine the other platform
+	# 3 - Detect the other platform
 	if [ "$sdk_platform" == "iphoneos" ]; then
 		other_platform=iphonesimulator
 	else
 		other_platform=iphoneos
 	fi
+	
+	# 4 - Build prodcuts
+	current_sdk="${sdk_platform}${sdk_version}"
+	build_project "$scheme" "$current_sdk" "$configuration"
+	built_product="$CODESIGNING_FOLDER_PATH"
 
-	# 4 - Find the build directory
 	current_sdk="${other_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$config"
+	build_project "$scheme" "$current_sdk" "$configuration"
+	other_built_product="$CODESIGNING_FOLDER_PATH"
 
-	local other_built_product="$CODESIGNING_FOLDER_PATH"
-	logi "${other_built_product}"
+	# 4 - Make framework
+	logi "$ARROW Generate $TARGETNAME Framework ($configuration)"
 
-	logi "$ARROW Generate $TARGETNAME Framework ($config)"
-
-	local framework_name=${PRODUCT_NAME}
-	local framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
-
+	framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	make_framework "$built_product" "$other_built_product" "$framework_location"
 
-	# Install module.modulemap if needed
-	# FIXME
+	# 5 - Install module.modulemap if needed
+	# FIXME A `module.modulemap` location is fixed
 	if test -f "$HERE/module.modulemap"; then 
 		logi "Found ${HERE}/modulemap"
 		if ! test -d "${framework_location}/Modules"; then
@@ -180,17 +167,18 @@ build_framework () {
 		logi "Added ${framework_location}/Modules/modulemap"
 	fi
 
-	# Copy the framework to the user's desktop
+	# 6 - Copy the framework to the current workspace
 	if test ${framework_location} != "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"; then
 		 ditto "${framework_location}" "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	fi
 
-	logi "framework: ${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
+	logi "Framework: ${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 }
 
 BUILD_CMD_SEMAPHORE=
 
 is_framework=false
+framework_name=
 
 while [ $# -ne 0 ];  do
 	arg=$1
@@ -210,6 +198,8 @@ while [ $# -ne 0 ];  do
 		;;
 	--framework)
 		is_framework=true
+		framework_name="$1"
+		shift
 		;;
 	*)
 		release=$arg
@@ -227,19 +217,21 @@ fi
 trap "teardown_build" EXIT INT TERM
 setup_build $release
 
+
 rm -rf $PRODUCT_BUILD_ROOT
 mkdir -p $PRODUCT_BUILD_ROOT
 
 if $is_framework; then
-	build_framework $scheme $sdk $configuration
-	framework="${PRODUCT_BUILD_ROOT}/${PRODUCT_NAME}.framework"
-	if test -d $framework;
+	build_framework "$framework_name"
+	framework="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
+	if [[ -d $framework ]];
 	then
-		ditto -c -k --sequesterRsrc --keepParent $framework $framework.zip
+		ditto -c -k --sequesterRsrc --keepParent "$framework" "$framework".zip
 		logi "zip: ${framework}.zip"
 	else
 		die "Cound not find any zipping framework: ${framework}"
 	fi
 else
-	build_project $scheme $sdk $configuration
+	build_project "${scheme}" "${sdk}" "${configuration}"
+	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"
 fi

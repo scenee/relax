@@ -77,11 +77,11 @@ fi
 
 case $1 in
 -v)
-	LOG_LEVEL=$LOG_LEVEL_VERBOSE
+	REL_LOG_LEVEL=$REL_LOG_LEVEL_VERBOSE
 	shift
 	;;
 -vvv)
-	LOG_LEVEL=$LOG_LEVEL_DEBUG,$LOG_LEVEL_VERBOSE
+	REL_LOG_LEVEL=$REL_LOG_LEVEL_DEBUG,$REL_LOG_LEVEL_VERBOSE
 	set -x
 	shift
 	;;
@@ -130,9 +130,14 @@ help)
 
 	export REL_CONFIG_PATH="$(config_find)"
 	export REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+
 	case $command in
-	build|archive|export)
+	build|archive|export|upload)
+		check_toolchain
 		config_load "$REL_CONFIG_PATH"
+		;;
+	init|validate|resign|ls-certs|ls-profiles)
+		check_toolchain
 		;;
 	*)
 		;;

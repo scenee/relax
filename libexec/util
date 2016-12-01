@@ -1,19 +1,29 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: utility functions
 
-# Util variables
+#################
+###  Defines  ###
+#################
+
 export REL_TEMP_DIR=
-export LOG_LEVEL=
-export LOG_LEVEL_DEBUG=DEBUG
-export LOG_LEVEL_VERBOSE=VERBOSE
+export REL_LOG_LEVEL=
+export REL_LOG_LEVEL_DEBUG=DEBUG
+export REL_LOG_LEVEL_VERBOSE=VERBOSE
 export ARROW="${BLUE}==>${NC}${BOLD}"
 export ERR=${RED}Error:${NC}
 export WARN=${YELLOW}Warning:${NC}
 export NOTE=${BOLD}Note:${NC}
 
-#############
-### Utils ###
-#############
+#################
+### Functions ###
+#################
+
+check_toolchain () {
+	which xcodebuild > /dev/null || die "Not found xcodebuild"
+	which /usr/libexec/PlistBuddy > /dev/null || die "Not found /usr/libexec/PlistBuddy"
+	which plutil > /dev/null || die "Not found plutil"
+	which codesign > /dev/null || die "Not found codesign"
+}
 
 pop_all() {
 	local arr=($(dirs))
@@ -53,10 +63,11 @@ clean_temp () {
 teardown () {
 	pop_all
 	if [ -f $REL_CONFIG ]; then
-		for bak in $(find $HERE -name *.$BAK_EXT)
+		find $HERE -name "*.$BAK_EXT" |\
+		while IFS= read bak
 		do
-			cp $bak ${bak%.$BAK_EXT}
-			rm $bak
+			cp "$bak" "${bak%.$BAK_EXT}"
+			rm "$bak"
 		done
 	fi
 }
@@ -88,7 +99,7 @@ die_with_status () {
 }
 
 ###############
-### Logging ###
+### Logger  ###
 ###############
 
 __log () {
@@ -102,14 +113,14 @@ __log () {
 }
 
 logv () {
-	if [[ ${LOG_LEVEL:-undefined} =~ .*"$LOG_LEVEL_VERBOSE".* ]]; then
+	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		__log "$@"
 	fi
 }
 
 
 logd () {
-	if [[ ${LOG_LEVEL:-undefined} =~ .*"$LOG_LEVEL_DEBUG".* ]]; then
+	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_DEBUG".* ]]; then
 		__log "$@"
 	fi
 }
@@ -118,6 +129,7 @@ logi () {
 	__log "$@"
 }
 
+declare -x -f check_toolchain
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log
 declare -x -f make_temp pop_all clean_temp TRAP
