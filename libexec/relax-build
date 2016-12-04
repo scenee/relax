@@ -31,23 +31,26 @@ build_project () {
 
 	local build_suffix=$(echo "${_configuration}-${_sdk}")
 	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
-	local log_file="$PRODUCT_BUILD_ROOT/$build_suffix.log"
+	local logfile="$PRODUCT_BUILD_ROOT/$build_suffix.log"
 
 	xcodebuild -showBuildSettings "${params[@]}" > "$build_settings_file" 
 
 	params+=( clean build )
 
 	logi "Run: xcodebuild ${params[@]}"
-	logi "Log: $log_file"
+	logi "Log: $logfile"
 
-	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
+	rm -rf "${logfile}"
+	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		if [ -z $REL_LOG_FORMATTER ]; then
-			xcodebuild "${params[@]}" 2>&1 | tee "$log_file"; test ${PIPESTATUS[0]} -eq 0 || xargs die
+			xcodebuild "${params[@]}" 2>&1 |\
+				tee "${logfile}"; test ${PIPESTATUS[0]} -eq 0 || return 1
 		else
-			xcodebuild "${params[@]}" 2>&1 | tee "$log_file" | $REL_LOG_FORMATTER; test ${PIPESTATUS[0]} -eq 0 || xargs die
+			xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2) |\
+				${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
 		fi
 	else
-		xcodebuild "${params[@]}" >"$log_file" 2>&1 || die
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
 	fi
 
 	load_xcode_build_settings "$params_file"
@@ -80,7 +83,7 @@ make_framework () {
 	xcrun lipo -create \
 		"${1}" \
 		"${2}" \
-		-output "${3}/Versions/A/${PRODUCT_NAME}"
+		-output "${3}/Versions/A/${framework_name}"
 
 	# Create the path to the real Headers die
 	mkdir -p "${framework_loc}/Versions/A/Headers"
@@ -88,8 +91,8 @@ make_framework () {
 	# Create the required symlinks
 	/bin/ln -sfh A "${framework_loc}/Versions/Current"
 	/bin/ln -sfh Versions/Current/Headers "${framework_loc}/Headers"
-	/bin/ln -sfh "Versions/Current/${PRODUCT_NAME}" \
-		"${framework_loc}/${PRODUCT_NAME}"
+	/bin/ln -sfh "Versions/Current/${framework_name}" \
+		"${framework_loc}/${framework_name}"
 
 	if [ -d "${TARGET_BUILD_DIR}/$PUBLIC_HEADERS_FOLDER_PATH/" ]; then
 		# Copy the public headers into the framework

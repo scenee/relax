@@ -130,10 +130,11 @@ export_archive () {
 	logi "Run: xcodebuild ${params[@]}"
 	logi "Log: ${logfile}"
 
+	rm -rf "${logfile}"
 	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
-		xcodebuild "${params[@]}" 2>&1 | tee "${logfile}"; test ${PIPESTATUS[0]} -eq 0 || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2)  || return 1
 	else
-		xcodebuild "${params[@]}" > "${logfile}" 2>&1 || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
 	fi
 
 	# update a symbolic link of the latest archive

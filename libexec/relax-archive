@@ -44,7 +44,7 @@ make_archive () {
 	### Update 'Configuration' in a xcscheme ###
 	XCSCHEME_PATH="$(__find_xcscheme "$scheme")"
 	if [[ -n "$XCSCHEME_PATH" ]]; then
-		logi "xcscheme file path: $XCSCHEME_PATH"
+		logi "Scheme file: $XCSCHEME_PATH"
 		set_archive_config "$XCSCHEME_PATH" "$configuration"
 		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##/*}"
 	fi
@@ -90,14 +90,17 @@ make_archive () {
 	logi "Run: xcodebuild ${params[@]}"
 	logi "Log: $logfile"
 
+	rm -rf "${logfile}"
 	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		if [ -z $REL_LOG_FORMATTER ]; then
-			xcodebuild "${params[@]}" 2>&1 | tee "$logfile"; test ${PIPESTATUS[0]} -eq 0 || return 1
+			xcodebuild "${params[@]}" 2>&1 |\
+				tee "${logfile}"; test ${PIPESTATUS[0]} -eq 0 || return 1
 		else
-			xcodebuild "${params[@]}" 2>&1 | tee "$logfile" | ${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
+			xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2) |\
+				${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
 		fi
 	else
-		xcodebuild "${params[@]}" 2>&1 >"$logfile" || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
 	fi
 
 	logi "Archived: $archive_path"
