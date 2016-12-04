@@ -100,7 +100,16 @@ make_archive () {
 				${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
 		fi
 	else
-		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) & 
+		xcodebuild_pid=$!
+		printf "["
+		progress_bar $xcodebuild_pid
+		if wait $xcodebuild_pid; then
+			printf "] done!\n"
+		else
+			printf "]\n"
+			return 1
+		fi
 	fi
 
 	logi "Archived: $archive_path"
@@ -157,4 +166,4 @@ mkdir -p "$data_root"
 
 LATEST_ARCHIVE="$data_root/LATEST_ARCHIVE"
 
-make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"
+make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@" || die

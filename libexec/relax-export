@@ -134,7 +134,16 @@ export_archive () {
 	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2)  || return 1
 	else
-		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
+		xcodebuild_pid=$!
+		printf "["
+		progress_bar $xcodebuild_pid
+		if wait $xcodebuild_pid; then
+			printf "] done!\n"
+		else
+			printf "]\n"
+			return 1
+		fi
 	fi
 
 	# update a symbolic link of the latest archive

@@ -18,6 +18,17 @@ export NOTE=${BOLD}Note:${NC}
 ### Functions ###
 #################
 
+
+progress_bar()
+{
+	local pid=$1
+	local delay=0.75
+	while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+		printf  "▓"
+		sleep $delay
+	done
+}
+
 check_toolchain () {
 	which xcodebuild > /dev/null || die "Not found xcodebuild"
 	which /usr/libexec/PlistBuddy > /dev/null || die "Not found /usr/libexec/PlistBuddy"
@@ -129,7 +140,7 @@ logi () {
 	__log "$@"
 }
 
-declare -x -f check_toolchain
+declare -x -f check_toolchain progress_bar
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log
 declare -x -f make_temp pop_all clean_temp TRAP

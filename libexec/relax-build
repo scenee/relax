@@ -50,7 +50,16 @@ build_project () {
 				${REL_LOG_FORMATTER}; test ${PIPESTATUS[0]} -eq 0 || return 1
 		fi
 	else
-		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) || return 1
+		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
+		xcodebuild_pid=$!
+		printf "["
+		progress_bar $xcodebuild_pid
+		if wait $xcodebuild_pid; then
+			printf "] done!\n"
+		else
+			printf "]\n"
+			return 1
+		fi
 	fi
 
 	load_xcode_build_settings "$params_file"
