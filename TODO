@@ -1,10 +1,12 @@
 TODO
-======
+====
 
 Common
 ------
 
 - [L] Write man page with Ronn.
+- [L] Unify disjointed code styles
+- [L] Enrich the command/option completion
 
 Export
 ------

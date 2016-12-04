@@ -3,27 +3,20 @@
 #
 
 ---
+
 # Required 'xcodeproj' OR 'workspace'
 xcodeproj: WORKSPACE
 workspace: XCODEPROJ
 
 release1: # Required
   scheme: SCHEME # Required
-
-  sdk:           SDK  # Required. i.e. iphoneos, iphoneos10.0
-
-  configuration: CONFIGURATION # Required, i.e. Release
-
+  sdk:           SDK  # Optional. 'ipthoneos' is the default. i.e. iphoneos, iphoneos10.0
+  configuration: CONFIGURATION # Optional. The default is following the scheme. i.e. Release
   bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
-
-  team_id: J3D7L9FHSS # Optional
-
-  pre-hook: "logi \"$ARROW Update Build Number\"; agvtool next-version -all"
-
-  build_settings:
+  team_id: J3D7L9FHSS # Optional. The default is following the project settings.
+  build_settings: # Optional
     - OTHER_SWIFT_FLAGS: "-DMOCK"
-
-  provisioning_profile: "Scenee Wild Card Dev"
+  provisioning_profile: "Scenee Wild Card Dev" # Optional. If it's set, Relax automatically build a product on 'Manual' provisioning style.
 
   ## Bundle version format
   # %V: Version number
@@ -45,10 +38,6 @@ release1: # Required
 
     # For non-App Store exports, should Xcode re-compile the app from bitcode? Defaults to YES.
     compileBitcode: true # Optional.
-
-    # TODO: For non-App Store exports, if the app uses On Demand Resources and this is YES, asset packs are embedded in the app bundle so that the app can be tested without a server to host asset packs. Defaults to YES unless onDemandResourcesAssetPacksBaseURL is specified.
-    #embedOnDemandResourcesAssetPacksInBundle: true # Optional.
-
     # The Developer Portal team to use for this export. Defaults to the team used to build the archive.
     team_id: XXXXXX # Optional.
 
@@ -56,7 +45,10 @@ release1: # Required
     uploadBitcode : true # Optional.
 
     # For non-App Store exports, should Xcode thin the package for one or more device variants? Available options: <none> (Xcode produces a non-thinned universal app), <thin-for-all-variants> (Xcode produces a universal app and all available thinned variants), or a model identifier for a specific device (e.g. "iPhone7,1"). Defaults to <none>.
-    thinning : "iPhone7,1"
+    thinning : "iPhone7,1" # Optional.
+
+    # TODO: For non-App Store exports, if the app uses On Demand Resources and this is YES, asset packs are embedded in the app bundle so that the app can be tested without a server to host asset packs. Defaults to YES unless onDemandResourcesAssetPacksBaseURL is specified.
+    #embedOnDemandResourcesAssetPacksInBundle: true # Optional.
 
     # TODO: For non-App Store exports, users can download your app over the web by opening your distribution manifest file in a web browser. To generate a distribution manifest, the value of this key should be a dictionary with three sub-keys: appURL, displayImageURL, fullSizeImageURL. The additional sub-key assetPackManifestURL is required when using on demand resources.
     # manifest : Dictionary
@@ -73,7 +65,7 @@ release2:
 
 ...
 ---
-log_formatter: xcpretty # Optional
+log_formatter: xcpretty # Optional. Relax will pass xcodebuild's stdout to it.
 
 crashlytics:
   token:  __TOKEN__

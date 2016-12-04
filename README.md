@@ -5,8 +5,10 @@ relax is a comfortable release tool for your iOS Application.
 It's hard to understand stuff of `xcodebuild` and codesigning mechanism.
 It takes care of much of the hassle of them, so you can focus on development.
 
-- Don't need to write a huge build script
-- Easy to check/validate your built product for codesigining
+Relax can be
+
+- Manage configurations and deployments without a build script.
+- Validate your product on codesigining
 - Reduce build time just to change a code signature
 
 
