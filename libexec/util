@@ -18,12 +18,12 @@ export NOTE=${BOLD}Note:${NC}
 ### Functions ###
 #################
 
-
+# progress_bar <pid>
 progress_bar()
 {
 	local pid=$1
 	local delay=0.75
-	while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+	while ps -p $pid | grep -q $pid; do
 		printf  "▓"
 		sleep $delay
 	done

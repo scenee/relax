@@ -2,10 +2,6 @@
 # @(#) relax: `show` command
 # completions
 
-LATEST_IPA=
-LATEST_EXPORT_DIR=
-LATEST_ARCHIVE=
-
 usage_show() {
 	cat <<-EOM
 	usage: ${ME} show <release> <item>

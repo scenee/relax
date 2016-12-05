@@ -101,10 +101,10 @@ make_archive () {
 		fi
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) & 
-		xcodebuild_pid=$!
+		XCODEBUILD_PID=$!
 		printf "["
-		progress_bar $xcodebuild_pid
-		if wait $xcodebuild_pid; then
+		progress_bar $XCODEBUILD_PID
+		if wait $XCODEBUILD_PID; then
 			printf "] done!\n"
 		else
 			printf "]\n"
@@ -116,9 +116,6 @@ make_archive () {
 	ln -fs "$archive_path" "$LATEST_ARCHIVE"
 }
 
-PRODUCT_BUILD_ROOT=
-LATEST_ARCHIVE=
-INFO_PLIST_PATH=
 XCSCHEME_PATH=
 
 release=
@@ -158,7 +155,7 @@ if test ${release:-undefined} = undefined; then
 	fin
 fi
 
-trap 'teardown_build' EXIT INT TERM
+trap 'teardown_build;' EXIT INT TERM
 setup_build $release
 
 data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
@@ -166,4 +163,4 @@ mkdir -p "$data_root"
 
 LATEST_ARCHIVE="$data_root/LATEST_ARCHIVE"
 
-make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@" || die
+make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"

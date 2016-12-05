@@ -4,6 +4,24 @@
 ### Xcode Utils ###
 ###################
 
+export LATEST_ARCHIVE=
+export LATEST_IPA=
+export LATEST_EXPORT_DIR=
+
+export PRODUCT_BUILD_ROOT=
+export BUNDLE_VERSION=
+export INFO_PLIST_PATH=
+export XCODEBUILD_PID=
+
+__kill_bg_xcodebuid_task () {
+	if [[ -n ${XCODEBUILD_PID} ]]; then
+		if ps -p $XCODEBUILD_PID > /dev/null; then
+			kill $XCODEBUILD_PID
+		fi
+	fi
+}
+
+
 # __map_vals <release>
 __map_vals () {
 	local release=$1
@@ -234,6 +252,8 @@ print_info_plist () {
 }
 
 teardown_build () {
+	__kill_bg_xcodebuid_task
+
 	if [[ ${INFO_PLIST_PATH:-undefined} != undefined ]]; then
 		if [[ -f $INFO_PLIST_PATH.$BAK_EXT ]]; then
 			cp "$INFO_PLIST_PATH".$BAK_EXT "$INFO_PLIST_PATH"
@@ -429,6 +449,7 @@ update_archived_entitlements_xcent () {
 	cp "$_entitlements_xcent" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT"
 }
 
+declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team
 declare -x -f load_xcode_build_settings get_build_params_file
 declare -x -f print_info_plist print_xcode_version

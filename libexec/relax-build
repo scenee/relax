@@ -51,10 +51,10 @@ build_project () {
 		fi
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
-		xcodebuild_pid=$!
+		XCODEBUILD_PID=$!
 		printf "["
-		progress_bar $xcodebuild_pid
-		if wait $xcodebuild_pid; then
+		progress_bar $XCODEBUILD_PID
+		if wait $XCODEBUILD_PID; then
 			printf "] done!\n"
 		else
 			printf "]\n"
