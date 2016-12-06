@@ -21,6 +21,7 @@ validate_app () {
 	local app_path="$1"
 
 	local success=false
+	local warning=0
 	if test ! -d "${app_path}"; then
 		die "Not found ${app_path}"
 	fi
@@ -32,7 +33,7 @@ validate_app () {
 	fi
 	logi "$ARROW Validating $product_name..."
 
-	logi "$ARROW Check CodeSigning"
+	logi "$ARROW Check codesigning"
 
 	logv "$ARROW Verifying $app_name"
 	codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" | tee $REL_TEMP_DIR/codesign_info
@@ -82,38 +83,9 @@ validate_app () {
 		die "Failed codesign verification."
 	fi
 
-	logi "$ARROW Checking Entitlements and Provisioning"
-
-	# Show entitlement
-	logi "$ARROW Entitlements"
-	if codesign -d --entitlements :- "${app_path}" 2>/dev/null | grep ".*" | logi; test ${PIPESTATUS[1]} -eq 1; then
-		success=false
-		logi "$ERR Not found the Entitlements"
-	else
-		:
-	fi
-
-	# Show embedded provisioning profile
-	logi "$ARROW Embedded provisioning profile"
-	local mobileprovision=$REL_TEMP_DIR/embedded.mobileprovision
-	security cms -D -i "${app_path}/embedded.mobileprovision" > $mobileprovision
-	local mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $mobileprovision)
-	local mp_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $mobileprovision)
-	local mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" $mobileprovision)
-	local mp_team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $mobileprovision)
-	local mp_cdate=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $mobileprovision)
-	local mp_edate=$(/usr/libexec/PlistBuddy -c "Print :ExpirationDate" $mobileprovision)
-	cat <<-EOM | logi
-	Name: $mp_name
-	UUID: $mp_uuid
-	Team: $mp_team($mp_team_id)
-	Creation Date: $mp_cdate
-	Expiration Date: $mp_edate
-	EOM
-	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
-
 	# Show Info.plist
-	logi "$ARROW Show Info.plist"
+	logi "$ARROW Checking Info.plist"
+	logi "$ARROW Info.plist"
 	local info_plist_path info_version info_bundle_version info_bundle_identifier
 	info_plist_path="$REL_TEMP_DIR/Info.plist"
 	plutil -convert xml1 "${app_path}/Info.plist" -o "$info_plist_path"
@@ -131,6 +103,48 @@ validate_app () {
 		logi "Not match CodeSigining and Info.plist bundle identifier"
 	fi
 
+	logi "$ARROW Checking the entitlements and mobileprovision"
+
+	# Show entitlement
+	logi "$ARROW Entitlements"
+	if codesign -d --entitlements :- "${app_path}" 2>/dev/null | grep ".*" | logi; test ${PIPESTATUS[1]} -eq 1; then
+		success=false
+		logi "$ERR Not found the Entitlements"
+	else
+		:
+	fi
+
+	# Show embedded provisioning profile
+	logi "$ARROW Embedded Provisioning Profile"
+	local mobileprovision=$REL_TEMP_DIR/embedded.mobileprovision
+	security cms -D -i "${app_path}/embedded.mobileprovision" > $mobileprovision
+	local mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $mobileprovision)
+	local mp_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $mobileprovision)
+	local mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" $mobileprovision)
+	local mp_team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $mobileprovision)
+	local mp_cdate=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $mobileprovision)
+	local mp_edate=$(/usr/libexec/PlistBuddy -c "Print :ExpirationDate" $mobileprovision)
+	cat <<-EOM | logi
+	Name: $mp_name
+	UUID: $mp_uuid
+	Team: $mp_team($mp_team_id)
+	Creation Date: $mp_cdate
+	Expiration Date: $mp_edate
+	EOM
+	# Warning for an AppStore mobileprovision
+	if /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" $mobileprovision \
+		2>&1 | grep -q "Does Not Exist"; then
+		if /usr/libexec/PlistBuddy -c "Print :ProvisionsAllDevices" $mobileprovision \
+			2>&1 | grep -q "Does Not Exist"; then
+			logi "$WARN ${BOLD}$app_name can contain an AppStore provisioning profile."
+			logi "         ${BOLD}Please check the embedded provisioning profile with 'relax -v validate'."
+			printf "${NC}"
+			success=false
+			(( warning+=1 ))
+		fi
+	fi
+	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
+
 	# Check if archived-expanded-entitlements.xcent matches the signed entitlements
 	if [[ $app_path =~ xcarchive ]]; then
 		logi "$ARROW Check archived-expanded-entitlements in ${app_path##*/}"
@@ -146,7 +160,7 @@ validate_app () {
 		fi
 	fi
 
-	logi "$ARROW Check duplicates of all bundle identifiers in ${app_path##*/}"
+	logi "$ARROW Detect duplicate bundle identifiers in ${app_path##*/}"
 	find "$app_path" -name "Info.plist" -mindepth 2 |\
 	while IFS= read info
 	do
@@ -161,7 +175,7 @@ validate_app () {
 			logi "${app_name}${bundle_path}: $new_id"
 			if [[ $bundle_ids =~ $new_id ]]; then
 				success=false
-				logi "$ERR A duplicated bundle identifier($new_id) is found in $info"
+				logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
 			fi
 		fi
 		bundle_ids+="$new_id"
@@ -176,7 +190,11 @@ validate_app () {
 	if [[ $success = true ]]; then
 		logi "${GREEN}Validation Successful${NC}"
 	else
-		die "Validation Failed"
+		if [[ $warning -gt 0 ]]; then
+			logi "${YELLOW} $(printf "%s Warning Found" $warning)"
+		else
+			die "Validation Failed"
+		fi
 	fi
 }
 
