@@ -52,7 +52,7 @@ build_project () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
 		XCODEBUILD_PID=$!
-		if ! progress_bar $XCODEBUILD_PID; then
+		if ! print_progress_time $XCODEBUILD_PID; then
 			return 1
 		fi
 	fi

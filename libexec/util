@@ -18,6 +18,44 @@ export NOTE=${BOLD}Note:${NC}
 ### Functions ###
 #################
 
+# print_progress_time <pid>
+print_progress_time () {
+	local pid=$1
+	local delay=0.16666666 # 0.016666666 * 10
+	local stime=$(date "+%s")
+	local i=1
+
+	star="$BOLD"'\xE2\x88\x97'"$NC"
+	lbr="$BLUE[$NC"
+	rbr="$BLUE]$NC"
+	sp=("$lbr$star  $rbr"  "$lbr $star $rbr"  "$lbr  $star$rbr"  "$lbr $star $rbr")
+
+	# Invisible cursor.
+	tput civis
+	# Don't echo back any chars typed.
+	stty -echo
+
+	while ps -p $pid | grep -q $pid; do
+		now=$(date "+%s")
+		dt=$(date -r "$(( $now - $stime - 32400))" "+%T")
+		printf "\b${sp[i++%${#sp[*]}]} Time: $dt\r"
+		sleep $delay
+	done
+
+	tput el # Clear to end of line
+	printf "Time: $dt\n"
+
+	# Retore tty and tput
+	stty echo
+	tput cnorm
+
+	if wait $pid; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 # progress_bar <pid>
 progress_bar()
 {
@@ -28,7 +66,7 @@ progress_bar()
 		printf  "▓"
 		sleep $delay
 	done
-	if wait $XCODEBUILD_PID; then
+	if wait $pid; then
 		printf "] done!\n"
 		return 0
 	else
@@ -148,7 +186,8 @@ logi () {
 	__log "$@"
 }
 
-declare -x -f check_toolchain progress_bar
+declare -x -f print_progress_time progress_bar
+declare -x -f check_toolchain 
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log
 declare -x -f make_temp pop_all clean_temp TRAP
