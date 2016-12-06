@@ -23,10 +23,18 @@ progress_bar()
 {
 	local pid=$1
 	local delay=0.75
+	printf "["
 	while ps -p $pid | grep -q $pid; do
 		printf  "▓"
 		sleep $delay
 	done
+	if wait $XCODEBUILD_PID; then
+		printf "] done!\n"
+		return 0
+	else
+		printf "]\n"
+		return 1
+	fi
 }
 
 check_toolchain () {
