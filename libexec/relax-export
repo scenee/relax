@@ -141,15 +141,14 @@ export_archive () {
 		fi
 	fi
 
-	# update a symbolic link of the latest archive
-	find "$export_path" -name "*.ipa"
-	if [[ ! -n $(find "$export_path" -name "*.ipa") ]]; then
+	local ipa_path=$(find "$export_path" -maxdepth 1 -mindepth 1 -name "*.ipa" | head -1)
+	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
+	else
+		logi "$ARROW IPA: $ipa_path"
 	fi
 
-	local ipa_path=$(find "$export_path" -maxdepth 1 -mindepth 1 -name "*.ipa" | head -1)
-	logi "IPA: $ipa_path"
-
+	# update a symbolic link of the latest archive
 	rm -f "$LATEST_IPA"
 	ln -fs "$ipa_path" "$LATEST_IPA"
 	rm -f "$LATEST_EXPORT_DIR"

@@ -108,7 +108,7 @@ make_archive () {
 		fi
 	fi
 
-	logi "Archived: $archive_path"
+	logi "$ARROW Archived: $archive_path"
 	ln -fs "$archive_path" "$LATEST_ARCHIVE"
 }
 

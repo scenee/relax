@@ -179,7 +179,7 @@ build_framework () {
 		 ditto "${framework_location}" "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	fi
 
-	logi "Framework: ${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
+	logi "$ARROW Framework: ${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 }
 
 BUILD_CMD_SEMAPHORE=
