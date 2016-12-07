@@ -7,10 +7,12 @@ It takes care of much of the hassle of them, so you can focus on development.
 
 Relax can be
 
-- Manage configurations and deployments without a build script.
-- Validate your product on codesigining
-- Reduce build time just to change a code signature
-
+- Manage your multi-deployment in a Relax configuration file(Relfile)
+    - Deploy your app quickly to a tester, a client and an end user in your professional project
+    - Easy to set and revert a specific property of Info.plist and xcode build settings on each release
+    - Switch codesign mode(Automatic, Manual) automatically as your Relfile
+- Validate your product's codesigin for a deployment
+- Resign your xarchive and ipa file.
 
 # Installation
 
@@ -18,11 +20,16 @@ Relax can be
 $brew tap SCENEE/homebrew-formulae
 $brew install relax
 ```
-# Requirement
+# Requirements
 
+Relax must depend on only pre-install command line tools in macOS and ones of Xcode.
+
+Because Relax aims to get rid of installation and environment stuff when you manage a build server for your teaem.
+
+- macOS 10.11+
 - Xcode8.0+
 
-NOTE: Relax might be working on Xcode 7.3.1.
+NOTE: Relax might be working on Xcode 7.3.1
 
 # Getting Started
 
@@ -35,26 +42,36 @@ $relax init
 ```
 
 An example of Relfile is here.
+Check [this Refile section](#Relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/etc/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
 
-development: # Release Type
+development: # Define a Release Type
   scheme: SampleApp
   configuration: Debug
   build_settings:
     - OTHER_SWIFT_FLAGS: -DMOCK
+  info_plist:
+    UISupportedExternalAccessoryProtocols:
+      - com.example.SampleApp.dev
 
 adhoc:
   scheme: SampleApp
-  team_id: COMPANY_TEAM_ID
-  bundle_version_format:  %R-%C
+  configuration: Debug
+  team_id: __MY_COMPANY_TEAM_ID__
+  bundle_version_format:  "%R-%C"
+  info_plist:
+    CFBundleName: SmapleApp (DEBUG)
+    UISupportedExternalAccessoryProtocols:
+      - com.example.SampleApp
+      - com.example.SampleApp2
   export_options:
     method:  ad-hoc
 
 enterprise:
   scheme: SampleApp
-  team_id: ENTERPRISE_TEAM_ID
+  team_id: __MY_ENTERPRISE_TEAM_ID__
   export_options:
     method:  enterprise
 
@@ -62,13 +79,19 @@ appstore:
   scheme: SampleApp
   sdk: iphoneos
   configuration: Release
-  team_id: COMPANY_TEAM_ID 
+  team_id: __MY_COMPANY_TEAM_ID__
   export_options:
     method:  appstore
 
 framework:
   scheme: Sample Framework
   configuration: Release
+
+
+crashlytics:
+  token:  __MY_TOKEN__
+  secret: __MY_SECRET__
+  group:  __MY_GROUP__
 
 log_formatter: xcpretty
 ```
@@ -114,14 +137,40 @@ $relax commands
 
 # Relfile
 
-## Bundle Identifier Format
+Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/etc/Relfile)
+
+## Use an Environment variable
+
+You can use an Environment variable in Relfile.
+An example is here.
+
+```yaml
+development2:
+  scheme: Sample App
+  bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
+  ....
+```
+
+```bash
+$BUNDLE_SUFFIX=debug relax archive development2
+```
+or
+
+```bash
+$export BUNDLE_SUFFIX=debug 
+$relax archive development2
+```
+But you can't use Xcode build setting variables (PRODUCT_NAME etc.) in Relfile.
+Because they can be overridden by Relfile's definitions.
+
+## Bundle Version Format
 
 The characters and their meanings are as follows.
 
 | Character | Meaning |
 |:---------|:-------|
-|%V| Version number|
-|%v| Bundle number|
+|%V| Release version number|
+|%v| Build version number|
 |%C| Build configuration|
 |%R| SCM commit ref|
 |%B| SCM branch name|

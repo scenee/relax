@@ -18,8 +18,8 @@ release1: # Required
   provisioning_profile: "Scenee Wild Card Dev" # Optional. If it's set, Relax automatically build a product on 'Manual' provisioning style.
 
   ## Bundle version format
-  # %V: Version number
-  # %v: Bundle number
+  # %V: Release version number
+  # %v: Build version number
   # %C: Build configuration
   # %R: SCM commit ref
   # %B: SCM branch name
