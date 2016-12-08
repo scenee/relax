@@ -1,5 +1,6 @@
 /bats/
-/bats.log/
+bats.log
+/**/bats.log
 /**/.relax/
 /**/build/
 /**/Releases/
