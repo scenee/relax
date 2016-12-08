@@ -25,6 +25,9 @@ print_progress_time () {
 	local stime=$(date "+%s")
 	local i=1
 
+	# For a interrupt timing issue
+	trap "stty echo; tput cnorm; " INT TERM
+
 	star="$BOLD"'\xE2\x88\x97'"$NC"
 	lbr="$BLUE[$NC"
 	rbr="$BLUE]$NC"
