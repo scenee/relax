@@ -66,6 +66,12 @@ _check_config () {
 }
 
 _export_config() {
+	###################################################################
+	# NOTE: Escape an unbound error when a env var is used in Relfile #
+	#       See test/SampleApp/Relfile in this repository             #
+	###################################################################
+	echo "set +u" > $REL_TEMP_DIR/config  
+
 	_parse_yaml $1 "REL_CONFIG_" | awk '{
 		if ( $0 ~ /.*\+=.*/ ) {
 			print $0
@@ -75,7 +81,10 @@ _export_config() {
 		} else {
 			print "export "$0
 		}
-	}' > $REL_TEMP_DIR/config
+	}' >> $REL_TEMP_DIR/config
+
+	echo "set -u" >> $REL_TEMP_DIR/config
+
 	source $REL_TEMP_DIR/config
 }
 

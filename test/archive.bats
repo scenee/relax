@@ -8,3 +8,10 @@ load test_helper
   assert_success
 }
 
+@test "relax archive development2" {
+  cd test/SampleApp
+  export BUNDLE_SUFFIX=debug
+  run  relax archive development2
+  assert_success
+}
+

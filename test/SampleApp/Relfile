@@ -14,6 +14,14 @@ development:
   export_options:
     method: development
 
+development2:
+  scheme: Sample App
+  bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
+  configuration: Debug
+  export_options:
+    method: development
+
+
 adhoc:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
