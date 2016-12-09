@@ -31,7 +31,6 @@ resign_app () {
 	local mobileprovision="$2"
 	local app_path="$3"
 	local entitlements=$REL_TEMP_DIR/entitlements
-	local entitlements_xcent=$REL_TEMP_DIR/entitlements_xcent
 
 	if [[ ! -f "$mobileprovision" ]]; then
 		mobileprovision="$(__find_mobileprovision "$mobileprovision")"
@@ -39,9 +38,7 @@ resign_app () {
 			die "Not found $mobileprovision"
 		fi
 	fi
-
-	cp "$app_path/archived-expanded-entitlements.xcent" "$entitlements_xcent"
-
+	
 	/usr/bin/codesign -d --entitlements :- "$app_path" 2>/dev/null > $entitlements
 
 	# Get the current TEAM ID
@@ -81,31 +78,23 @@ resign_app () {
 	logi "$ARROW Resigning ${app_path##*/}"
 
 	local stdtemp=$REL_TEMP_DIR/stdtemp
-	exec 3> $stdtemp
 
+	exec 3> $stdtemp
 	set +e
 
-	if  [[ -d ${app_path}/Frameworks ]]; then
-		find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1 |\
-		while IFS= read framework
-		do
-			/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$framework" 1>&3 2>&3
-			if [[ $? != 0 ]]; then
-				die "$(cat $stdtemp)"
-			else
-				cat $stdtemp | logv
-			fi
-		done
-	fi
+	while IFS= read -r bundle || [[ -n "$bundle" ]]
+	do
+		/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$bundle" 1>&3 2>&3
+		if [[ $? != 0 ]]; then
+			die "$(cat $stdtemp)"
+		else
+			cat $stdtemp | logv
+		fi
+	done < <(find -d "${app_path}/.." \
+		\( -name "*.app" -o -name "*.appex" -o -name "*.framework" -o -name "*.dylib" \))
 
-	/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$app_path" 1>&3 2>&3
-	if [[ $? != 0 ]]; then
-		die "$(cat $stdtemp)"
-	else
-		cat $stdtemp | logv
-	fi
-	exec 3>&-
 	set -e
+	exec 3>&-
 }
 
 if test $# = 0; then
@@ -159,13 +148,18 @@ resign_suffix="-resigned"
 
 logi "$ARROW Resigning $target"
 
+mkdir -p $resign_root
+
 if [[ $target =~ (.*)\.xcarchive  ]]; then
 	file_name="${BASH_REMATCH[1]}";
+
 	logd "archive: $target"
 
 	dest_path="$PWD/${file_name}"${resign_suffix}".xcarchive"
 
-	rm -rf "$dest_path"
+	if [[ -f $dest_path ]]; then
+		die "Already existing $dest_path"
+	fi
 
 	cp -a "$arg" "$resign_root"
 
@@ -177,7 +171,14 @@ if [[ $target =~ (.*)\.xcarchive  ]]; then
 
 elif [[ $target =~ (.*)\.ipa ]]; then
 	file_name="${BASH_REMATCH[1]}";
+
 	logd "ipa: $target"
+
+	dest_path="$PWD/${file_name}"${resign_suffix}".ipa"
+
+	if [[ -f $dest_path ]]; then
+		die "Already existing $dest_path"
+	fi
 
 	unzip -q "$arg" -d "$resign_root"
 
@@ -186,7 +187,6 @@ elif [[ $target =~ (.*)\.ipa ]]; then
 	resign_app "$certificate" "$mobileprovision"  "$app_path"
 
 	# zip
-	dest_path="$PWD/${file_name}"${resign_suffix}".ipa"
 	(
 		cd "$resign_root"
 		zip -rq "$dest_path" *

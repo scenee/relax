@@ -14,6 +14,7 @@ load test_helper
 
   pushd test/SampleApp
 
+  rm -rf *-resigned.ipa
   run relax resign -i "com.scenee.SampleApp" -p "Scenee Wild Card Adhoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show enterprise ipa)"
   echo "$output" >> ../../bats.log
   assert_success
@@ -23,5 +24,10 @@ load test_helper
   assert_success
 
   popd
+}
+
+@test "relax resign failed if resigned ipa is existing" {
+  run relax resign -i "com.scenee.SampleApp" -p "Scenee Wild Card Adhoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show enterprise ipa)"
+  assert_failure
 }
 
