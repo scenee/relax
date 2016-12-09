@@ -47,40 +47,40 @@ validate_app () {
 	local cs_app_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/^Identifier=\(.*\)/\1/p")
 	local cs_team_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/TeamIdentifier=\(.*\)/\1/p")
 
-	# Check Framework codesignning
-	if [[ -d ${app_path}/Frameworks ]]; then
-		local fm_name fm_team_id fm_temp_codesign_info
+	# Check embedded bundles' codesign
+	while IFS= read -r bundle && [[ -n "$bundle" ]]
+	do
+		local bundle_name bundle_team_id bundle_temp_codesign_info
+		bundle_name="${framework##*/}"
 
-		find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1 2>/dev/null |\
-		while IFS= read framework
-		do
-			fm_name="${framework##*/}"
-
-			logv "$ARROW Verifying $fm_name"
-			if codesign --verify --no-strict -vvvv "${framework}" 2>&1 | logv; test ${PIPESTATUS[1]} -eq 0; then
-				success=true
-			else
-				success=false
-			fi
-
-			fm_temp_codesign_info=$(mktemp "$REL_TEMP_DIR/codesign_info.XXXXXX")
-
-			codesign -dv "${framework}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" | tee $fm_temp_codesign_info | logv
-
-			fm_team_id=$(cat $fm_temp_codesign_info | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
-
-			if [[ $cs_team_id = $fm_team_id ]]; then
-				logv "$fm_name matched $cs_team_id."
-				success=true
-			else
-				logi "$ERR: Found an invalid Framework signed by a different Team ID($fm_team_id): $fm_name"
-				success=false
-			fi
-		done
-
-		if [[ $success = true ]]; then
-			logi "All Embedded Frameworks matched \"$cs_team_id\"."
+		logv "$ARROW Verifying $bundle_name"
+		if codesign --verify --no-strict -vvvv "${bundle}" 2>&1 \
+			| logv; test ${PIPESTATUS[1]} -eq 0; then
+			success=true
+		else
+			success=false
 		fi
+
+		bundle_temp_codesign_info=$(mktemp "$REL_TEMP_DIR/codesign_info.XXXXXX")
+
+		codesign -dv "${bundle}" 2>&1 \
+			| grep -e "Format\|Identifier\|Signed Time" \
+			| tee $bundle_temp_codesign_info | logv
+
+		bundle_team_id=$(cat $bundle_temp_codesign_info | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
+
+		if [[ $cs_team_id = $bundle_team_id ]]; then
+			logv "$bundle_name matched $cs_team_id."
+			success=true
+		else
+			logi "$ERR: Found an invalid Framework signed by a different Team ID($bundle_team_id): $bundle_name"
+			success=false
+		fi
+	done < <(find -d "${app_path}/.." \
+		\( -name "*.app" -o -name "*.appex" -o -name "*.framework" -o -name "*.dylib" \))
+
+	if [[ $success = true ]]; then
+		logi "All Embedded Frameworks matched \"$cs_team_id\"."
 	fi
 
 	if [[ $success != true ]]; then
