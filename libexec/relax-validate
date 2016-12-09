@@ -50,6 +50,7 @@ validate_app () {
 	# Check Framework codesignning
 	if [[ -d ${app_path}/Frameworks ]]; then
 		local fm_name fm_team_id fm_temp_codesign_info
+
 		find "${app_path}/Frameworks" -name "*" -maxdepth 1 -mindepth 1 2>/dev/null |\
 		while IFS= read framework
 		do
@@ -76,7 +77,10 @@ validate_app () {
 				success=false
 			fi
 		done
-		logi "All Embedded Frameworks matched \"$cs_team_id\"."
+
+		if [[ $success = true ]]; then
+			logi "All Embedded Frameworks matched \"$cs_team_id\"."
+		fi
 	fi
 
 	if [[ $success != true ]]; then
