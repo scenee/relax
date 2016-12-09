@@ -215,6 +215,7 @@ print_xcode_version() {
 # commands:
 #     version
 #     bundle_version 
+#     bundle_name
 #     bundle_identifier
 #     bundle_identifier_prefix
 # $2 -- info-plist
@@ -228,6 +229,11 @@ print_info_plist () {
 			| grep -v "Does Not Exist")
 		;;
 
+	bundle_name)
+		echo $(/usr/libexec/PlistBuddy -c \
+			"Print :CFBundleName" "$1" 2>&1\
+			| grep -v "Does Not Exist")
+		;;
 	bundle_version) 
 		echo $(/usr/libexec/PlistBuddy -c \
 			"Print :CFBundleVersion" "$1" 2>&1\
@@ -286,14 +292,14 @@ setup_build () {
 
 	load_xcode_build_settings $params_file
 
-	if [ ${FULL_PRODUCT_NAME:-undefined} = undefined ]; then
+	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
 		die "This scheme($scheme) isn't for an Application, Framework or Library target"
 	fi
 
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
 
 	## Replace TEAMID if needed
-	if test "${team_id:-undefined}" != undefined; then
+	if [[ "${team_id:-undefined}" != undefined ]]; then
 		__replace_development_team $team_id
 	fi
 
@@ -313,6 +319,18 @@ setup_build () {
 
 	cp $INFO_PLIST_PATH $INFO_PLIST_PATH.$BAK_EXT
 	logd "Info plist: $INFO_PLIST_PATH"
+
+	set +e
+	exec 3> $REL_TEMP_DIR/stdtemp
+	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>&3
+	if [[ $? != 0 ]]; then
+		printf "$ERR "; cat $REL_TEMP_DIR/stdtemp
+		exec 3>&-
+		die "Failed to parse $REL_CONFIG_PATH"
+	else
+		exec 3>&-
+	fi
+	set -e
 
 	## Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
@@ -366,29 +384,30 @@ setup_build () {
 	fi
 
 	## Bundle Version
+	local version=$(print_info_plist version "$INFO_PLIST_PATH")
+	local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
+	local abbcommit=$(git log -1 --format='%h')
+	local branch=$(git symbolic-ref --short HEAD)
+	local config=$(echo $configuration | tr [:upper:] [:lower:])
+
 	if test "${bundle_version_format:-undefined}" = undefined; then
 		BUNDLE_VERSION=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
 	else
-		# update build version
-		local version=$(print_info_plist version "$INFO_PLIST_PATH")
-		local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
-		local abbcommit=$(git log -1 --format='%h')
-		local branch=$(git symbolic-ref --short HEAD)
-		local config=$(echo $configuration | tr [:upper:] [:lower:])
-
-		test -z $bundle_version_format && BUNDLE_VERSION_FORMAT="%R-%C"
-			
-		BUNDLE_VERSION=$(echo "$bundle_version_format" | awk '
-		{
-			gsub(/%V/, "'"$version"'");
-			gsub(/%v/, "'"$bundle"'");
-			gsub(/%C/, "'"$configuration"'");
-			gsub(/%R/, "'"$abbcommit"'");
-			gsub(/%B/, "'"${branch//\//_}"'");
-			print
-		}') # See [Semantic Versioning 2.0.0](http://semver.org)
-		/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_VERSION" "$INFO_PLIST_PATH"
+		BUNDLE_VERSION=$bundle_version_format
 	fi
+
+	BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
+	{
+		gsub(/%V/, "'"$version"'");
+		gsub(/%v/, "'"$bundle"'");
+		gsub(/%C/, "'"$configuration"'");
+		gsub(/%R/, "'"$abbcommit"'");
+		gsub(/%B/, "'"${branch//\//_}"'");
+		print
+	}') # See [Semantic Versioning 2.0.0](http://semver.org)
+
+	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_VERSION" "$INFO_PLIST_PATH"
+
 	logi "Bundle Version: $BUNDLE_VERSION"
 
 	## Product Build Root

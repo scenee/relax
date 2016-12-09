@@ -95,9 +95,11 @@ validate_app () {
 	plutil -convert xml1 "${app_path}/Info.plist" -o "$info_plist_path"
 	info_version=$(print_info_plist version "$info_plist_path")
 	info_bundle_version=$(print_info_plist bundle_version "$info_plist_path")
+	info_bundle_name=$(print_info_plist bundle_name "$info_plist_path")
 	info_bundle_identifier=$(print_info_plist bundle_identifier "$info_plist_path")
 	cat <<-EOM | logi
-	Version: ${info_version}(${info_bundle_version})
+	Bundle Version: ${info_version}(${info_bundle_version})
+	Bundle Name: ${info_bundle_name}
 	Bundle Identifier: ${info_bundle_identifier}
 	EOM
 	cat "${info_plist_path}" | logv

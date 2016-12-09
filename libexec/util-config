@@ -21,16 +21,18 @@ _parse_yaml() {
 		vname[indent] = $2;
 		for (i in vname) {if (i > indent) {delete vname[i]}}
 		vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-		if (NF == 2) {
-			printf("%s%s=(\"%s\")\n", "'$prefix'",vn, $2); # Array
-		} else if (length($3) > 0) {
-			gsub(/^ */,"", $3); gsub(/ *$/,"", $3); #chomp whilespaces
-			gsub(/^"*/,"", $3); gsub(/"*$/,"", $3); #chomp whilespaces
-			if ( $2  ~ /^\+.*/) {
-				gsub(" ","{}", $3) # For "build_settings" key
-				printf("%s%s=(\"%s=%s\")\n", "'$prefix'",vn, substr($2, 2, length($2) -1), $3); # Dictionary
-			} else {
-				printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+		if ( vn !~ /info_plist/ ) { 
+			if (NF == 2) {
+				printf("%s%s=(\"%s\")\n", "'$prefix'",vn, $2); # Array
+			} else if (length($3) > 0) {
+				gsub(/^ */,"", $3); gsub(/ *$/,"", $3); #chomp whilespaces
+				gsub(/^"*/,"", $3); gsub(/"*$/,"", $3); #chomp whilespaces
+				if ( $2  ~ /^\+.*/) {
+					gsub(" ","{}", $3) # For "build_settings" key
+					printf("%s%s=(\"%s=%s\")\n", "'$prefix'",vn, substr($2, 2, length($2) -1), $3); # Dictionary
+				} else {
+					printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+				}
 			}
 		}
 	}' | sed 's/_=/+=/g'
@@ -70,7 +72,7 @@ _export_config() {
 	# NOTE: Escape an unbound error when a env var is used in Relfile #
 	#       See test/SampleApp/Relfile in this repository             #
 	###################################################################
-	echo "set +u" > $REL_TEMP_DIR/config  
+	echo "set +u" > $REL_TEMP_DIR/config
 
 	_parse_yaml $1 "REL_CONFIG_" | awk '{
 		if ( $0 ~ /.*\+=.*/ ) {

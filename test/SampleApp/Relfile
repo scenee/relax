@@ -13,6 +13,14 @@ development:
     - OTHER_LINKER_FLAGS: "-ObjC"
   export_options:
     method: development
+  info_plist:
+    CFBundleName: Sample (Debug)
+    CFBundleVersion: "%R-%C"
+    CFBundleDevelopmentRegion: en
+    UISupportedExternalAccessoryProtocols:
+      - com.example.SampleApp
+      - com.example.SampleApp2
+
 
 development2:
   scheme: Sample App
@@ -25,7 +33,7 @@ development2:
 adhoc:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version_format:  %R-%C
+  bundle_version_format:  "%R-%C"
   provisioning_profile: "Scenee Wild Card Dev" # Please replace your valid profile name.
   export_options:
     method: ad-hoc 
@@ -35,7 +43,7 @@ adhoc:
 enterprise:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version_format:  %R-%C
+  bundle_version_format:  "%R-%C"
   team_id: TGKEN7XA5C # Please replace your enterpise team id.
   export_options:
     method: enterprise

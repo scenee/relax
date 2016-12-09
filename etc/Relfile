@@ -2,20 +2,19 @@
 # Relax configuration YAML
 #
 
----
-
 # Required 'xcodeproj' OR 'workspace'
 xcodeproj: WORKSPACE
 workspace: XCODEPROJ
 
 release1: # Required
   scheme: SCHEME # Required
+
   sdk:           SDK  # Optional. 'ipthoneos' is the default. i.e. iphoneos, iphoneos10.0
+
   configuration: CONFIGURATION # Optional. The default is following the scheme. i.e. Release
-  bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
+
   team_id: J3D7L9FHSS # Optional. The default is following the project settings.
-  build_settings: # Optional
-    - OTHER_SWIFT_FLAGS: "-DMOCK"
+
   provisioning_profile: "Scenee Wild Card Dev" # Optional. If it's set, Relax automatically build a product on 'Manual' provisioning style.
 
   ## Bundle version format
@@ -25,7 +24,20 @@ release1: # Required
   # %R: SCM commit ref
   # %B: SCM branch name
   #######################
-  bundle_version_format:  %R-%C
+  bundle_version_format:  "%R-%C"
+
+  bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
+
+  build_settings: # Optional
+    - OTHER_SWIFT_FLAGS: "-DMOCK"
+
+  info_plist:
+    CFBundleName: Sample (Debug)
+    CFBundleVersion: "%R-%C"
+    CFBundleDevelopmentRegion: en
+    UISupportedExternalAccessoryProtocols:
+      - com.example.SampleApp
+      - com.example.SampleApp2
 
   export_options:
     # Describes how Xcode should export the archive. 
@@ -63,8 +75,6 @@ release1: # Required
 release2:
   scheme: SCHEME
 
-...
----
 log_formatter: xcpretty # Optional. Relax will pass xcodebuild's stdout to it.
 
 crashlytics:
@@ -78,6 +88,5 @@ testfairy:
   groups: __GROUPS__
   video: __VIDEO__
   notfiy: __NOTIFY__
-...
 
 # vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬

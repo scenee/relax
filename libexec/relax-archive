@@ -21,14 +21,14 @@ __find_xcscheme ()  {
 }
 
 set_archive_config () {
-	if [ ! $# = 2 ]; then 
+	if [[ ! $# = 2 ]]; then 
 		die "Fail to $FUNCNAME(): Bad argument"
 	fi
 
 	local xcscheme_path="$1"
 	local configuration="$2"
 
-	if [ ! -f "$xcscheme_path" ]; then
+	if [[ ! -f "$xcscheme_path" ]]; then
 		die "$FUNCNAME(): not found $xcscheme_path"
 	fi
 
