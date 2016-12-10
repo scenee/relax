@@ -164,15 +164,15 @@ build_framework () {
 	make_framework "$built_product" "$other_built_product" "$framework_location"
 
 	# 5 - Install module.modulemap if needed
-	# FIXME A `module.modulemap` location is fixed
-	if test -f "$HERE/module.modulemap"; then 
-		logi "Found ${HERE}/modulemap"
+	while IFS= read -r modulemap && [[ -n "$modulemap" ]]
+	do
+		logi "Found $modulemap"
 		if ! test -d "${framework_location}/Modules"; then
 			mkdir "${framework_location}/Modules"
 		fi
-		cp -a "$HERE/module.modulemap" "${framework_location}/Modules/"
-		logi "Added ${framework_location}/Modules/modulemap"
-	fi
+		cp -a "$modulemap" "${framework_location}/Modules/"
+		logi "Added ${framework_location}/Modules/module.modulemap"
+	done < <(find "$HERE" -name module.modulemap | head -n 1)
 
 	# 6 - Copy the framework to the current workspace
 	if test ${framework_location} != "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"; then
