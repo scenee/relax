@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/SCENEE/relax.svg?branch=support-travis-ci)](https://travis-ci.org/SCENEE/relax)
+
 # Relax
 
 relax is a comfortable release tool for your iOS Application. 

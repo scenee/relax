@@ -3,7 +3,7 @@
 load test_helper
 
 @test "relax package development artifact" {
-  cd test/SampleApp
+  run relax export development
   run relax package development artifact
   assert_success
 }

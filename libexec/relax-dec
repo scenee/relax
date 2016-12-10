@@ -1,0 +1,50 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `dec` command
+
+usage_dec () {
+	cat <<-EOM
+	usage: ${ME} dec -k <password> <file>
+
+	EOM
+}
+
+# dec_file <file>
+dec_file () {
+	local password=
+	while [ $# -ne 1 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		-k)
+			password="$1"
+			shift
+			;;
+		esac
+	done
+
+	local src="$1"
+	local dst="${src%.enc}"
+	logi "$ARROW Decrypting $1"
+
+	/usr/bin/openssl aes-256-cbc -k "$password" -in "$src" -out "$dst" -p -d -a > >(logv)
+	if [[ $? = 0 ]]; then
+		logi "Decrypted: $dst"
+	else
+		die
+	fi
+}
+
+if test $# = 0; then
+	usage_dec
+	fin
+fi
+
+case $1 in
+-h)
+	usage_dec
+	fin
+	;;
+esac
+
+dec_file "$@"

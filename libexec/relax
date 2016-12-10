@@ -2,17 +2,14 @@
 # Usage: relax [--version] [--config <Relfile>] <command>
 
 export VERSION="0.1.3"
-export PROVISIONING_DST_DIR=~/Library/MobileDevice/Provisioning\ Profiles
-export ARCHIVED_ENTITLEMENTS_XCENT=archived-expanded-entitlements.xcent
-export REL_CONFIG="Relfile"
+
+###################
+### Environment ###
+###################
 
 export CMDPATH=$(test -L ${BASH_SOURCE[0]:-$0} && echo $(readlink ${BASH_SOURCE[0]:-$0}) || echo $0)
 export ME=$(basename $CMDPATH)
 export HERE="${PWD}"
-export REL_RELEASE_ROOT="Releases"
-export REL_DATA_DIR=".relax"
-export REL_TEMP_ROOT="$TMPDIR/$ME"
-export REL_CACHE_DIR="~/Library/Caches/Relax"
 
 find_source_path() {
 	cd "$(dirname "${BASH_SOURCE[0]:-$0}")"
@@ -25,20 +22,21 @@ export SOURCE_PATH="$(find_source_path)"
 export PATH="$SOURCE_PATH/libexec:$PATH"
 export LIBEXEC_DIR="$SOURCE_PATH/libexec"
 
+# Set a value dynamically
+export REL_LOG_LEVEL=
+export REL_RELEASES=
+export REL_CONFIG_PATH=
+
 ################
 ### Includes ###
 ################
 
+source const
 source color
 source util
 source util-build
 source util-config
-
-##############
-### Const  ###
-##############
-
-export BAK_EXT="bak.relax"
+source util-keychain
 
 #################
 ### Functions ###
@@ -128,8 +126,8 @@ help)
 	TRAP "clean_temp; teardown;"
 	make_temp
 
-	export REL_CONFIG_PATH="$(config_find)"
-	export REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+	REL_CONFIG_PATH="$(config_find)"
+	REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
 
 	case $command in
 	build|archive|export|upload)

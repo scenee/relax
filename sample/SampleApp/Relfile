@@ -8,6 +8,7 @@ development:
   scheme: Sample App
   sdk: iphoneos
   configuration: Debug
+  provisioning_profile: "Relax Development"
   build_settings:
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
@@ -16,6 +17,7 @@ development:
       - "-ObjC"
   export_options:
     method: development
+    compileBitcode: false
   info_plist:
     CFBundleName: Sample (Debug)
     CFBundleVersion: "%h-%C"
@@ -24,11 +26,11 @@ development:
       - com.example.SampleApp
       - com.example.SampleApp2
 
-
 development2:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
   configuration: Debug
+  provisioning_profile: "Relax Development"
   export_options:
     method: development
 
@@ -37,23 +39,23 @@ adhoc:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
   bundle_version:  "%h-%C"
-  provisioning_profile: "Scenee Wild Card Dev" # Please replace your valid profile name.
+  provisioning_profile: "Relax AdHoc"
   export_options:
     method: ad-hoc 
     thinning : iPhone7,1
-    #compileBitcode: false
+    compileBitcode: false
 
 enterprise:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
   bundle_version:  "%h-%C"
-  team_id: TGKEN7XA5C # Please replace your enterpise team id.
+  team_id: XXXXXXXXXX # Please replace your enterpise team id.
   export_options:
     method: enterprise
 
-
 appstore:
   scheme: Sample App
+  provisioning_profile: "Relax AppStore"
   export_options:
     method: appstore
     upload_symbols: true

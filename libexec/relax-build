@@ -27,8 +27,6 @@ build_project () {
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
 	while read p; do params+=( "$p" ); done < $params_file
 
-	#params=(-project "${PROJECT_FILE_PATH##*/}" -scheme "${_scheme}")
-
 	local build_suffix=$(echo "${_configuration}-${_sdk}")
 	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
 	local logfile="$PRODUCT_BUILD_ROOT/$build_suffix.log"

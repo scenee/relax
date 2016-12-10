@@ -3,52 +3,73 @@
 
 usage_add () {
 	cat <<-EOM
-	usage: ${ME} add [option] <provisioning-profile>
-	options:
-	    -f	A provisioning profile will be force added.
+	usage: ${ME} add <provisioning-profile>
+	       ${ME} add -P <password> <p12>
+
 	EOM
 }
 
-# add_provisioning_profile [-f]  <provisioning-profile>
-add_provisioning_profile () {
-
-	local is_force=false
+# add_identities  -P <password> <p12>
+add_identities () {
+	local password=
 	while [ $# -ne 1 ];
 	do
+		if [ $# = 0 ]; then
+			usage_add
+			fin
+		fi
+
 		arg=$1
 		shift
 		case $arg in
-		-f)
-			is_force=true
+		-P)
+			password=$1
+			shift
 			;;
 		esac
 	done
 	
+	if ! is_exist_keychain $REL_KEYCHAIN; then
+		logi "$ARROW Creating relax.keychain"
+		create_relax_keychain
+	fi
+
+
+	logi "$ARROW Importing PKCS12: $1"
+	import_p12_into_keychain -k $REL_KEYCHAIN_PASSWD -P $password $1 $REL_KEYCHAIN
+
+	init_keychain -k $REL_KEYCHAIN_PASSWD $REL_KEYCHAIN 
+	logi "Default keychain: $($SECURITY default-keychain | xargs)"
+
+	logi "$ARROW Validating imported certificates..."
+	validate_certs -P $password $1
+}
+
+# add_provisioning_profile [-f]  <provisioning-profile>
+add_provisioning_profile () {
 	local provisioning_file="$1"
 
 	if ! [ -z $provisioning_file ] && ! [ -f $provisioning_file ]; then
 		die "Not found $provisioning_file "
 	fi
 
+	local temp_provisioning_plist="$REL_TEMP_DIR/provisioning.plist"
 
-	if ! $is_force; then
-		local temp_provisioning_plist="$REL_TEMP_DIR/provisioning.plist"
+	decode_mobileprovision "$provisioning_file" "$temp_provisioning_plist"
 
-		security cms -D -i "$provisioning_file" > $temp_provisioning_plist
+	provisioning_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $temp_provisioning_plist)
+	provisioning_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $temp_provisioning_plist)
 
-		provisioning_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $temp_provisioning_plist)
-		provisioning_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $temp_provisioning_plist)
-
-		local stored_provisionig_file="$PROVISIONING_DST_DIR/$provisioning_uuid.mobileprovision" 
-		if [ -f "$stored_provisionig_file" ]; then
-			logi "Already existing. Use -f option if you still encounter a codesign problem."
-			fin
-		fi
+	mkdir -p "$PROVISIONING_DST_DIR"
+	local stored_provisionig_file="$PROVISIONING_DST_DIR/$provisioning_uuid.mobileprovision" 
+	if [ -f "$stored_provisionig_file" ]; then
+		logi "Already existing"
+		fin
 	fi
 
 	logi "$ARROW Installing Provisioning profile: $provisioning_file"
 	cp "$provisioning_file" "$stored_provisionig_file"
-	logi "Done."
+	logi "Added: $stored_provisionig_file"
 }
 
 if test $# = 0; then
@@ -63,7 +84,18 @@ case $1 in
 	;;
 esac
 
-add_provisioning_profile "$@"
+if [[ -f "$1" ]]; then
+	if grep -q "Provisioning Profile" "$1"; then
+		add_provisioning_profile "$@"
+	else
+		usage_add
+		fin
+	fi
+elif [[ $1 == "-P" ]]; then
+	add_identities "$@"
+else
+	die "Not Found $1"
+fi
 
 if test $? = 0; then
 	logi "${GREEN}Success${NC}"

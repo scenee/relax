@@ -3,11 +3,9 @@
 load test_helper
 
 @test "parse Relfile" {
-	cd libexec
+	cd ..
 
-	source util-config
-
-	cd ../test
+	source ../libexec/util-config
 
 	eval $(_parse_yaml SampleApp/Relfile "config_")
 

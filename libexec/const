@@ -1,0 +1,10 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: constants
+
+export REL_CONFIG="Relfile"
+export REL_RELEASE_ROOT="Releases"
+export REL_DATA_DIR=".relax"
+export REL_TEMP_ROOT="$TMPDIR/$ME"
+export REL_CACHE_DIR="~/Library/Caches/Relax"
+
+export BAK_EXT="bak.relax"

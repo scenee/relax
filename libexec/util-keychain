@@ -1,0 +1,197 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: keychain utility functions
+
+export REL_KEYCHAIN=relax.keychain
+export REL_KEYCHAIN_PASSWD=relax
+export SECURITY=/usr/bin/security
+export USER_KEYCHAINS=~/Library/Keychains
+export OS_VERSION=$(sw_vers -productVersion)
+
+# is_exist_keychain <keychain>
+is_exist_keychain () {
+	if ls $USER_KEYCHAINS/"$1"* 2>/dev/null | grep -q "$1"; then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
+# can_use_keychain <keychain>
+can_use_keychain () {
+	if $SECURITY default-keychain | grep -q "$1"; then
+		if $SECURITY list-keychains | grep -q "$1"; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+create_relax_keychain () {
+	$SECURITY create-keychain -p $REL_KEYCHAIN_PASSWD $REL_KEYCHAIN
+	$SECURITY set-keychain-settings -t 3600 $REL_KEYCHAIN
+}
+
+remove_relax_keychain () {
+	$SECURITY delete-keychain $REL_KEYCHAIN
+}
+
+# import_p12_file -k <keychain-pass> -P <p12-pass> <p12> <keychain>
+import_p12_into_keychain () {
+	local OPTIND p12_pass keychain_pass
+
+	while getopts k:P: OPT
+	do
+		case $OPT in
+		P)  p12_pass=$OPTARG ;;
+		k)  keychain_pass=$OPTARG ;;
+		esac
+	done
+	shift $((OPTIND - 1))
+ 
+	if [ $# = 0 ]; then
+		die "import_p12_into_keychain: bad arguments"
+	fi
+
+	local p12=$1
+	local keychain=$2
+	
+	$SECURITY import "$p12" -k $keychain -P $p12_pass -T /usr/bin/codesign
+
+	set +e
+	# See http://openradar.appspot.com/28524119
+	if [[ $(compare_versions $OS_VERSION "10.12.0") -ge 0 ]]; then
+		logi "Update a key partition list of $keychain for xcodebuild"
+		$SECURITY set-key-partition-list -S apple-tool:,apple: -k $keychain_pass $keychain | logv
+	fi
+}
+
+# validate_certs -P <pass> <p12>
+validate_certs () 
+{
+	local OPTIND password
+	while getopts P: OPT
+	do
+		case $OPT in
+		P) password=$OPTARG ;;
+		esac
+	done
+	shift $((OPTIND - 1))
+ 
+	logi "p12 : $1"
+	#echo "pass : $password"
+
+	local certs_pem=$REL_TEMP_DIR/certs.pem
+
+	openssl pkcs12 -info -in $1 -passin pass:$password -nokeys 2>/dev/null \
+	| sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' \
+	> ${certs_pem}
+
+	#cat $certs_pem
+
+	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+
+	local count=$(csplit -f $REL_TEMP_DIR/cert $certs_pem "/-----BEGIN CERTIFICATE-----/" {0} | wc -l | xargs)
+	for i in $(seq 0 $(( count - 1 )))
+	do
+		openssl x509 -in "$REL_TEMP_DIR/cert0$i" -noout -fingerprint |  awk -F= '{ gsub(":", "", $2); print $2; }' >> $cert_fingerprints
+	done
+
+	#cat $cert_fingerprints
+
+	local validate_cert_ids=$REL_TEMP_DIR/validate_cert_ids
+
+	$SECURITY find-identity -v -p codesigning > $validate_cert_ids
+
+	#cat $validate_cert_ids
+
+	success=false
+	while IFS= read -r fp
+	do
+		#echo "ID: $fp"
+		if grep -e $fp $validate_cert_ids; then
+			success=true
+		fi
+	done <$cert_fingerprints
+
+	if [[ $success = false ]]; then
+		die "There is no Xcode.app in this build machine, or 'Apple Worldwide Developer Relations Certification Authority'."
+	fi
+	set -e
+}
+
+# init_keychain -k <pass> <keychain>
+init_keychain () {
+	local OPTIND pass
+
+	while getopts k: OPT
+	do
+		case $OPT in
+		k)  pass=$OPTARG ;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	
+	local keychain=$1
+	$SECURITY default-keychain -s $keychain
+	if [[ $? != 0 ]]; then
+		logi "Create $keychain. Try run: \`relax add -P PASSWORD p12_FILE\`"
+		return 1
+	fi
+	$SECURITY unlock-keychain -p $pass $keychain
+	$SECURITY list-keychains -s $keychain
+}
+
+# reset_default_keychain <keychain>
+reset_default_keychain () {
+	$SECURITY list-keychains -s "$1"
+	$SECURITY default-keychain -s "$1"
+}
+
+
+# set_default_keychain <keychain>
+set_default_keychain () {
+	$SECURITY default-keychain -s $1
+
+	local default_keychain=$($SECURITY default-keychain | xargs) 
+	if echo "$default_keychain" | grep -q $1; then
+		logi "Set default keychain: $default_keychain"
+	else
+		die "Failed to set default keychain: $1"
+	fi
+}
+
+lock_relax_keychain () {
+	if $SECURITY default-keychain | grep -q $REL_KEYCHAIN; then
+		$SECURITY lock-keychain $REL_KEYCHAIN
+	fi
+}
+
+unlock_relax_keychain () {
+	$SECURITY unlock-keychain -p $REL_KEYCHAIN_PASSWD $REL_KEYCHAIN
+	logi "Unlock: $REL_KEYCHAIN"
+}
+
+# can_use_keychain <srcfile> <decfile>
+decode_mobileprovision () {
+	set  +e
+	local keychain=login.keychain
+	if can_use_keychain $REL_KEYCHAIN; then
+		keychain=$REL_KEYCHAIN
+	fi
+
+	# `2>/dev/null` will get rid of this error output. 
+	# 'security: SecPolicySetValue: One or more parameters passed to a function were not valid.'
+	$SECURITY cms -D -k $keychain -p $REL_KEYCHAIN_PASSWD -i "$1" -o "$2" 2>/dev/null
+
+	if [[ $? != 0 ]]; then
+		die "Not found a valid certificate for $provisioning_file in $REL_KEYCHAIN"
+	fi
+	set -e
+}
+
+declare -x -f create_relax_keychain remove_relax_keychain
+declare -x -f import_p12_into_keychain validate_certs
+declare -x -f init_keychain reset_default_keychain 
+declare -x -f lock_relax_keychain unlock_relax_keychain
+declare -x -f set_default_keychain is_exist_keychain can_use_keychain 
+declare -x -f decode_mobileprovision

@@ -78,11 +78,28 @@ progress_bar()
 	fi
 }
 
+compare_versions()
+{
+    local v1=( $(echo "$1" | tr '.' ' ') )
+    local v2=( $(echo "$2" | tr '.' ' ') )
+    local v1len="${#v1[*]}"
+    local v2len="${#v2[*]}"
+    local len="$(( $v1len > $v2len ? $v1len : $v2len ))"
+    for ((i=0; i<len; i++))
+    do
+        [ "${v1[i]:-0}" -gt "${v2[i]:-0}" ] && echo -n 1 && return 0
+        [ "${v1[i]:-0}" -lt "${v2[i]:-0}" ] && echo -n -1 && return 0
+    done
+    echo -n 0
+    return 0
+}
+
 check_toolchain () {
 	which xcodebuild > /dev/null || die "Not found xcodebuild"
 	which /usr/libexec/PlistBuddy > /dev/null || die "Not found /usr/libexec/PlistBuddy"
 	which plutil > /dev/null || die "Not found plutil"
 	which codesign > /dev/null || die "Not found codesign"
+	which security > /dev/null || die "Not found security"
 }
 
 pop_all() {
@@ -141,6 +158,7 @@ fin () {
 
 die () {
 	die_with_status 1 "$@"
+
 }
 
 die_with_status () {
@@ -190,7 +208,7 @@ logi () {
 }
 
 declare -x -f print_progress_time progress_bar
-declare -x -f check_toolchain 
+declare -x -f check_toolchain compare_versions 
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log
 declare -x -f make_temp pop_all clean_temp TRAP

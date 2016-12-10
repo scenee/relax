@@ -1,6 +1,13 @@
 #!/usr/bin/env bash -eu
 
 ###################
+### Xcode Const ###
+###################
+
+export PROVISIONING_DST_DIR=~/Library/MobileDevice/Provisioning\ Profiles
+export ARCHIVED_ENTITLEMENTS_XCENT=archived-expanded-entitlements.xcent
+
+###################
 ### Xcode Utils ###
 ###################
 
@@ -21,6 +28,35 @@ __kill_bg_xcodebuid_task () {
 	fi
 }
 
+
+# is_distribution_profile <mobileprovision_name>
+is_distribution_profile () {
+	local mobileprovision=$(find_mobileprovision "$1")
+	if [[ -f "$mobileprovision" ]]; then
+		temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
+
+		decode_mobileprovision "$mobileprovision" "$temp_mobileprovision"
+		# Ref https://devforums.apple.com/message/84647#84647
+		if /usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" $temp_mobileprovision \
+			| grep -q false; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+
+# find_mobileprovision <mobileprovision_name>
+find_mobileprovision () {
+	grep -rw "$PROVISIONING_DST_DIR" -e "$1" | \
+	sed -n "s:[^\/]*\(\/.*mobileprovision\).*:\1:p" | \
+	while IFS= read file; do
+		local temp_file=$TMPDIR/__find_mobileprovision
+		decode_mobileprovision "$file" "$temp_file"
+		date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $temp_file)
+		echo $date"#"$file
+	done | sort -ur | awk -F# '{ print $2 }' | head -n 1
+}
 
 # TODO It can be replacted with a ruby script.
 # __map_vals <release>
@@ -127,7 +163,11 @@ get_build_params_file () {
 	# https://developer.apple.com/videos/play/wwdc2016/401/.
 	# But it's not working when exporint ana adhoc IPA file.
 	# I confirmed It's working well in Xcode 7.3.1.
-	params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
+	if is_distribution_profile "$provisioning_profile"; then
+		params+=( CODE_SIGN_IDENTITY="iPhone Distribution" )
+	else
+		params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
+	fi
 
 	if test "${build_settings:-undefined}" != undefined; then
 		if test ${#build_settings[@]} -gt 0; then
@@ -285,6 +325,10 @@ setup_build () {
 	local release stdtemp build_settings_file params_file
 
 	release="$1"
+
+	if [[ ! " ${REL_RELEASES[@]} " =~ " ${release} " ]]; then
+		die "'$release' is undefined."
+	fi
 
 	{
 		stdtemp=$REL_TEMP_DIR/stdtemp
@@ -486,3 +530,4 @@ declare -x -f load_xcode_build_settings get_build_params_file
 declare -x -f print_info_plist print_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
+declare -x -f find_mobileprovision is_distribution_profile

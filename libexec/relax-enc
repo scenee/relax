@@ -1,0 +1,55 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `enc` command
+
+usage_enc () {
+	cat <<-EOM
+	usage: ${ME} enc [-k <password>] <file>
+
+	EOM
+}
+
+# enc_file [-k <password>] <file>
+enc_file() {
+	local key
+	while [ $# != 1 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		-k)
+			key=$1
+			shift
+			;;
+		esac
+	done
+
+	logi "$ARROW Encrypting $1"
+
+	[[ -n $key ]] || key=$(openssl rand -base64 32 | head -c 16)
+
+	local src="$1"
+	local dst="$src".enc
+
+	/usr/bin/openssl aes-256-cbc -k "$key" -in "$src" -out "$dst" -p -a > >(logv)
+	if [[ $? = 0 ]]; then
+		logi "Encrypted: $dst"
+		logi "password: $key"
+	else
+		die
+	fi
+
+}
+
+if test $# = 0; then
+	usage_enc
+	fin
+fi
+
+case $1 in
+-h)
+	usage_enc
+	fin
+	;;
+esac
+
+enc_file "$@"

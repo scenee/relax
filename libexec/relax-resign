@@ -14,18 +14,6 @@ usage_resign () {
 	EOM
 }
 
-# __find_mobileprovision <mobileprovision_name>
-__find_mobileprovision () {
-	grep -rw "$PROVISIONING_DST_DIR" -e "$1" | \
-	sed -n "s:[^\/]*\(\/.*mobileprovision\).*:\1:p" | \
-	while IFS= read file; do
-		local temp_file=$TMPDIR/__find_mobileprovision
-		security cms -D -i "$file" > $temp_file
-		date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $temp_file)
-		echo $date"#"$file
-	done | sort -ur | awk -F# '{ print $2 }' | head -n 1
-}
-
 # resign_app <certificate> <mobileprovision> <app-path>
 resign_app () {
 	if [ $# != 3 ]; then
@@ -38,9 +26,10 @@ resign_app () {
 	local entitlements=$REL_TEMP_DIR/entitlements
 
 	if [[ ! -f "$mobileprovision" ]]; then
-		mobileprovision="$(__find_mobileprovision "$mobileprovision")"
+		local mobileprovision_name="$mobileprovision"
+		mobileprovision="$(find_mobileprovision "$mobileprovision_name")"
 		if [[ ! -f "$mobileprovision" ]]; then
-			die "Not found $mobileprovision"
+			die "Not found $mobileprovision_name"
 		fi
 	fi
 	
@@ -53,7 +42,7 @@ resign_app () {
 	# Get the resign TEAM ID from mobileprovision
 	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
 
-	security cms -D -i "$mobileprovision" > $temp_mobileprovision
+	decode_mobileprovision "$mobileprovision" "$temp_mobileprovision"
 
 	local resign_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
 
@@ -89,7 +78,8 @@ resign_app () {
 
 	while IFS= read -r bundle || [[ -n "$bundle" ]]
 	do
-		/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$bundle" 1>&3 2>&3
+		local keychain=$(security default-keychain | xargs)
+		/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 1>&3 2>&3
 		if [[ $? != 0 ]]; then
 			die "$(cat $stdtemp)"
 		else
