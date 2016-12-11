@@ -3,9 +3,14 @@
 
 usage_resign () {
 	cat <<-EOM
-	Usage: ${ME} resign [-i <bundl-identifer>] -p <provisioning-profile> -c <certificate-name> <ipa|xcarchive>
+	Usage: ${ME} resign [-i <bundl-identifer>] -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
 
 	Resign a product with a mobileprovision and a certificate
+	This command doens't check consistencies between them.
+	You can check valid mobileprovision and certificates with the below command.
+	    ${ME} ls-profiles
+	    ${ME} ls-certs
+	
 	EOM
 }
 
