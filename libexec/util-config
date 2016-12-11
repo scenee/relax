@@ -105,6 +105,7 @@ config_load () {
 	fi
 
 	local config_path=$1
+	logi "$ARROW Loading ${config_path#\./}"
 	
 	if [ -f "$config_path" ]; then
 		_export_config $config_path
