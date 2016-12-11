@@ -7,9 +7,9 @@ It takes care of much of the hassle of them, so you can focus on development.
 
 Relax can be
 
-- Manage your multi-deployment in a Relax configuration file(Relfile)
-    - Deploy your app quickly to a tester, a client and an end user in your professional project
-    - Easy to set and revert a specific property of Info.plist and xcode build settings on each release
+- Manage your multi-deployment in a Relax configuration file(aka. Relfile)
+    - Deploy your app quickly to testers, clients and end users in your professional project
+    - Easy to set and revert a specific property of Info.plist and xcode build settings on each deployment.
     - Switch codesign mode(Automatic, Manual) automatically as your Relfile
 - Validate your product's codesigin for a deployment
 - Resign your xarchive and ipa file.
@@ -22,14 +22,14 @@ $brew install relax
 ```
 # Requirements
 
-Relax must depend on only pre-install command line tools in macOS and ones of Xcode.
-
-Because Relax aims to get rid of installation and environment stuff when you manage a build server for your teaem.
-
 - macOS 10.11+
 - Xcode8.0+
 
 NOTE: Relax might be working on Xcode 7.3.1
+
+Relax must have dependencies only on pre-installed command line tools in macOS and Xcode.
+
+Because Relax aims to get rid of environment stuff when you manage a build server for your teaem.
 
 # Getting Started
 
@@ -42,12 +42,12 @@ $relax init
 ```
 
 An example of Relfile is here.
-Check [this Refile section](#Relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/etc/Relfile) for detail.
+And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/etc/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
 
-development: # Define a Release Type
+development: # Define a deployment type
   scheme: SampleApp
   configuration: Debug
   build_settings:
@@ -65,7 +65,7 @@ adhoc:
   bundle_version_format:  "%R-%C"
   build_settings:
     OTHER_SWIFT_FLAGS: -DDEBUG
-  info_plist:
+  info_plist: # You can change Info.plist settings for a deployment.
     CFBundleName: SmapleApp (DEBUG)
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp
@@ -106,7 +106,8 @@ log_formatter: xcpretty
 $relax -v archive adhoc
 ```
 
-If you would like to print xcodebuild stdout, please use with '-v' option.
+`xcodebuild` stdout is always written to a log file. 
+If you would like to print it in your console, please use with '-v' option.
 
 ## Export an .ipa file
 
@@ -114,7 +115,13 @@ If you would like to print xcodebuild stdout, please use with '-v' option.
 $relax export adhoc
 ```
 
-You can specify a xcarchive file path after a release type.
+You can specify a xcarchive file path after a release type like here.
+
+```bash
+$relax export adhoc /path/to/archive
+```
+
+Relax can export it on a different team and certificate from one signed xcarchive.
 
 ## Check the mobileprovision, entitlements and version of an .ipa file
 

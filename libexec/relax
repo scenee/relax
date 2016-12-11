@@ -1,7 +1,7 @@
 #!/usr/bin/env bash -eu
 # Usage: relax [--version] [--config <Relfile>] <command>
 
-export VERSION="0.1.1"
+export VERSION="0.1.2"
 export PROVISIONING_DST_DIR=~/Library/MobileDevice/Provisioning\ Profiles
 export ARCHIVED_ENTITLEMENTS_XCENT=archived-expanded-entitlements.xcent
 export REL_CONFIG="Relfile"
