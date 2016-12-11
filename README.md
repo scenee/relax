@@ -51,7 +51,9 @@ development: # Define a Release Type
   scheme: SampleApp
   configuration: Debug
   build_settings:
-    - OTHER_SWIFT_FLAGS: -DMOCK
+    OTHER_SWIFT_FLAGS: 
+      - "-DMOCK"
+      - "-DDEBUG" 
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp.dev
@@ -61,6 +63,8 @@ adhoc:
   configuration: Debug
   team_id: __MY_COMPANY_TEAM_ID__
   bundle_version_format:  "%R-%C"
+  build_settings:
+    OTHER_SWIFT_FLAGS: -DDEBUG
   info_plist:
     CFBundleName: SmapleApp (DEBUG)
     UISupportedExternalAccessoryProtocols:

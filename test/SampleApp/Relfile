@@ -9,8 +9,11 @@ development:
   sdk: iphoneos
   configuration: Debug
   build_settings:
-    - OTHER_SWIFT_FLAGS: "-DMOCK"
-    - OTHER_LINKER_FLAGS: "-ObjC"
+    OTHER_SWIFT_FLAGS: 
+      - "-DMOCK"
+    OTHER_LINKER_FLAGS:
+      - "$(inherited)"
+      - "-ObjC"
   export_options:
     method: development
   info_plist:
@@ -59,6 +62,10 @@ appstore:
 
 framework:
   scheme: SampleFramework
+  build_settings:
+    OTHER_C_FLAGS:
+      - "-fembed-bitcode"
+      - "-fsanitize=address"
 
 staticlib:
   scheme: SampleLib

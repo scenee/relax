@@ -22,6 +22,7 @@ __kill_bg_xcodebuid_task () {
 }
 
 
+# TODO It can be replacted with a ruby script.
 # __map_vals <release>
 __map_vals () {
 	local release=$1
@@ -280,12 +281,27 @@ setup_build () {
 	if test ! -d $REL_TEMP_DIR; then
 		die "Not found Temporary directory"
 	fi
-	local release _params
 
-	local release="$1"
+	local release stdtemp build_settings_file params_file
+
+	release="$1"
+
+	{
+		stdtemp=$REL_TEMP_DIR/stdtemp
+		build_settings_file=$REL_TEMP_DIR/build_settings_file
+		set +e
+		$LIBEXEC_DIR/config_parser.rb \
+			"$REL_CONFIG_PATH" "$release" >"${build_settings_file}" \
+			2>"${stdtemp}"
+		if [[ $? != 0 ]]; then
+			printf "$ERR "; cat "${stdtemp}"
+			die "Failed to parse $REL_CONFIG_PATH"
+		fi
+		set -e
+	}
+	source "${build_settings_file}"
 
 	__map_vals "$release"
-
 	__check_scheme "$scheme"
 
 	params_file=$(get_build_params_file "$scheme")
@@ -321,14 +337,10 @@ setup_build () {
 	logd "Info plist: $INFO_PLIST_PATH"
 
 	set +e
-	exec 3> $REL_TEMP_DIR/stdtemp
-	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>&3
+	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
 	if [[ $? != 0 ]]; then
-		printf "$ERR "; cat $REL_TEMP_DIR/stdtemp
-		exec 3>&-
+		printf "$ERR "; cat "${stdtemp}"
 		die "Failed to parse $REL_CONFIG_PATH"
-	else
-		exec 3>&-
 	fi
 	set -e
 

@@ -29,7 +29,10 @@ release1: # Required
   bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
 
   build_settings: # Optional
-    - OTHER_SWIFT_FLAGS: "-DMOCK"
+    OTHER_SWIFT_FLAGS: "-DMOCK"
+    OTHER_C_FLAGS:
+      - "-fembed-bitcode"
+      - "-fsanitize=address"
 
   info_plist:
     CFBundleName: Sample (Debug)

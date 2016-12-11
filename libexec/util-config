@@ -5,6 +5,7 @@
 ### YAML ###
 ############
 
+# TODO It can be replacted with a ruby script.
 _parse_yaml() {
 	local prefix=$2
 	local s='[[:space:] ]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
@@ -21,7 +22,7 @@ _parse_yaml() {
 		vname[indent] = $2;
 		for (i in vname) {if (i > indent) {delete vname[i]}}
 		vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-		if ( vn !~ /info_plist/ ) { 
+		if ( vn !~ /(info_plist|build_settings)/ ) { 
 			if (NF == 2) {
 				printf("%s%s=(\"%s\")\n", "'$prefix'",vn, $2); # Array
 			} else if (length($3) > 0) {
@@ -46,7 +47,6 @@ config_collect_releases () {
 		| grep -v "crashlytics\|testfairy"
 	fi
 }
-
 
 _check_config () {
 	if [[ "${REL_CONFIG_xcodeproj:-undefined}" = undefined ]]; then
