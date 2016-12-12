@@ -62,7 +62,7 @@ generate_relfile () {
 
 	adhoc:
 	  scheme: ${scheme}
-	  #bundle_version_format:  %R-%C
+	  #bundle_version:  %R-%C
 	  #team_id: TEAM_ID
 	  #bundle_identifier: CUSTOM_BUNDLE_ID
 	  export_options:

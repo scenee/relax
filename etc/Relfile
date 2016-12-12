@@ -17,14 +17,7 @@ release1: # Required
 
   provisioning_profile: "Scenee Wild Card Dev" # Optional. If it's set, Relax automatically build a product on 'Manual' provisioning style.
 
-  ## Bundle version format
-  # %V: Release version number
-  # %v: Build version number
-  # %C: Build configuration
-  # %R: SCM commit ref
-  # %B: SCM branch name
-  #######################
-  bundle_version_format:  "%R-%C"
+  bundle_version:  "%h-%C" # Refer to Bundle Version Format section in Relfile
 
   bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
 
@@ -36,7 +29,7 @@ release1: # Required
 
   info_plist:
     CFBundleName: Sample (Debug)
-    CFBundleVersion: "%R-%C"
+    CFBundleVersion: "%h-%C"
     CFBundleDevelopmentRegion: en
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp

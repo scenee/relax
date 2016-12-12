@@ -62,7 +62,7 @@ adhoc:
   scheme: SampleApp
   configuration: Debug
   team_id: __MY_COMPANY_TEAM_ID__
-  bundle_version_format:  "%R-%C"
+  bundle_version:  "%R-%C"
   build_settings:
     OTHER_SWIFT_FLAGS: -DDEBUG
   info_plist: # You can change Info.plist settings for a deployment.
@@ -181,10 +181,10 @@ The characters and their meanings are as follows.
 | Character | Meaning |
 |:---------|:-------|
 |%V| Release version number|
-|%v| Build version number|
+|%B| Build version number|
 |%C| Build configuration|
-|%R| SCM commit ref|
-|%B| SCM branch name|
+|%h| Git abbreviated commit hash|
+|%D| Git branch name|
 
 ## Export Option Support
 

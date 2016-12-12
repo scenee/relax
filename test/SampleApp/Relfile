@@ -18,7 +18,7 @@ development:
     method: development
   info_plist:
     CFBundleName: Sample (Debug)
-    CFBundleVersion: "%R-%C"
+    CFBundleVersion: "%h-%C"
     CFBundleDevelopmentRegion: en
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp
@@ -36,7 +36,7 @@ development2:
 adhoc:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version_format:  "%R-%C"
+  bundle_version:  "%h-%C"
   provisioning_profile: "Scenee Wild Card Dev" # Please replace your valid profile name.
   export_options:
     method: ad-hoc 
@@ -46,7 +46,7 @@ adhoc:
 enterprise:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version_format:  "%R-%C"
+  bundle_version:  "%h-%C"
   team_id: TGKEN7XA5C # Please replace your enterpise team id.
   export_options:
     method: enterprise

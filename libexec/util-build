@@ -41,8 +41,8 @@ __map_vals () {
 		build_settings=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
 	test -z $bundle_identifier && \
 		bundle_identifier=$(eval echo '$'REL_CONFIG_${release}_bundle_identifier)
-	test -z $bundle_version_format && \
-		bundle_version_format=$(eval echo '$'REL_CONFIG_${release}_bundle_version_format)
+	test -z $bundle_version && \
+		bundle_version=$(eval echo '$'REL_CONFIG_${release}_bundle_version)
 	test -z $team_id && \
 		team_id=$(eval echo '$'REL_CONFIG_${release}_team_id)
 	test -z $export_option_method  && \
@@ -402,19 +402,19 @@ setup_build () {
 	local branch=$(git symbolic-ref --short HEAD)
 	local config=$(echo $configuration | tr [:upper:] [:lower:])
 
-	if test "${bundle_version_format:-undefined}" = undefined; then
+	if test "${bundle_version:-undefined}" = undefined; then
 		BUNDLE_VERSION=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
 	else
-		BUNDLE_VERSION=$bundle_version_format
+		BUNDLE_VERSION=$bundle_version
 	fi
 
 	BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
 	{
 		gsub(/%V/, "'"$version"'");
-		gsub(/%v/, "'"$bundle"'");
-		gsub(/%C/, "'"$configuration"'");
-		gsub(/%R/, "'"$abbcommit"'");
-		gsub(/%B/, "'"${branch//\//_}"'");
+		gsub(/%B/, "'"$bundle"'");
+		gsub(/%C/, "'"$config"'");
+		gsub(/%h/, "'"$abbcommit"'");
+		gsub(/%D/, "'"${branch//\//_}"'");
 		print
 	}') # See [Semantic Versioning 2.0.0](http://semver.org)
 
@@ -429,7 +429,7 @@ setup_build () {
 		if [[ $BUNDLE_VERSION =~ (.*)\$\(CURRENT_PROJECT_VERSION\)(.*) ]]; then
 			BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
 		fi
-		if [[ ! $BUNDLE_VERSION =~ "$configuration" ]]; then
+		if [[ ! $BUNDLE_VERSION =~ "$config" ]]; then
 			BUNDLE_VERSION=$BUNDLE_VERSION-$configuration
 		fi
 		PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release/$scheme-$BUNDLE_VERSION")
