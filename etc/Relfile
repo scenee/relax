@@ -30,7 +30,7 @@ release1: # Required
   info_plist:
     CFBundleName: Sample (Debug)
     CFBundleVersion: "%h-%C"
-    CFBundleDevelopmentRegion: en
+    CFBundleDevelopmentRegion: $COUNTRY
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp
       - com.example.SampleApp2

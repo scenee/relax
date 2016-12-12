@@ -4,6 +4,7 @@ load test_helper
 
 @test "relax archive development" {
   pushd test/SampleApp
+  export COUNTRY=ja
   run relax archive development
   assert_success
   popd

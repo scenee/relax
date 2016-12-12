@@ -37,12 +37,12 @@ if config.has_key?(release) && config[release].has_key?(INFO_PLIST_KEY)
 			v.each_index do |i|
 				case v[i] 
 				when String
-					puts "#{plistbuddy} -c 'Add :#{k}:#{i} string \"#{v[i]}\"' #{plist_file}"
-					%x[ #{plistbuddy} -c 'Add :#{k}:#{i} string \"#{v[i]}\"' #{plist_file} ]
+					puts "#{plistbuddy} -c \"Add :#{k}:#{i} string #{v[i]}\" #{plist_file}"
+					%x[ #{plistbuddy} -c \"Add :#{k}:#{i} string #{v[i]}\" #{plist_file} ]
 
 				when Boolean
-					puts "#{plistbuddy} -c 'Add :#{k}:#{i} bool \"#{v[i]}\"' #{plist_file}"
-					%x[ #{plistbuddy} -c 'Add :#{k}:#{i} bool \"#{v[i]}\"' #{plist_file} ]
+					puts "#{plistbuddy} -c \"Add :#{k}:#{i} bool #{v[i]}\" #{plist_file}"
+					%x[ #{plistbuddy} -c \"Add :#{k}:#{i} bool #{v[i]}\" #{plist_file} ]
 
 				else
 					puts "Unsupported type #{v[i].class}: { #{k}: #{v[i]} }"
@@ -54,8 +54,8 @@ if config.has_key?(release) && config[release].has_key?(INFO_PLIST_KEY)
 			puts "Unsupported type #{v.class}: { #{k}: #{v} }"
 
 		else
-			puts "#{plistbuddy} -c 'Set :#{k} \"#{v}\"' #{plist_file}"
-			%x[ #{plistbuddy} -c 'Set :#{k} \"#{v}\"' #{plist_file} ]
+			puts "#{plistbuddy} -c \"Set :#{k} #{v}\" #{plist_file}"
+			%x[ #{plistbuddy} -c \"Set :#{k} #{v}\" #{plist_file} ]
 
 		end
 	end
