@@ -51,7 +51,7 @@ validate_app () {
 	while IFS= read -r bundle && [[ -n "$bundle" ]]
 	do
 		local bundle_name bundle_team_id bundle_temp_codesign_info
-		bundle_name="${framework##*/}"
+		bundle_name="${bundle##*/}"
 
 		logv "$ARROW Verifying $bundle_name"
 		if codesign --verify --no-strict -vvvv "${bundle}" 2>&1 \
