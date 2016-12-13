@@ -200,4 +200,8 @@ The characters and their meanings are as follows.
 | onDemandResourcesAssetPacksBaseURL | No |
 | iCloudContainerEnvironment | No |
 
+# Known Issues
+
+- Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
+- Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
 
