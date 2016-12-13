@@ -114,7 +114,7 @@ export_archive () {
 	logi "$ARROW Creating IPA"
 
 	if [ -f "$export_path/$PRODUCT_NAME.ipa" ]; then 
-		logi "Found the same IPA file so it is removed."
+		logi "$WARN Found the same IPA file so it is removed."
 		rm -rf "$export_path/$PRODUCT_NAME.ipa"
 	fi
 
