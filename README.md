@@ -33,7 +33,35 @@ Because Relax aims to get rid of environment stuff when you manage a build serve
 
 # Getting Started
 
-## Set up `Relfile`
+## Quick start
+
+```bash
+cd /path/to/your/project
+
+# Create a Relfile template
+relax init 
+
+# Build a xcarchive file
+relax archive development 
+
+# Print a path to a built archive
+relax show development archive 
+
+# Export an ipa file
+relax export development 
+
+# Print a path to a exported ipa file
+relax show development ipa 
+
+# Validate the ipa file
+relax validate "$(relax show development ipa)"
+
+# Upload the ipa file (It's necessary to add a token and secret in Relfile)
+relax upload crashlytics "$(relax show development ipa)"
+
+```
+
+## Set up Relfile
 
 Run this command and set up each configurations in `Relfile`.
 
@@ -57,16 +85,18 @@ development: # Define a deployment type
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp.dev
+  export_options:
+    method:  development
 
 adhoc:
   scheme: SampleApp
-  configuration: Debug
   team_id: __MY_COMPANY_TEAM_ID__
-  bundle_version:  "%R-%C"
+  bundle_version:  "%h-%C" # See 'Bundle Version Format section'
   build_settings:
     OTHER_SWIFT_FLAGS: -DDEBUG
   info_plist: # You can change Info.plist settings for a deployment.
     CFBundleName: SmapleApp (DEBUG)
+    CFBundleDevelopmentRegion: en
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp
       - com.example.SampleApp2
@@ -81,8 +111,6 @@ enterprise:
 
 appstore:
   scheme: SampleApp
-  sdk: iphoneos
-  configuration: Release
   team_id: __MY_COMPANY_TEAM_ID__
   export_options:
     method:  appstore
@@ -204,4 +232,5 @@ The characters and their meanings are as follows.
 
 - Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
 - Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
+- `stty: stdin isn't a terminal` can be printed on a CI build server, but Relax is working well.
 
