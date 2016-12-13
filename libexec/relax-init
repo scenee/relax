@@ -47,6 +47,7 @@ generate_relfile () {
 
 	## Get scheme list
 	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
+
 	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
 		> $REL_TEMP_DIR/xcode-build-schemes
 	source $REL_TEMP_DIR/xcode-build-schemes
@@ -62,9 +63,9 @@ generate_relfile () {
 
 	adhoc:
 	  scheme: ${scheme}
-	  #bundle_version:  %R-%C
-	  #team_id: TEAM_ID
-	  #bundle_identifier: CUSTOM_BUNDLE_ID
+	  #bundle_version:  %h-%C
+	  #team_id: YOUR_TEAM_ID
+	  #bundle_identifier: APP_BUNDLE_ID
 	  export_options:
 	    method: ad-hoc
 

@@ -7,7 +7,6 @@
 			} 
 			gsub(/^  */,"", foo)
 			gsub(/ *$/,"", foo)
-			gsub(" ","_", foo)
             print "xcode_schemes+=(\""foo"\")"
         }
         else {
