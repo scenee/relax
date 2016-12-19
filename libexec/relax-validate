@@ -155,8 +155,8 @@ validate_app () {
 	if [[ $app_path =~ xcarchive ]]; then
 		logi "$ARROW Check archived-expanded-entitlements in ${app_path##*/}"
 		local xcent="$app_path/archived-expanded-entitlements.xcent"
-		if [ -f $xcent ]; then
-			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" $xcent)
+		if [[ -f "$xcent" ]]; then
+			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$xcent")
 			logi "Signed entitlements: $cs_team_id.$cs_app_id"
 			logi "Archived expanded entitlements: $xcent_app_id"
 			if [ "$cs_team_id.$cs_app_id" != "$xcent_app_id" ]; then
