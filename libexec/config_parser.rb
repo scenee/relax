@@ -3,7 +3,6 @@
 
 require 'rubygems'
 require 'yaml'
-require 'json'
 
 if ARGV.length != 2
 	puts "usage: #{$0} <Relfile> <release>"
