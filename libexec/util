@@ -40,13 +40,13 @@ print_progress_time () {
 
 	while ps -p $pid | grep -q $pid; do
 		now=$(date "+%s")
-		dt=$(date -r "$(( $now - $stime - 32400))" "+%T")
-		printf "\b${sp[i++%${#sp[*]}]} Time: $dt\r"
+		dt=$(date -r "$(( $now - $stime ))" "+%s")
+		printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
 		sleep $delay
 	done
 
 	tput el # Clear to end of line
-	printf "Time: $dt\n"
+	printf "Time: ${dt}s\n"
 
 	# Retore tty and tput
 	stty echo
