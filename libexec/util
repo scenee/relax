@@ -157,8 +157,11 @@ fin () {
 }
 
 die () {
-	die_with_status 1 "$@"
-
+	if [[ -p /dev/stdin ]]; then
+		die_with_status 1 "$(</dev/stdin)"
+	else
+		die_with_status 1 "$@"
+	fi
 }
 
 die_with_status () {
@@ -185,7 +188,7 @@ __log () {
 		echo -e "$@${NC}"
 	else
 		if [[ -p /dev/stdin ]]; then
-			cat -
+			echo -e "$(</dev/stdin)${NC}"
 		fi
 	fi
 }

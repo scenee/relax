@@ -142,9 +142,10 @@ validate_app () {
 		2>&1 | grep -q "Does Not Exist"; then
 		if /usr/libexec/PlistBuddy -c "Print :ProvisionsAllDevices" $mobileprovision \
 			2>&1 | grep -q "Does Not Exist"; then
-			logi "$WARN ${BOLD}$app_name can contain an AppStore provisioning profile."
-			logi "         ${BOLD}Please check the embedded provisioning profile with 'relax -v validate'."
-			printf "${NC}"
+			cat <<-EOM | logi
+			$WARN ${BOLD}$app_name can contain an AppStore provisioning profile.
+				 ${BOLD}Please check the embedded provisioning profile with 'relax -v validate'.
+			EOM
 			success=false
 			(( warning+=1 ))
 		fi
@@ -157,8 +158,10 @@ validate_app () {
 		local xcent="$app_path/archived-expanded-entitlements.xcent"
 		if [[ -f "$xcent" ]]; then
 			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$xcent")
-			logi "Signed entitlements: $cs_team_id.$cs_app_id"
-			logi "Archived expanded entitlements: $xcent_app_id"
+			cat <<-EOM | logi
+			Signed entitlements: $cs_team_id.$cs_app_id
+			Archived expanded entitlements: $xcent_app_id
+			EOM
 			if [ "$cs_team_id.$cs_app_id" != "$xcent_app_id" ]; then
 				success=false
 				die "Not match the signed entitlements and the archived expanded entitlements"
