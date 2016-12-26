@@ -2,19 +2,22 @@
 
 # Relax
 
-relax is a comfortable release tool for your iOS Application. 
+Relax is a comfortable release tool for your iOS Application. 
 
 It's hard to understand stuff of `xcodebuild` and codesigning mechanism.
-It takes care of much of the hassle of them, so you can focus on development.
+It takes care of much of the hassle of them, so you can focus on development
 
-Relax can be
+You can
 
-- Manage your multi-deployment in a Relax configuration file(aka. Relfile)
-    - Deploy your app quickly to testers, clients and end users in your professional project
-    - Easy to set and revert a specific property of Info.plist and xcode build settings on each deployment.
-    - Switch codesign mode(Automatic, Manual) automatically as your Relfile
-- Validate your product's codesigin for a deployment
-- Resign your xarchive and ipa file.
+- **Manage** multi distributions(i.e. adhoc, enterprise and appstore) in a Relax configuration file(aka. Relfile)
+- **Validate** your product(ipa/archive) has a correct codesign, entitlements and mobileprovision.
+- **Resign** your product(ipa, archive) with a different bundle id and provisioning profile
+
+Relax can
+
+- Modify and revert specific properties in Info.plist and xcode build settings on each deployment
+- Switch codesign modes(Automatic or Manual) automatically as your preferences
+- Get ride of your stuff on a host envorinment like a ruby version and other module compatibles.
 
 # Installation
 
@@ -24,14 +27,21 @@ $brew install relax
 ```
 # Requirements
 
+Relax must only depend on pre-installed command line tools in macOS and Xcode.
+Because it aims to get rid of any stuff of a host envornment to make it easy to manage a build server.
+As a result, You can set it up on a macOS build machine quickly even if it's a virtual machine.
+
 - macOS 10.11+
 - Xcode8.0+
 
 NOTE: Relax might be working on Xcode 7.3.1
 
-Relax must have dependencies only on pre-installed command line tools in macOS and Xcode.
 
-Because Relax aims to get rid of environment stuff when you manage a build server for your teaem.
+# Known Issues
+
+- Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
+- Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
+- `stty: stdin isn't a terminal` can be printed on a CI build server, but Relax is working well.
 
 # Getting Started
 
@@ -229,10 +239,3 @@ The characters and their meanings are as follows.
 | manifest | No |
 | onDemandResourcesAssetPacksBaseURL | No |
 | iCloudContainerEnvironment | No |
-
-# Known Issues
-
-- Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
-- Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
-- `stty: stdin isn't a terminal` can be printed on a CI build server, but Relax is working well.
-
