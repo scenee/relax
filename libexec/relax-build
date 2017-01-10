@@ -2,13 +2,14 @@
 # @(#) relax: `build` command
 # completions
 
-usage_build() {
+usage() {
 	cat <<-EOM
 	usage: ${ME} build <release> [--framework <name>] [-c <configuration>]
 	options:
 	    --framework		: Make a framework bundle from a static library
 	    -c			: Specify a configuration
 	EOM
+	fin
 }
 
 # build_project <scheme> <sdk> <configuration>
@@ -189,11 +190,10 @@ while [ $# -ne 0 ];  do
 	arg=$1
 	shift
 	case $arg in
-	-h|--help)
-		usage_build
-		fin
-		;;
+	-h|--help) usage ;;
 	-c)
+		[[ $# != 0 ]] || usage
+
 		configuration=$1
 		shift
 		;;
@@ -202,6 +202,7 @@ while [ $# -ne 0 ];  do
 		fin
 		;;
 	--framework)
+		[[ $# != 0 ]] || usage
 		is_framework=true
 		framework_name="$1"
 		shift
@@ -214,10 +215,7 @@ done
 
 source $REL_TEMP_DIR/config
 
-if test ${release:-undefined} = undefined; then
-	usage_build
-	fin
-fi
+[[ ${release:-undefined} != undefined ]] || usage
 
 trap "teardown_build" EXIT INT TERM
 setup_build $release

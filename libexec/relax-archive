@@ -2,11 +2,11 @@
 # @(#) relax: `archive` command
 # completions
 
-usage_archive () {
+usage () {
 	cat <<-EOM
 	usage: ${ME} archive <release> [-c <configuration>] [<xcodebuild-option>] ...
-
 	EOM
+	fin
 }
 
 # __find_xcscheme <scheme>
@@ -121,11 +121,9 @@ do
 	arg=$1
 	shift
 	case $arg in
-	-h|--help)
-		usage_archive
-		fin
-		;;
+	-h|--help) usage ;;
 	--complete)
+		[[ $# != 0 ]] || usage
 		prev=$1
 		shift
 		comp="-c"
@@ -135,6 +133,7 @@ do
 		fin
 		;;
 	-c)
+		[[ $# != 0 ]] || usage
 		configuration=$1
 		shift
 		;;
@@ -146,10 +145,7 @@ done
 
 source $REL_TEMP_DIR/config
 
-if test ${release:-undefined} = undefined; then
-	usage_archive
-	fin
-fi
+[[ ${release:-undefined} != undefined ]] || usage
 
 trap 'teardown_build;' EXIT INT TERM
 setup_build $release

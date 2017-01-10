@@ -118,29 +118,37 @@ help)
 	fin
 	;;
 * )
+	module_path=""
 	command_path="$(command -v "relax-$command" || true)"
 	if ! [ -n "$command_path" ]; then
-		die "No such command \`$command'"
+		module=$command
+		export PATH="$SOURCE_PATH/libexec/$module:$PATH"
+		module_path="$(command -v "$module" || true)"
+		if ! [ -n "$module_path" ]; then
+			die "No such command \`$command'"
+		else
+			"$module_path" "$@"
+		fi
+	else
+		TRAP "clean_temp; teardown;"
+		make_temp
+
+		REL_CONFIG_PATH="$(config_find)"
+		REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+
+		case $command in
+		build|archive|export|upload)
+			check_toolchain
+			config_load "$REL_CONFIG_PATH"
+			;;
+		init|validate|resign|ls-certs|ls-profiles)
+			check_toolchain
+			;;
+		*)
+			;;
+		esac
+
+		"$command_path" "$@"
 	fi
-
-	TRAP "clean_temp; teardown;"
-	make_temp
-
-	REL_CONFIG_PATH="$(config_find)"
-	REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
-
-	case $command in
-	build|archive|export|upload)
-		check_toolchain
-		config_load "$REL_CONFIG_PATH"
-		;;
-	init|validate|resign|ls-certs|ls-profiles)
-		check_toolchain
-		;;
-	*)
-		;;
-	esac
-
-	"$command_path" "$@"
 	;;	
 esac

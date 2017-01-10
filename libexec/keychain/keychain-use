@@ -1,0 +1,60 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-use` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain use <keychain> -p <keychain-pass>
+
+	EOM
+	fin
+}
+
+# use_keychain <keychain> -p <keychain-pass>
+use_keychain () {
+	local keychain keychain_pass
+	while [ $# -ne 0 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		-p)
+			keychain_pass=$1
+			shift
+			;;
+		*)
+			keychain=$arg
+			;;
+		esac
+	done
+
+	if ! [[ -n "${keychain_pass}" ]]; then
+		usage
+	fi
+
+	logi "$ARROW Setting up $keychain"
+
+	$SECURITY default-keychain -s "$keychain"
+	if [[ $? != 0 ]]; then
+		logi "Create $keychain. Try run: \`relax keychain add\`"
+		return 1
+	fi
+
+	$SECURITY unlock-keychain -p "$keychain_pass" "$keychain"
+	$SECURITY list-keychains -s "$keychain"
+
+	logi "$keychain is ready!"
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+--completions) 
+	list_keychain | grep -v "\(System\|login\)" | xargs
+	fin
+	;;
+*)
+	use_keychain "$@"
+	;;
+esac

@@ -6,9 +6,7 @@ set -e
 
 COMMAND="$1"
 
-if [ -z "$COMMAND" ]; then
-	fin
-fi
+[[ -n "$COMMAND" ]] || fin
 
 case $1 in
 	releases)

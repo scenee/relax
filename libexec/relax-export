@@ -2,13 +2,14 @@
 # @(#) relax: `export` command
 # completions
 
-usage_export () {
+usage () {
 	cat <<-EOM
 	usage: ${ME} export <release> [<archive-path>]
 
 	If you don't specify an archive, it will export the last one of
 	a release type.
 	EOM
+	fin
 }
 
 export_generate_optoin_list() {
@@ -159,11 +160,7 @@ prepare_export() {
 	EXPORT_OPTIONS_PLIST=$REL_TEMP_DIR/ExportOptions.plist
 }
 
-if [ $# = 0 ]
-then
-	usage_export
-	fin
-fi
+[[ $# != 0 ]] || usage
 
 target_archive_file=""
 release=
@@ -174,8 +171,7 @@ do
 	shift
 	case $arg in
 	-h|--help)
-		usage_export
-		fin
+		usage
 		;;
 	--complete)
 		fin
@@ -193,10 +189,7 @@ do
 	esac
 done
 
-if test ${release:-undefined} = undefined; then
-	usage_export
-	fin
-fi
+[[ ${release:-undefined} != undefined ]] || usage
 
 if [[ -z "$target_archive_file" ]]; then
 	target_archive_file="$(relax-show $release archive)"

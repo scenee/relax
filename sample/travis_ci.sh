@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-# Xcode 7 (incl. 7.0.1) seems to have a dependency on the system ruby.
+# Xcode 8 or later seems to have a dependency on the system ruby.
 # xcodebuild is screwed up by using rvm to map to another non-system
 # ruby. 
 # This script's executed by /bin/bash --login
@@ -17,16 +17,40 @@ shell_session_update() { :; }
 
 set -ue
 
-export PATH="$PWD/bats/bin:$PWD/bin:$PATH"
-relax dec -k "$DECORD_KEY" etc/RelaxCertificates.p12.enc
-relax dec -k "$DECORD_KEY" etc/Relax_Development.mobileprovision.enc
-relax dec -k "$DECORD_KEY" etc/Relax_AdHoc.mobileprovision.enc
-relax add -P "$CERTS_PASS" etc/RelaxCertificates.p12
+export PATH="$PWD/bin:$PATH"
+
+#########################
+# Set up relax keychain #
+#########################
+
+relax keychain create relax.keychain -p relax
+relax dec -p "$DECORD_KEY" etc/RelaxCertificates.p12.enc
+relax keychain add etc/RelaxCertificates.p12 -P "$CERTS_PASS"  -k relax.keychain -p relax
+
+############################
+# Install mobileprovisions #
+############################
+
+relax dec -p "$DECORD_KEY" etc/Relax_Development.mobileprovision.enc
+relax dec -p "$DECORD_KEY" etc/Relax_AdHoc.mobileprovision.enc
 relax add etc/Relax_Development.mobileprovision
 relax add etc/Relax_AdHoc.mobileprovision
+export PROVISION_PROFILE_DEV="Relax Development"
+export PROVISION_PROFILE_ADHOC="Relax AdHoc"
 
+###########
+# Do Test #
+###########
+
+relax keychain use relax.keychain -p relax
 make test
+relax keychain reset
+
+############
+# Teardown #
+############
 
 relax rm "Relax Development"
 relax rm "Relax AdHoc"
-relax rm keychain
+
+relax keychain delete relax.keychain

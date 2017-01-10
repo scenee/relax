@@ -1,0 +1,50 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `keychain-delete` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain delete <keychain>
+
+	EOM
+	fin
+}
+
+# delete_keychain
+delete_keychain () {
+	local keychain keychain_pass
+	while [ $# -ne 0 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		*)
+			keychain=$arg
+			;;
+		esac
+	done
+	
+	if is_exist_keychain $keychain; then
+		$SECURITY delete-keychain $keychain
+		reset_default_keychain login.keychain
+		logi "Removed $keychain"
+	else
+		fin "Not exists: $keychain"
+	fi
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+--completions) 
+	list_keychain | grep -v "\(System\|login\)" | xargs
+	fin
+	;;
+esac
+
+delete_keychain "$@"
+
+if test $? = 0; then
+	logi "${GREEN}Success${NC}"
+fi

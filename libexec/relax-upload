@@ -2,7 +2,7 @@
 # @(#) relax: `upload` command
 # completions
 
-usage_upload () {
+usage () {
 	cat <<-EOM
 	Usage: ${ME} upload <services> [-f <release-note>] ipa_file
 
@@ -13,6 +13,7 @@ usage_upload () {
 	Options:
 	    -f release_note	Specify a release note file
 	EOM
+	fin
 }
 
 # upload_crashlytics <ipa> <release-note-file>
@@ -68,31 +69,24 @@ upload_testfairy () {
 }
 
 
-if [ $# = 0 ]
-then
-	usage_upload
-	fin
-fi
+[[ $# != 0 ]] || usage
 
 service=
 release_note_file=
 ipa_file==
+
 while [ $# -ne 0 ];  do
 	arg=$1
 	shift
 	case $arg in
-	-h|--help)
-		usage_upload
-		fin
-		;;
+	-h|--help) usage ;;
 	--complete)
 		echo "crashlytics testfairy"
 		fin
 		;;
 	-f)
-		if [[ ! -f $1 ]]; then
-			die "Not found $1"
-		fi
+		[[ $# != 0 ]] ||  usage
+		[[ -f $1 ]]  || die "Not found $1"
 		release_note_file=$1
 		shift
 		;;
@@ -101,9 +95,7 @@ while [ $# -ne 0 ];  do
 			service=$arg
 		else
 			ipa_file=$arg
-			if [[ ! -f "$ipa_file" ]]; then 
-				die "Not found $ipa_file"
-			fi
+			[[ ! -f "$ipa_file" ]] || die "Not found $ipa_file"
 		fi
 		;;
 	esac
@@ -114,10 +106,7 @@ if [[ -z $release_note_file ]]; then
 	echo $(git log -1 --decorate) > "$release_note_file"
 fi
 
-if [[ -z $ipa_file ]]; then
-	usage_upload
-	fin
-fi
+[[ -n $ipa_file ]] || usage
 
 logi "$ARROW Start uploading ipa file: $ipa_file"
 logi "----------Release Note---------------"
@@ -132,6 +121,6 @@ testfairy)
 	upload_testfairy "$ipa_file" "$release_note_file"
 	;;
 *)
-	usage_upload
+	usage
 	;;
 esac

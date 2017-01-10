@@ -8,6 +8,7 @@ usage () {
 	List all valid certificates.
 
 	EOM
+	fin
 }
 
 ls_certs () {
@@ -22,7 +23,6 @@ while [[ $# != 0 ]]; do
 	case $arg in
 	-h)
 		usage
-		fin
 		;;
 	esac
 done

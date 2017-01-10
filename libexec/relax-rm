@@ -1,52 +1,35 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `rm` command
 
-usage_rm () {
+usage () {
 	cat <<-EOM
-	usage: ${ME} rm [keychain|<provisioning-profile-name>]
+	usage: ${ME} rm <provisioning-profile-name>
 
 	EOM
+	fin
 }
 
 # rm_provisioning_profile <provisioning-profile>
 rm_provisioning_profile () {
 	local mobileprovision="$(find_mobileprovision "$1")"
 	if [[ ! -f "$mobileprovision" ]]; then
-		fin "'$1 mobileprovision' doesn't exist"
+		fin "'$1' mobileprovision doesn't exist"
 	fi
 	rm -f "$mobileprovision"
 	logi "Removed '$1':$mobileprovision"
 }
 
-# rm_keychain
-rm_keychain () {
-	if is_exist_keychain $REL_KEYCHAIN; then
-		unlock_relax_keychain
-		remove_relax_keychain
-		reset_default_keychain login.keychain
-		logi "Removed $REL_KEYCHAIN"
-	else
-		fin "Already removed $REL_KEYCHAIN"
-	fi
-}
-
 if test $# = 0; then
-	usage_rm
-	fin
+	usage
 fi
 
 case $1 in
 -h)
-	usage_rm
-	fin
+	usage
 	;;
 esac
 
-if [[ $1 = "keychain" ]]; then
-	rm_keychain
-else
-	rm_provisioning_profile "$@"
-fi
+rm_provisioning_profile "$@"
 
 if test $? = 0; then
 	logi "${GREEN}Success${NC}"

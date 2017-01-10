@@ -8,11 +8,16 @@ IFS=: paths=($PATH)
 
 shopt -s nullglob
 
-{ for path in "${paths[@]}"; do
-    for command in "$path/relax-"*; do
-      command="${command##*relax-}"
-      echo $command
-    done
-  done
-  echo "help"
-} | grep -v "completions" | sort -u
+if [[ $# = 0 ]]; then
+	{ 
+	for path in "${paths[@]}"; do
+		for command in "$path/relax-"*; do
+			command="${command##*relax-}"
+			echo $command
+		done
+	done
+	echo "help"
+	} | grep -v "completions" | sort -u
+elif [[ $1 = "--modules" ]]; then
+	echo "keychain"
+fi

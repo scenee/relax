@@ -17,7 +17,7 @@ Relax can
 
 - Modify and revert specific properties in Info.plist and xcode build settings on each deployment
 - Switch codesign modes(Automatic or Manual) automatically as your preferences
-- Get ride of your stuff on a host envorinment like a ruby version and other module compatibles.
+- Make it easy to manage your keychain with 'relax keychain'
 
 # Installation
 

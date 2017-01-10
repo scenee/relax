@@ -2,7 +2,7 @@
 # @(#) relax: `show` command
 # completions
 
-usage_show() {
+usage() {
 	cat <<-EOM
 	usage: ${ME} show <release> <item>
 
@@ -13,6 +13,7 @@ usage_show() {
 	    archive:	Open the latest archive file
 	    ipa:	Print the latest IPA 
 	EOM
+	fin
 }
 
 read_latest_ipa () {
@@ -43,15 +44,14 @@ read_latest_dir() {
 release=
 
 if test $# == 0; then
-	usage_show
+	usage
 else
 	while [ $# -ne 0 ];  do
 		arg=$1
 		shift
 		case $arg in
 		-h|--help)
-			usage_show
-			fin
+			usage
 			;;
 		--complete)
 			echo "build archive ipa"
@@ -65,8 +65,7 @@ else
 	done
 
 	if test ${release:-undefined} = undefined; then
-		usage_show
-		fin
+		usage
 	fi
 
 	data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
@@ -85,7 +84,7 @@ else
 			read_archive
 			;;
 		*)
-			usage_show
+			usage
 			;;
 		esac
 	done
