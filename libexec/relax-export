@@ -16,7 +16,6 @@ export_generate_optoin_list() {
 	logi "$ARROW Generating ExportOptions.plist"
 
 	local plistbuddy_cmd_file=$REL_TEMP_DIR/plistbuddy_cmd
-	cp "${SOURCE_PATH}"/etc/empty.plist $EXPORT_OPTIONS_PLIST
 
 	if [ ! -z $export_option_method ]; then
 		echo "Add :method string $export_option_method" \
@@ -64,7 +63,7 @@ export_generate_optoin_list() {
 	fi
 
 	cat $plistbuddy_cmd_file | \
-		xargs -I{} /usr/libexec/PlistBuddy -c {} $EXPORT_OPTIONS_PLIST
+		xargs -I{} /usr/libexec/PlistBuddy -c {} $EXPORT_OPTIONS_PLIST >/dev/null 2>&1
 
 	cat $EXPORT_OPTIONS_PLIST
 }

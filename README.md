@@ -82,7 +82,7 @@ $relax init
 ```
 
 An example of Relfile is here.
-And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/etc/Relfile) for detail.
+And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
@@ -188,7 +188,7 @@ $relax commands
 
 # Relfile
 
-Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/etc/Relfile)
+Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/samples/Relfile)
 
 ## Use an Environment variable
 

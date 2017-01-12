@@ -24,17 +24,17 @@ export PATH="$PWD/bin:$PATH"
 #########################
 
 relax keychain create relax.keychain -p relax
-relax dec -p "$DECORD_KEY" etc/RelaxCertificates.p12.enc
-relax keychain add etc/RelaxCertificates.p12 -P "$CERTS_PASS"  -k relax.keychain -p relax
+relax dec -p "$DECORD_KEY" sample/certificates/RelaxCertificates.p12.enc
+relax keychain add sample/certificates/RelaxCertificates.p12 -P "$CERTS_PASS"  -k relax.keychain -p relax
 
 ############################
 # Install mobileprovisions #
 ############################
 
-relax dec -p "$DECORD_KEY" etc/Relax_Development.mobileprovision.enc
-relax dec -p "$DECORD_KEY" etc/Relax_AdHoc.mobileprovision.enc
-relax add etc/Relax_Development.mobileprovision
-relax add etc/Relax_AdHoc.mobileprovision
+relax dec -p "$DECORD_KEY" sample/certificates/Relax_Development.mobileprovision.enc
+relax dec -p "$DECORD_KEY" sample/certificates/Relax_AdHoc.mobileprovision.enc
+relax add sample/certificates/Relax_Development.mobileprovision
+relax add sample/certificates/Relax_AdHoc.mobileprovision
 export PROVISION_PROFILE_DEV="Relax Development"
 export PROVISION_PROFILE_ADHOC="Relax AdHoc"
 
