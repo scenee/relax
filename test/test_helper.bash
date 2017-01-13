@@ -2,12 +2,9 @@ source libexec/util-keychain
 
 setup () {
 	pushd sample/SampleApp >/dev/null
-	init_keychain -k "$REL_KEYCHAIN_PASSWD" "$REL_KEYCHAIN"
 }
 
 teardown () {
-	lock_relax_keychain
-	reset_default_keychain login.keychain
 	popd >/dev/null
 }
 

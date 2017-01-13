@@ -1,10 +1,11 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `init` command
 
-usage_init () {
+usage () {
 	cat <<-EOM
 	usage: ${ME} init
 	EOM
+	fin
 }
 
 generate_relfile () {
@@ -98,8 +99,7 @@ do
 		fin
 		;;
 	-h|--help|*)
-		usage_init
-		fin
+		usage
 		;;
 	esac
 done

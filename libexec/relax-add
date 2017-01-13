@@ -1,48 +1,12 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `add` command
 
-usage_add () {
+usage () {
 	cat <<-EOM
 	usage: ${ME} add <provisioning-profile>
-	       ${ME} add -P <password> <p12>
 
 	EOM
-}
-
-# add_identities  -P <password> <p12>
-add_identities () {
-	local password=
-	while [ $# -ne 1 ];
-	do
-		if [ $# = 0 ]; then
-			usage_add
-			fin
-		fi
-
-		arg=$1
-		shift
-		case $arg in
-		-P)
-			password=$1
-			shift
-			;;
-		esac
-	done
-	
-	if ! is_exist_keychain $REL_KEYCHAIN; then
-		logi "$ARROW Creating relax.keychain"
-		create_relax_keychain
-	fi
-
-
-	logi "$ARROW Importing PKCS12: $1"
-	import_p12_into_keychain -k $REL_KEYCHAIN_PASSWD -P $password $1 $REL_KEYCHAIN
-
-	init_keychain -k $REL_KEYCHAIN_PASSWD $REL_KEYCHAIN 
-	logi "Default keychain: $($SECURITY default-keychain | xargs)"
-
-	logi "$ARROW Validating imported certificates..."
-	validate_certs -P $password $1
+	fin
 }
 
 # add_provisioning_profile [-f]  <provisioning-profile>
@@ -63,7 +27,7 @@ add_provisioning_profile () {
 	mkdir -p "$PROVISIONING_DST_DIR"
 	local stored_provisionig_file="$PROVISIONING_DST_DIR/$provisioning_uuid.mobileprovision" 
 	if [ -f "$stored_provisionig_file" ]; then
-		logi "Already existing"
+		logi "Already existing: $provisioning_name($provisioning_uuid)"
 		fin
 	fi
 
@@ -72,29 +36,18 @@ add_provisioning_profile () {
 	logi "Added: $stored_provisionig_file"
 }
 
-if test $# = 0; then
-	usage_add
-	fin
-fi
+[[ $# != 0 ]] || usage
 
 case $1 in
--h)
-	usage_add
-	fin
-	;;
+-h) usage ;;
 esac
 
 if [[ -f "$1" ]]; then
 	if grep -q "Provisioning Profile" "$1"; then
 		add_provisioning_profile "$@"
 	else
-		usage_add
-		fin
+		usage
 	fi
-elif [[ $1 == "-P" ]]; then
-	add_identities "$@"
-else
-	die "Not Found $1"
 fi
 
 if test $? = 0; then

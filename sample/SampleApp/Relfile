@@ -8,7 +8,7 @@ development:
   scheme: Sample App
   sdk: iphoneos
   configuration: Debug
-  provisioning_profile: "Relax Development"
+  provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
   build_settings:
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
@@ -30,7 +30,7 @@ development2:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
   configuration: Debug
-  provisioning_profile: "Relax Development"
+  provisioning_profile: "$PROVISION_PROFILE_DEV"
   export_options:
     method: development
 
@@ -39,7 +39,7 @@ adhoc:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
   bundle_version:  "%h-%C"
-  provisioning_profile: "Relax AdHoc"
+  provisioning_profile: "$PROVISION_PROFILE_ADHOC"
   export_options:
     method: ad-hoc 
     thinning : iPhone7,1

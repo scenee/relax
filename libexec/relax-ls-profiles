@@ -8,6 +8,7 @@ usage () {
 	List installed provisioning profiles
 
 	EOM
+	fin
 }
 
 ls_mobileprovision () {
@@ -31,7 +32,6 @@ while [[ $# != 0 ]]; do
 	case $arg in
 	-h)
 		usage
-		fin
 		;;
 	esac
 done

@@ -1,0 +1,64 @@
+#!/bin/bash -eu
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} [option] keychain <command> ...
+
+	Options:
+	    -v		: Be verbose when executing commands
+	    -h		: Show help
+
+	Commands:
+	    create	Create a keychain
+	    delete	Delete a keychain
+	    add		Add certificates and private keys from a pkcs12 file
+	    rm		Remove certificates and private keys of a pkcs12 file
+	    use		Set up a keychain to use it
+	    reset	Reset the default keychain to login.keychain
+	    help	Show help
+	EOM
+}
+
+
+if [ $# = 0 ]; then
+	usage
+	fin
+fi
+
+command=$1
+shift
+case $command in 
+help)
+	if [ $# == 0 ]
+	then
+		usage
+	else 
+		command=$1
+		shift
+		command_path="$(command -v "relax-$command" || true)"
+		if ! [ -n "$command_path" ]; then
+			die "No such command \`$command'"
+		fi
+
+		bash -f "$command_path" -h
+		fin
+	fi
+	;;
+"")
+	usage
+	fin
+	;;
+* )
+	module_path=${0%/*}
+	module=${module_path##*/}
+	command_path="$(command -v "${module}-${command}" || true)"
+	if ! [ -n "$command_path" ]; then
+		die "No such $module command \`$command'"
+	fi
+	
+	TRAP "clean_temp; teardown;"
+	make_temp
+
+	"$command_path" "$@"
+	;;	
+esac

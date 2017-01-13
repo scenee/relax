@@ -1,16 +1,16 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `package` command
 
-usage_package() {
+usage() {
 	cat <<-EOM
 	usage: ${ME} package <release> <package_path>
 	EOM
+	fin
 }
 
 make_package() {
 	if test $# != 2; then
-		usage_package
-		fin
+		usage
 	fi
 
 	local release=$1
@@ -38,12 +38,11 @@ make_package() {
 
 if [ $# = 0 ]
 then
-	usage_package
+	usage
 else 
 	case $1 in
 	-h|--help)
 		usage_export
-		fin
 		;;
 	esac
 

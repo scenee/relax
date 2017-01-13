@@ -1,31 +1,37 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `dec` command
 
-usage_dec () {
+usage () {
 	cat <<-EOM
-	usage: ${ME} dec -k <password> <file>
+	usage: ${ME} dec -p <password> <file>
 
 	EOM
+	fin
 }
 
 # dec_file <file>
 dec_file () {
-	local password=
-	while [ $# -ne 1 ];
+	local password src
+	while [ $# -ne 0 ];
 	do
 		arg=$1
 		shift
 		case $arg in
-		-k)
+		-p)
+			[[ $# != 0 ]] || usage
 			password="$1"
 			shift
+			;;
+		*)
+			src=$arg
 			;;
 		esac
 	done
 
-	local src="$1"
+	[[ -n $src ]] || usage;
+
 	local dst="${src%.enc}"
-	logi "$ARROW Decrypting $1"
+	logi "$ARROW Decrypting $src"
 
 	/usr/bin/openssl aes-256-cbc -k "$password" -in "$src" -out "$dst" -p -d -a > >(logv)
 	if [[ $? = 0 ]]; then
@@ -35,16 +41,10 @@ dec_file () {
 	fi
 }
 
-if test $# = 0; then
-	usage_dec
-	fin
-fi
+[[ $# != 0 ]] || usage
 
 case $1 in
--h)
-	usage_dec
-	fin
-	;;
+-h) usage ;;
 esac
 
 dec_file "$@"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash -eu
 # Summary: Resign ipa or xcarchive
 
-usage_resign () {
+usage () {
 	cat <<-EOM
 	Usage: ${ME} resign [-i <bundl-identifer>] -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
 
@@ -12,6 +12,7 @@ usage_resign () {
 	    ${ME} ls-certs
 	
 	EOM
+	fin
 }
 
 # resign_app <certificate> <mobileprovision> <app-path>
@@ -92,17 +93,8 @@ resign_app () {
 	exec 3>&-
 }
 
-if test $# = 0; then
-	usage_resign
-	fin
-fi
+[[ $# != 0 ]] || usage
 
-case $1 in
--h)
-	usage_resign
-	fin
-	;;
-esac
 
 mobileprovision=
 bundle_identifier=
@@ -110,25 +102,24 @@ certificate=
 file_name=
 app_path=
 
-if test $# == 0; then
-	usage_resign
-	fin
-fi
-
 while [ $# -ne 0 ];
 do
 	arg=$1
 	shift
 	case $arg in
+	-h) usage ;;
 	-i)
+		[[ $# != 0 ]] || usage
 		bundle_identifier=$1
 		shift
 		;;
 	-p)
+		[[ $# != 0 ]] || usage
 		mobileprovision=$1
 		shift
 		;;
 	-c)
+		[[ $# != 0 ]] || usage
 		certificate=$1
 		shift
 		;;

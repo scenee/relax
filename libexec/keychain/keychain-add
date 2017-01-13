@@ -1,0 +1,157 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-add` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain add <p12> -P <password> -k <keychain> -p <keychain-pass>
+
+	EOM
+	fin
+}
+
+# __validate_certs <p12> -P <pass>  -k <keychain>
+__validate_certs () 
+{
+	local keychain password p12
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-P)
+			password="$1"
+			shift
+			;;
+		-k)
+			keychain="$1"
+			shift
+			;;
+		*)
+			p12="$arg"
+			;;
+		esac
+	done
+
+	logi "p12: $p12"
+	
+	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
+
+	#cat $cert_fingerprints
+
+	local validate_cert_ids=$REL_TEMP_DIR/validate_cert_ids
+
+	$SECURITY find-identity -v -p codesigning "$keychain" > $validate_cert_ids
+
+	#cat $validate_cert_ids
+
+	success=false
+	while IFS= read -r fp
+	do
+		#echo "ID: $fp"
+		if grep -e $fp $validate_cert_ids; then
+			success=true
+		fi
+	done <$cert_fingerprints
+
+	if [[ $success = false ]]; then
+		die "There is no Xcode.app in this build machine, or 'Apple Worldwide Developer Relations Certification Authority'."
+	fi
+	set -e
+}
+
+# add_identities <p12> -P <password> -k <keychain> -p <keychain-pass>
+add_identities () {
+	if [[ $# != 7 ]]; then
+		usage
+	fi
+
+	local keychain keychain_pass password p12
+	is_sudo=false
+
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-k)
+			[[ $# != 0 ]] || usage
+			keychain="$1"
+			shift
+			;;
+		-p)
+			[[ $# != 0 ]] || usage
+			keychain_pass=$1
+			shift
+			;;
+		-P)
+			[[ $# != 0 ]] || usage
+			password=$1
+			shift
+			;;
+		*)
+			p12="$arg"
+			;;
+		esac
+	done
+
+	[[ -n $p12 ]] || usage;
+	[[ -n $password ]] || usage;
+	[[ -n $keychain ]] || usage;
+	[[ -n $keychain_pass ]] || usage;
+
+
+	if [[ -n $keychain ]]; then
+		if ! is_exist_keychain "$keychain"; then
+			die "$ERR Not found keychain: $keychain. Try to run 'relax keychain create $keychain -p $keychain_pass'"
+		fi
+	fi
+
+	if [[ "$keychain" = "System.keychain" ]]; then
+		keychain="$SYSTEM_KEYCHAINS/$keychain"
+		is_sudo=true
+	else
+		trap "relax keychain reset" EXIT INT TERM
+		relax keychain use "$keychain" -p $keychain_pass
+	fi
+
+	logi "$ARROW Importing PKCS12: $p12"
+	cmd="$SECURITY import ${p12// /\ } -k ${keychain// /\ } -P $password -T /usr/bin/codesign"
+	if [[ $is_sudo = true ]]; then
+		sudo bash -c "$cmd"
+	else
+		eval "$cmd"
+	fi
+
+	set +e
+	# See http://openradar.appspot.com/28524119
+	if [[ $(compare_versions $OS_VERSION "10.12.0") -ge 0 ]]; then
+		logi "Update a key partition list of $keychain for xcodebuild"
+		$SECURITY set-key-partition-list -S apple-tool:,apple: -k $keychain_pass $keychain | logv
+	fi
+
+	logi "Default keychain: $($SECURITY default-keychain | xargs)"
+
+	logi "$ARROW Validating imported certificates..."
+	__validate_certs "$p12" -P $password -k $keychain
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+--completions) 
+	while [[ $# != 0 ]]; 
+	do
+		case $1 in
+			-) fin "-k -P -p" ;;
+			-k) list_keychain | xargs ;;
+		esac
+		shift
+	done
+	fin
+	;;
+esac
+
+add_identities "$@"

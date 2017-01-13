@@ -1,7 +1,7 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `validate` command
 
-usage_validate () {
+usage () {
 	cat <<-EOM
 	usage: ${ME} validate <ipa|app|archive>
 
@@ -10,6 +10,7 @@ usage_validate () {
 	i.e. relax -v validate <product>
 
 	EOM
+	fin
 }
 
 prepare_validate () {
@@ -208,10 +209,7 @@ validate_app () {
 }
 
 validate_product () {
-	if [[ $# != 1 ]];then
-		usage_validate
-		fin
-	fi
+	[[ $# = 1 ]] || usage
 
 	local product_path="${1%/}"
 	local app_path
@@ -246,17 +244,10 @@ validate_product () {
 	validate_app "${app_path}"
 }
 
-if test $# = 0; then
-	usage_validate
-	fin
-fi
+[[ $# != 0 ]] || usage
 
-# provide relax completions
 case $1 in
--h|--help)
-	usage_validate
-	fin
-	;;
+-h|--help) usage ;;
 esac
 
 prepare_validate

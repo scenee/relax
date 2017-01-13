@@ -1,33 +1,39 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `enc` command
 
-usage_enc () {
+usage () {
 	cat <<-EOM
-	usage: ${ME} enc [-k <password>] <file>
+	usage: ${ME} enc [-p <password>] <file>
 
 	EOM
+	fin
 }
 
 # enc_file [-k <password>] <file>
 enc_file() {
-	local key
-	while [ $# != 1 ];
+	local key src
+	while [ $# != 0 ];
 	do
 		arg=$1
 		shift
 		case $arg in
-		-k)
+		-p)
+			[[ $# != 0 ]] || usage
 			key=$1
 			shift
+			;;
+		*)
+			src=$arg
 			;;
 		esac
 	done
 
-	logi "$ARROW Encrypting $1"
+	[[ -n $src ]] || usage;
+
+	logi "$ARROW Encrypting $src"
 
 	[[ -n $key ]] || key=$(openssl rand -base64 32 | head -c 16)
 
-	local src="$1"
 	local dst="$src".enc
 
 	/usr/bin/openssl aes-256-cbc -k "$key" -in "$src" -out "$dst" -p -a > >(logv)
@@ -40,16 +46,10 @@ enc_file() {
 
 }
 
-if test $# = 0; then
-	usage_enc
-	fin
-fi
+[[ $# != 0 ]] || usage
 
 case $1 in
--h)
-	usage_enc
-	fin
-	;;
+-h) usage ;;
 esac
 
 enc_file "$@"

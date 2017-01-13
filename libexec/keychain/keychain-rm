@@ -1,0 +1,100 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-rm` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain rm <p12> -P <password> -k <keychain> -p <keychain-pass>
+
+	EOM
+	fin
+}
+
+# rm_identities <p12> -P <password> -k <keychain> -p <keychain-pass>
+rm_identities () {
+	if [[ $# != 7 ]]; then
+		usage
+	fi
+
+	local keychain keychain_pass password p12
+	is_sudo=false
+
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-k)
+			keychain="$1"
+			shift
+			;;
+		-p)
+			keychain_pass=$1
+			shift
+			;;
+		-P)
+			password=$1
+			shift
+			;;
+		*)
+			p12="$arg"
+			;;
+		esac
+	done
+
+	[[ -n $p12 ]] || usage;
+	[[ -n $password ]] || usage;
+	[[ -n $keychain ]] || usage;
+	[[ -n $keychain_pass ]] || usage;
+
+
+	if [[ -n $keychain ]]; then
+		if ! is_exist_keychain "$keychain"; then
+			die "$ERR Not found keychain: $keychain. Try to run 'relax keychain create $keychain -p $keychain_pass'"
+		fi
+	fi
+
+	if [[ "$keychain" = "System.keychain" ]]; then
+		keychain="$SYSTEM_KEYCHAINS/$keychain"
+		is_sudo=true
+	else
+		trap "relax keychain reset" EXIT INT TERM
+		relax keychain use "$keychain" -p $keychain_pass
+	fi
+
+	logi "$ARROW Remove these identiies imported from $p12"
+	
+	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+
+	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
+
+	while IFS= read -r identity && [[ -n $identity ]]
+	do
+		echo "$identity"
+		cmd="$SECURITY delete-certificate -Z $identity $keychain"
+		if [[ $is_sudo = true ]]; then
+			sudo bash -c "$cmd"
+		else
+			eval "$cmd"
+		fi
+	done <$cert_fingerprints
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+--completions) 
+	while [[ $# != 0 ]]; 
+	do
+		case $1 in
+			-) fin "-k -P -p" ;;
+			-k) list_keychain | xargs ;;
+		esac
+		shift
+	done
+	fin
+	;;
+esac
+
+rm_identities "$@"

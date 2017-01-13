@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Usage: relax completions <command> [arg1 arg2...]
+# completions
+
+#set -e
+
+
+
+[[ $# != 0 ]] || keychain-commands
+
+COMMAND="$1"
+shift
+
+[[ -n "$COMMAND" ]] || fin
+
+# list keychains
+COMMAND_PATH="$(command -v "keychain-$COMMAND")"
+if grep -qiE "^# completions" "$COMMAND_PATH"; then
+	exec "$COMMAND_PATH" --completions "$@"
+else
+	:
+fi

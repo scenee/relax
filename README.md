@@ -17,14 +17,23 @@ Relax can
 
 - Modify and revert specific properties in Info.plist and xcode build settings on each deployment
 - Switch codesign modes(Automatic or Manual) automatically as your preferences
-- Get ride of your stuff on a host envorinment like a ruby version and other module compatibles.
+- Make it easy to manage your keychain with 'relax keychain'
 
 # Installation
 
+## Homebrew
+
 ```bash
-$brew tap SCENEE/homebrew-formulae
-$brew install relax
+$ brew tap SCENEE/homebrew-formulae
+$ brew install relax
 ```
+
+## Install script
+
+```bash
+$ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | bash
+```
+
 # Requirements
 
 Relax must only depend on pre-installed command line tools in macOS and Xcode.
@@ -48,28 +57,28 @@ NOTE: Relax might be working on Xcode 7.3.1
 ## Quick start
 
 ```bash
-cd /path/to/your/project
+$ cd /path/to/your/project
 
 # Create a Relfile template
-relax init 
+$ relax init 
 
 # Build a xcarchive file
-relax archive development 
+$ relax archive development 
 
 # Print a path to a built archive
-relax show development archive 
+$ relax show development archive 
 
 # Export an ipa file
-relax export development 
+$ relax export development 
 
 # Print a path to a exported ipa file
-relax show development ipa 
+$ relax show development ipa 
 
 # Validate the ipa file
-relax validate "$(relax show development ipa)"
+$ relax validate "$(relax show development ipa)"
 
 # Upload the ipa file (It's necessary to add a token and secret in Relfile)
-relax upload crashlytics "$(relax show development ipa)"
+$ relax upload crashlytics "$(relax show development ipa)"
 
 ```
 
@@ -78,11 +87,11 @@ relax upload crashlytics "$(relax show development ipa)"
 Run this command and set up each configurations in `Relfile`.
 
 ```bash
-$relax init
+$ relax init
 ```
 
 An example of Relfile is here.
-And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/etc/Relfile) for detail.
+And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
@@ -143,7 +152,7 @@ log_formatter: xcpretty
 ## Build an archive for your product
 
 ```bash
-$relax -v archive adhoc
+$ relax -v archive adhoc
 ```
 
 `xcodebuild` stdout is always written to a log file. 
@@ -152,13 +161,13 @@ If you would like to print it in your console, please use with '-v' option.
 ## Export an .ipa file
 
 ```bash
-$relax export adhoc
+$ relax export adhoc
 ```
 
 You can specify a xcarchive file path after a release type like here.
 
 ```bash
-$relax export adhoc /path/to/archive
+$ relax export adhoc /path/to/archive
 ```
 
 Relax can export it on a different team and certificate from one signed xcarchive.
@@ -166,29 +175,29 @@ Relax can export it on a different team and certificate from one signed xcarchiv
 ## Check the mobileprovision, entitlements and version of an .ipa file
 
 ```bash
-$relax validate /path/to/SampleApp.ipa
+$ relax validate /path/to/SampleApp.ipa
 ```
 
 ## Upload an .ipa file to Crashlytics
 
 ```bash
-$relax upload crashlytics /path/to/SampleApp.ipa
+$ relax upload crashlytics /path/to/SampleApp.ipa
 ```
 
 ## Resign an .ipa file with other provisioning profile and a certificate
 
 ```bash
-$relax resign -p "<my-provisioning-profile>" -c "iPhone Distribution: <Me>" /path/to/SampleApp.ipa
+$ relax resign -p "<my-provisioning-profile>" -c "iPhone Distribution: <Me>" /path/to/SampleApp.ipa
 ```
 ## Other commands
 
 ```bash
-$relax commands
+$ relax commands
 ```
 
 # Relfile
 
-Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/etc/Relfile)
+Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/samples/Relfile)
 
 ## Use an Environment variable
 
@@ -203,13 +212,13 @@ development2:
 ```
 
 ```bash
-$BUNDLE_SUFFIX=debug relax archive development2
+$ BUNDLE_SUFFIX=debug relax archive development2
 ```
 or
 
 ```bash
-$export BUNDLE_SUFFIX=debug 
-$relax archive development2
+$ export BUNDLE_SUFFIX=debug 
+$ relax archive development2
 ```
 But you can't use Xcode build setting variables (PRODUCT_NAME etc.) in Relfile.
 Because they can be overridden by Relfile's definitions.

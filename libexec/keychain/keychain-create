@@ -1,0 +1,52 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-create` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain create <keychain> -p <keychain-pass>
+
+	EOM
+	fin
+}
+
+
+create_keychain () {
+	local keychain keychain_pass
+	while [ $# -ne 0 ];
+	do
+		arg=$1
+		shift
+		case $arg in
+		-p)
+			keychain_pass=$1
+			shift
+			;;
+		*)
+			keychain=$arg
+			;;
+		esac
+	done
+
+	[[ -n $keychain ]] || usage;
+	[[ -n $keychain_pass ]] || usage;
+
+	if is_exist_keychain $keychain; then
+		fin "Already exist keychain: $keychain."
+	fi
+
+	logi "$ARROW Creating $keychain"
+	$SECURITY create-keychain -p $keychain_pass $keychain
+	$SECURITY set-keychain-settings -t 3600 $keychain
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+esac
+
+create_keychain "$@"
+
+if test $? = 0; then
+	logi "${GREEN}Success${NC}"
+fi
