@@ -1,6 +1,6 @@
 .PHONY: test
 test: bats
-	@test/run.sh
+	@PATH="$$PWD/bats/bin:$$PWD/bin:$$PATH" test/run.sh ${keychain}
 
 version: 
 	@PATH="$$PWD/bin:$$PATH" relax --version

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash -eu
 # @(#) relax `keychain-reset` command
-# completions
 
 usage () {
 	cat <<-EOM
@@ -11,15 +10,12 @@ usage () {
 }
 
 reset_keychain () {
-	logi "Reset the default keychain to login.keychain "
 	reset_default_keychain login.keychain
+	logi "Reset the default keychain to login.keychain "
 }
 
 if [[ $# != 0 ]]; then
 	case $1 in
-	--completions) 
-		fin
-		;;
 	-h|--help|*) usage ;;
 	esac
 else

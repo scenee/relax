@@ -31,7 +31,6 @@ dec_file () {
 	[[ -n $src ]] || usage;
 
 	local dst="${src%.enc}"
-	logi "$ARROW Decrypting $src"
 
 	/usr/bin/openssl aes-256-cbc -k "$password" -in "$src" -out "$dst" -p -d -a > >(logv)
 	if [[ $? = 0 ]]; then

@@ -97,22 +97,6 @@ fi
 command=$1
 shift
 case $command in 
-help)
-	if [ $# == 0 ]
-	then
-		usage
-	else 
-		command=$1
-		shift
-		command_path="$(command -v "relax-$command" || true)"
-		if ! [ -n "$command_path" ]; then
-			die "No such command \`$command'"
-		fi
-
-		bash -f "$command_path" -h
-		fin
-	fi
-	;;
 "")
 	usage
 	fin
@@ -130,6 +114,8 @@ help)
 			"$module_path" "$@"
 		fi
 	else
+		[[ $command != "help" ]] || exec "$command_path" "$@"
+
 		TRAP "clean_temp; teardown;"
 		make_temp
 

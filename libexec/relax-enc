@@ -30,8 +30,6 @@ enc_file() {
 
 	[[ -n $src ]] || usage;
 
-	logi "$ARROW Encrypting $src"
-
 	[[ -n $key ]] || key=$(openssl rand -base64 32 | head -c 16)
 
 	local dst="$src".enc
