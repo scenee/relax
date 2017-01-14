@@ -2,13 +2,23 @@
 
 load test_helper
 
-@test "relax help init" {
-	run relax help init
+@test "relax help" {
+	run relax help
 	assert_success
 }
 
-@test "relax help add" {
-	run relax help add
+@test "relax help profile" {
+	run relax help profile
+	assert_success
+}
+
+@test "relax help keychain" {
+	run relax help keychain
+	assert_success
+}
+
+@test "relax help init" {
+	run relax help init
 	assert_success
 }
 

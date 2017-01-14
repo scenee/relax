@@ -1,9 +1,9 @@
 #!/usr/bin/env bash -eu
-# @(#) relax: `rm` command
+# @(#) relax: `profile-rm` command
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} rm <provisioning-profile-name>
+	usage: ${ME} profile rm <provisioning-profile-name>
 
 	EOM
 	fin
@@ -30,7 +30,3 @@ case $1 in
 esac
 
 rm_provisioning_profile "$@"
-
-if test $? = 0; then
-	logi "${GREEN}Success${NC}"
-fi

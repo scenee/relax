@@ -112,17 +112,19 @@ add_identities () {
 		keychain="$SYSTEM_KEYCHAINS/$keychain"
 		is_sudo=true
 	else
-		trap "relax keychain reset" EXIT INT TERM
-		relax keychain use "$keychain" -p $keychain_pass
+		trap "relax keychain reset >/dev/null " INT TERM
+		relax keychain use "$keychain" -p $keychain_pass >/dev/null
 	fi
 
-	logi "$ARROW Importing PKCS12: $p12"
 	cmd="$SECURITY import ${p12// /\ } -k ${keychain// /\ } -P $password -T /usr/bin/codesign"
+	{
 	if [[ $is_sudo = true ]]; then
 		sudo bash -c "$cmd"
 	else
 		eval "$cmd"
 	fi
+	} >/dev/null
+	logi "Imported pkcs12: $p12"
 
 	set +e
 	# See http://openradar.appspot.com/28524119
@@ -131,10 +133,13 @@ add_identities () {
 		$SECURITY set-key-partition-list -S apple-tool:,apple: -k $keychain_pass $keychain | logv
 	fi
 
-	logi "Default keychain: $($SECURITY default-keychain | xargs)"
-
-	logi "$ARROW Validating imported certificates..."
 	__validate_certs "$p12" -P $password -k $keychain
+
+	if $SECURITY default-keychain | grep -q $keychain; then
+		logi "Changed your default keychain: $keychain"
+	else
+		die "default keychain is still login.keychain"
+	fi
 }
 
 [[ $# != 0 ]] || usage

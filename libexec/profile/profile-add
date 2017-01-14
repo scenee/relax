@@ -1,9 +1,9 @@
 #!/usr/bin/env bash -eu
-# @(#) relax: `add` command
+# @(#) relax: `profile-add` command
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} add <provisioning-profile>
+	usage: ${ME} profile add <provisioning-profile>
 
 	EOM
 	fin
@@ -31,9 +31,8 @@ add_provisioning_profile () {
 		fin
 	fi
 
-	logi "$ARROW Installing Provisioning profile: $provisioning_file"
 	cp "$provisioning_file" "$stored_provisionig_file"
-	logi "Added: $stored_provisionig_file"
+	logi "Added '$provisioning_name' provisioning profile: ${stored_provisionig_file// /\ }"
 }
 
 [[ $# != 0 ]] || usage
@@ -48,8 +47,6 @@ if [[ -f "$1" ]]; then
 	else
 		usage
 	fi
-fi
-
-if test $? = 0; then
-	logi "${GREEN}Success${NC}"
+else
+	die "Not found $1"
 fi

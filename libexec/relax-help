@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Usage: relax help <command|module>
+
+[[ -n "$1" ]] || exec relax -h
+
+if grep -q "$1" <<< $(relax commands --modules); then
+	relax $1 help
+else 
+	relax-"$1" -h
+fi

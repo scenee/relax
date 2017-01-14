@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Usage: relax completions <command> [arg1 arg2...]
-# completions
 
 set -e
 

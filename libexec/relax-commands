@@ -1,23 +1,34 @@
 #!/usr/bin/env bash -eu
 # Summary: List all available commands
 
-
 set -e
 
-IFS=: paths=($PATH)
+usage () {
+	cat <<-EOM
+	usage: ${ME} commands
 
+	EOM
+	fin
+}
+
+print_modules () {
+	echo "keychain"
+	echo "profile"
+}
+
+IFS=: paths=($PATH)
 shopt -s nullglob
 
 if [[ $# = 0 ]]; then
-	{ 
-	for path in "${paths[@]}"; do
-		for command in "$path/relax-"*; do
-			command="${command##*relax-}"
-			echo $command
-		done
-	done
-	echo "help"
-	} | grep -v "completions" | sort -u
-elif [[ $1 = "--modules" ]]; then
-	echo "keychain"
+	print_commands relax
+	print_modules
+else
+	case $1 in
+	-h)
+		usage
+		;;
+	--modules)
+		print_modules
+		;;
+	esac
 fi

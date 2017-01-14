@@ -32,8 +32,6 @@ use_keychain () {
 		usage
 	fi
 
-	logi "$ARROW Setting up $keychain"
-
 	$SECURITY default-keychain -s "$keychain"
 	if [[ $? != 0 ]]; then
 		logi "Create $keychain. Try run: \`relax keychain add\`"

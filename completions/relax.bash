@@ -9,34 +9,14 @@ _relax() {
 	local module special i
 	for (( i=0; i < ${#words[@]}-1; i++ )); do
 		commands="$(relax commands | grep -v -- --version | tr " " "\|")"
-		if echo ${words[i]} | grep -q "$commands" ; then
+		if grep -q -e "${words[i]}" <<< "$commands" ; then
 		    special=${words[i]}
 		fi
 		modules="$(relax commands --modules | tr " " "\|" )"
-		if echo ${words[i]} | grep -q "$modules" ; then
+		if grep -q -e "${words[i]}" <<< "$modules" ; then
 		    module=${words[i]}
 		fi
 	done
-
-	if [[ -n $module ]]; then
-		case $module in
-		keychain)
-			if [[ $prev = $module ]]; then
-				COMPREPLY=( $( compgen -W "$(relax $module completions)" -- $cur ) )
-			else
-				command=${words[2]}
-				case $command in
-				reset)
-					;;
-				*)
-					COMPREPLY=( $( compgen -W "$(relax $module completions ${command} $prev $cur)" -- $cur ) )
-					;;
-				esac
-			fi
-			return
-			;;
-		esac
-	fi
 
 	if [[ -n $special ]]; then
 		case $special in
@@ -51,6 +31,15 @@ _relax() {
 			upload)
 				if [[ $prev = $special ]]; then
 					COMPREPLY=( $( compgen -W "$(relax $special --complete)" -- $cur ) )
+				fi
+				return
+				;;
+			$module)
+				if [[ $prev = $special ]]; then
+					COMPREPLY=( $( compgen -W "$(relax $module completions)" -- $cur ) )
+				else
+					command=${words[2]}
+					COMPREPLY=( $( compgen -W "$(relax $module completions ${command} $prev $cur)" -- $cur ) )
 				fi
 				return
 				;;
@@ -69,7 +58,7 @@ _relax() {
 
 	case "$cur" in
 		*)
-		COMPREPLY=( $(compgen -W "$(relax commands) $(relax commands --modules)" -- "$cur") )
+		COMPREPLY=( $(compgen -W "$(relax commands)" -- "$cur") )
 		;;
 	esac
 }

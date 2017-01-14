@@ -34,9 +34,9 @@ create_keychain () {
 		fin "Already exist keychain: $keychain."
 	fi
 
-	logi "$ARROW Creating $keychain"
 	$SECURITY create-keychain -p $keychain_pass $keychain
 	$SECURITY set-keychain-settings -t 3600 $keychain
+	logi "Created: $keychain"
 }
 
 [[ $# != 0 ]] || usage
@@ -46,7 +46,3 @@ case $1 in
 esac
 
 create_keychain "$@"
-
-if test $? = 0; then
-	logi "${GREEN}Success${NC}"
-fi

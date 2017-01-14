@@ -36,15 +36,11 @@ make_package() {
 	ls "$package_dir"
 }
 
-if [ $# = 0 ]
-then
-	usage
-else 
-	case $1 in
-	-h|--help)
-		usage_export
-		;;
-	esac
 
-	make_package "$@"
-fi
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+esac
+
+make_package "$@"

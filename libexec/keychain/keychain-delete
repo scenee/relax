@@ -44,7 +44,3 @@ case $1 in
 esac
 
 delete_keychain "$@"
-
-if test $? = 0; then
-	logi "${GREEN}Success${NC}"
-fi

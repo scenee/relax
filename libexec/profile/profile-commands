@@ -1,4 +1,5 @@
 #!/usr/bin/env bash -eu
 # Summary: List all available commands
 
-print_commands keychain
+
+print_commands profile
