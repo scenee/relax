@@ -102,20 +102,6 @@ set_default_keychain () {
 	fi
 }
 
-# can_use_keychain <srcfile> <decfile>
-decode_mobileprovision () {
-	set  +e
-	# `2>/dev/null` will get rid of this error output. 
-	# 'security: SecPolicySetValue: One or more parameters passed to a function were not valid.'
-	$SECURITY cms -D -i "$1" -o "$2" 2>/dev/null
-
-	if [[ $? != 0 ]]; then
-		die "No valid certificates for $provisioning_file"
-	fi
-	set -e
-}
-
 declare -x -f pkcs12_fetch_identities list_keychain
 declare -x -f set_default_keychain reset_default_keychain 
 declare -x -f is_exist_keychain can_use_keychain 
-declare -x -f decode_mobileprovision

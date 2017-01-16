@@ -1,0 +1,22 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `profile-dec` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} profile dec <provisioning-profile> [-o <out>]
+
+	EOM
+	fin
+}
+
+if test $# = 0; then
+	usage
+fi
+
+case $1 in
+-h)
+	usage
+	;;
+esac
+
+dec_provisioning_profile "$@" # Defined in util-build

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `profile-find` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} profile find <provisioning-profile-name>
+
+	EOM
+	fin
+}
+
+if test $# = 0; then
+	usage
+fi
+
+case $1 in
+-h)
+	usage
+	;;
+esac
+
+find_mobileprovision "$@" # Defined in util-build
