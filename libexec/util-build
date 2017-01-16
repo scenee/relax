@@ -432,11 +432,19 @@ setup_build () {
 
 	## Provisioning Profile
 	if [[ -n $provisioning_profile ]]; then
-		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
 		# Custom Sigining
-		sed -i .$BAK_EXT \
-		-e "/DevelopmentTeam/d; s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-		"$PROJECT_FILE_PATH"/project.pbxproj 
+		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+			sed -i .$BAK_EXT \
+			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+			"$PROJECT_FILE_PATH"/project.pbxproj 
+		else
+			s='[[:space:] ]*'
+			sed -i .$BAK_EXT \
+			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+			\1ProvisioningStyle = Manual;\
+			/" "$PROJECT_FILE_PATH"/project.pbxproj 
+		fi
+		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
 	fi
 
 	## Bundle Version
