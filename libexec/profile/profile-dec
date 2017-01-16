@@ -1,0 +1,58 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `profile-dec` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} profile dec <provisioning-profile> [-o <out>]
+
+	EOM
+	fin
+}
+
+# dec;_provisioning_profile <provisioning-profile> [-o <out>]
+dec_provisioning_profile () {
+	local infile outfile result
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-o)
+			outfile="$1"
+			shift
+			;;
+		*)
+			infile="$arg"
+			;;
+		esac
+	done
+
+
+	set  +e
+	# `2>/dev/null` will get rid of this error output. 
+	# 'security: SecPolicySetValue: One or more parameters passed to a function were not valid.'
+	if [[ -n "$outfile" ]]; then
+		$SECURITY cms -D -i "$infile" -o "$outfile"
+		result=$?
+	else
+		$SECURITY cms -D -i "$infile"
+		result=$?
+	fi
+
+	if [[ $result != 0 ]]; then
+		die "No valid certificates for $infile"
+	fi
+	set -e
+}
+
+if test $# = 0; then
+	usage
+fi
+
+case $1 in
+-h)
+	usage
+	;;
+esac
+
+dec_provisioning_profile "$@"

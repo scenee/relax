@@ -43,7 +43,7 @@ resign_app () {
 	# Get the resign TEAM ID from mobileprovision
 	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
 
-	decode_mobileprovision "$mobileprovision" "$temp_mobileprovision"
+	relax profile dec "$mobileprovision" -o "$temp_mobileprovision"
 
 	local resign_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
 

@@ -11,6 +11,7 @@ usage () {
 	Commands:
 	    add		Add a provisioning profile
 	    rm		Remove a provisioning profile
+	    dec		Decode a provisioning profile
 	    help	Show help
 	EOM
 	fin
