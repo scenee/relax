@@ -44,7 +44,7 @@ source util-keychain
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} [option] <command> ...
+	Usage: ${ME} [option] <command|module> ...
 
 	Options:
 	    -v		: Be verbose when executing commands
@@ -62,6 +62,10 @@ usage () {
 	    show	Print the latest archive/ipa file path.
 	    upload	Upload an ipa file to a distribution service(i.e. Crashlytics Beta)
 	    validate	Print the embedded provisioning profile and entitlements of an app
+
+	Modules:
+	    keychain	See 'relax keychain help'
+	    profile	See 'relax profile help'
 	EOM
 }
 
