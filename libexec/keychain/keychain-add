@@ -112,9 +112,9 @@ add_identities () {
 		keychain="$SYSTEM_KEYCHAINS/$keychain"
 		is_sudo=true
 	else
-		trap "relax keychain reset >/dev/null " INT TERM
-		relax keychain use "$keychain" -p $keychain_pass >/dev/null
+		$SECURITY unlock-keychain -p $keychain_pass "$keychain"
 	fi
+
 
 	cmd="$SECURITY import ${p12// /\ } -k ${keychain// /\ } -P $password -T /usr/bin/codesign"
 	{
@@ -134,12 +134,6 @@ add_identities () {
 	fi
 
 	__validate_certs "$p12" -P $password -k $keychain
-
-	if $SECURITY default-keychain | grep -q $keychain; then
-		logi "Changed your default keychain: $keychain"
-	else
-		die "default keychain is still login.keychain"
-	fi
 }
 
 [[ $# != 0 ]] || usage
