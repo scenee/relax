@@ -360,6 +360,11 @@ setup_build () {
 
 	params_file=$(get_build_params_file "$scheme")
 
+	## Replace TEAMID if needed
+	if [[ "${team_id:-undefined}" != undefined ]]; then
+		__replace_development_team $team_id
+	fi
+
 	load_xcode_build_settings $params_file
 
 	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
@@ -367,11 +372,6 @@ setup_build () {
 	fi
 
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
-
-	## Replace TEAMID if needed
-	if [[ "${team_id:-undefined}" != undefined ]]; then
-		__replace_development_team $team_id
-	fi
 
 	logi "$ARROW Set up '$release' configurations"
 	logi "Configuration: $CONFIGURATION"
