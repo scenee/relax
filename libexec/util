@@ -165,7 +165,8 @@ pop_all() {
 TRAP() {
 	local cmd=$1
 	trap "${cmd}" EXIT
-	trap "${cmd} die \"Interrupted\"" INT
+	trap "${cmd} die \"Interrupted\"" INT HUP
+	trap "${cmd} die \"Aborted \"" ABRT
 	trap "${cmd} die \"Terminate\"" TERM
 }
 	
