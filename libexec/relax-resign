@@ -29,9 +29,7 @@ resign_app () {
 	if [[ ! -f "$mobileprovision" ]]; then
 		local mobileprovision_name="$mobileprovision"
 		mobileprovision="$(find_mobileprovision "$mobileprovision_name")"
-		if [[ ! -f "$mobileprovision" ]]; then
-			die "Not found $mobileprovision_name"
-		fi
+		[[ -f "$mobileprovision" ]] || die "Not found $mobileprovision_name"
 	fi
 	
 	/usr/bin/codesign -d --entitlements :- "$app_path" 2>/dev/null > $entitlements
@@ -43,7 +41,7 @@ resign_app () {
 	# Get the resign TEAM ID from mobileprovision
 	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
 
-	decode_mobileprovision "$mobileprovision" "$temp_mobileprovision"
+	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
 
 	local resign_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
 

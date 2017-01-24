@@ -20,6 +20,61 @@ export BUNDLE_VERSION=
 export INFO_PLIST_PATH=
 export XCODEBUILD_PID=
 
+# find_mobileprovision <provisioning-profile-name>
+find_mobileprovision () {
+	[ $# = 1 ] || die "bad argument"
+	local name="$1"
+
+	local ret=$(\
+		grep -rw "$PROVISIONING_DST_DIR" -e "$name" | \
+		sed -n "s:[^\/]*\(\/.*mobileprovision\).*:\1:p" | \
+		while IFS= read file; do
+			local temp_file=$REL_TEMP_DIR/temp_mobileprovision
+			dec_provisioning_profile "$file" -o "$temp_file"
+			date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $temp_file)
+			echo $date"#"$file
+		done | sort -ur | awk -F# '{ print $2 }' | head -n 1)
+	[[ -n "$ret" ]] || echo ""
+	echo "$ret"
+}
+
+# dec_provisioning_profile <provisioning-profile> [-o <out>]
+dec_provisioning_profile () {
+	local infile outfile result
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-o)
+			outfile="$1"
+			shift
+			;;
+		*)
+			infile="$arg"
+			;;
+		esac
+	done
+
+
+	set  +e
+	# `2>/dev/null` will get rid of this error output. 
+	# 'security: SecPolicySetValue: One or more parameters passed to a function were not valid.'
+	{
+	if [[ -n "$outfile" ]]; then
+		$SECURITY cms -D -i "$infile" -o "$outfile"
+	else
+		$SECURITY cms -D -i "$infile"
+	fi
+	} 2>/dev/null
+	result=$?
+
+	if [[ $result != 0 ]]; then
+		die "No valid certificates for $infile"
+	fi
+	set -e
+}
+
 __kill_bg_xcodebuid_task () {
 	if [[ -n ${XCODEBUILD_PID} ]]; then
 		if ps -p $XCODEBUILD_PID > /dev/null; then
@@ -37,7 +92,7 @@ __is_distribution_profile () {
 
 	temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
 
-	relax profile dec "$mobileprovision" -o "$temp_mobileprovision"
+	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
 	result=$?
 	[[ $result = 0 ]] || return
 
@@ -54,18 +109,6 @@ __is_distribution_profile () {
 	fi
 }
 
-
-# find_mobileprovision <mobileprovision_name>
-find_mobileprovision () {
-	grep -rw "$PROVISIONING_DST_DIR" -e "$1" | \
-	sed -n "s:[^\/]*\(\/.*mobileprovision\).*:\1:p" | \
-	while IFS= read file; do
-		local temp_file=$TMPDIR/__find_mobileprovision
-		decode_mobileprovision "$file" "$temp_file"
-		date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" $temp_file)
-		echo $date"#"$file
-	done | sort -ur | awk -F# '{ print $2 }' | head -n 1
-}
 
 # TODO It can be replacted with a ruby script.
 # __map_vals <release>
@@ -163,21 +206,30 @@ get_build_params_file () {
 	[[ ${params[@]} =~ "-configuration" ]] || [[ -z $configuration ]] ||\
 		params+=( -configuration "$configuration" )
 
-	[[ -z $provisioning_profile ]] || params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
-	[[ -z $team_id ]] || param+=( DEVELOPMENT_TEAM="$team_id" )
+	if [[ -n $provisioning_profile ]]; then
+		params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
+		local mobileprovision=$(find_mobileprovision "$provisioning_profile")
+		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
 
-	params+=( ONLY_ACTIVE_ARCH=NO )
-
-	# Should use development signing for archive. Refer to this session, 
-	# https://developer.apple.com/videos/play/wwdc2016/401/.
-	# But it's not working when exporint ana adhoc IPA file.
-	# I confirmed It's working well in Xcode 7.3.1.
-	local mobileprovision=$(find_mobileprovision "$1")
-	if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
-		params+=( CODE_SIGN_IDENTITY="iPhone Distribution" )
+		# Should use development signing for archive. Refer to this session, 
+		# https://developer.apple.com/videos/play/wwdc2016/401/.
+		# But it's not working when exporint ana adhoc IPA file.
+		# I confirmed It's working well in Xcode 7.3.1.
+		if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
+			params+=( CODE_SIGN_IDENTITY="iPhone Distribution" )
+		else
+			params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
+		fi
 	else
 		params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
 	fi
+
+	if [[ -n $team_id ]]; then
+		param+=( DEVELOPMENT_TEAM="$team_id" )
+	fi
+
+	params+=( ONLY_ACTIVE_ARCH=NO )
+
 
 	if test "${build_settings:-undefined}" != undefined; then
 		if test ${#build_settings[@]} -gt 0; then
@@ -549,4 +601,5 @@ declare -x -f print_info_plist print_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
+declare -x -f dec_provisioning_profile
 declare -x -f __is_distribution_profile

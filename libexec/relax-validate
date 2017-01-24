@@ -124,7 +124,7 @@ validate_app () {
 	# Show embedded provisioning profile
 	logi "$ARROW Embedded Provisioning Profile"
 	local mobileprovision=$REL_TEMP_DIR/embedded.mobileprovision
-	decode_mobileprovision "${app_path}/embedded.mobileprovision" "$mobileprovision"
+	dec_provisioning_profile "${app_path}/embedded.mobileprovision" -o "$mobileprovision"
 	local mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $mobileprovision)
 	local mp_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $mobileprovision)
 	local mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" $mobileprovision)

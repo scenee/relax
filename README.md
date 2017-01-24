@@ -96,57 +96,59 @@ And also check [this 'Refile' section](#relfile) and [the reference Refile](http
 ```yaml
 workspace: SampleApp
 
-development: # Define a deployment type
+company_debug: # Define a deployment type
   scheme: SampleApp
+  team_id: __MY_COMPANY_TEAM_ID__
   configuration: Debug
+  bundle_version:  "%h-debug" # See 'Bundle Version Format section'
   build_settings:
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
       - "-DDEBUG" 
-  info_plist:
-    UISupportedExternalAccessoryProtocols:
-      - com.example.SampleApp.dev
-  export_options:
-    method:  development
-
-adhoc:
-  scheme: SampleApp
-  team_id: __MY_COMPANY_TEAM_ID__
-  bundle_version:  "%h-%C" # See 'Bundle Version Format section'
-  build_settings:
-    OTHER_SWIFT_FLAGS: -DDEBUG
   info_plist: # You can change Info.plist settings for a deployment.
     CFBundleName: SmapleApp (DEBUG)
-    CFBundleDevelopmentRegion: en
     UISupportedExternalAccessoryProtocols:
-      - com.example.SampleApp
-      - com.example.SampleApp2
+      - com.example.accessory.mock
   export_options:
     method:  ad-hoc
+
+company_adhoc: # Define a deployment type
+  scheme: SampleApp
+  team_id: __MY_COMPANY_TEAM_ID__
+  bundle_version: "%h-beta" # See 'Bundle Version Format section'
+  info_plist:
+    UISupportedExternalAccessoryProtocols:
+      - com.example.accessory
+  export_options:
+    method:  ad-hoc
+
+company_appstore:
+  scheme: SampleApp
+  team_id: __MY_COMPANY_TEAM_ID__
+  info_plist:
+    UISupportedExternalAccessoryProtocols:
+      - com.example.accessory
+  export_options:
+    method:  appstore
 
 enterprise:
   scheme: SampleApp
   team_id: __MY_ENTERPRISE_TEAM_ID__
+  info_plist:
+    UISupportedExternalAccessoryProtocols:
+      - com.example.accessory
   export_options:
     method:  enterprise
-
-appstore:
-  scheme: SampleApp
-  team_id: __MY_COMPANY_TEAM_ID__
-  export_options:
-    method:  appstore
 
 framework:
   scheme: Sample Framework
   configuration: Release
 
-
+log_formatter: xcpretty
 crashlytics:
   token:  __MY_TOKEN__
   secret: __MY_SECRET__
   group:  __MY_GROUP__
-
-log_formatter: xcpretty
 ```
 
 ## Build an archive for your product

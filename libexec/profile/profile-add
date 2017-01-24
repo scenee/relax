@@ -19,7 +19,7 @@ add_provisioning_profile () {
 
 	local temp_provisioning_plist="$REL_TEMP_DIR/provisioning.plist"
 
-	decode_mobileprovision "$provisioning_file" "$temp_provisioning_plist"
+	dec_provisioning_profile "$provisioning_file" -o "$temp_provisioning_plist"
 
 	provisioning_uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" $temp_provisioning_plist)
 	provisioning_name=$(/usr/libexec/PlistBuddy -c "Print :Name" $temp_provisioning_plist)
