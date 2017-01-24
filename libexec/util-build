@@ -29,20 +29,29 @@ __kill_bg_xcodebuid_task () {
 }
 
 
-# is_distribution_profile <mobileprovision_name>
-is_distribution_profile () {
-	local mobileprovision=$(find_mobileprovision "$1")
-	if [[ -f "$mobileprovision" ]]; then
-		temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
+# __is_distribution_profile <mobileprovision_file>
+__is_distribution_profile () {
+	local mobileprovision="$1"
 
-		decode_mobileprovision "$mobileprovision" "$temp_mobileprovision"
-		# Ref https://devforums.apple.com/message/84647#84647
-		if /usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" $temp_mobileprovision \
-			| grep -q false; then
-			return 0
-		fi
+	[[ -f "$mobileprovision" ]] || return
+
+	temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
+
+	relax profile dec "$mobileprovision" -o "$temp_mobileprovision"
+	result=$?
+	[[ $result = 0 ]] || return
+
+	# Ref https://devforums.apple.com/message/84647#84647
+	get_task_allow=$REL_TEMP_DIR/get-task-allow
+	/usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" $temp_mobileprovision > $get_task_allow
+	result=$?
+	[[ $result = 0 ]] || return
+
+	if cat "$get_task_allow" | grep -q false; then
+		echo true
+	else 
+		echo false
 	fi
-	return 1
 }
 
 
@@ -163,7 +172,8 @@ get_build_params_file () {
 	# https://developer.apple.com/videos/play/wwdc2016/401/.
 	# But it's not working when exporint ana adhoc IPA file.
 	# I confirmed It's working well in Xcode 7.3.1.
-	if is_distribution_profile "$provisioning_profile"; then
+	local mobileprovision=$(find_mobileprovision "$1")
+	if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
 		params+=( CODE_SIGN_IDENTITY="iPhone Distribution" )
 	else
 		params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
@@ -350,6 +360,11 @@ setup_build () {
 
 	params_file=$(get_build_params_file "$scheme")
 
+	## Replace TEAMID if needed
+	if [[ "${team_id:-undefined}" != undefined ]]; then
+		__replace_development_team $team_id
+	fi
+
 	load_xcode_build_settings $params_file
 
 	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
@@ -357,11 +372,6 @@ setup_build () {
 	fi
 
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
-
-	## Replace TEAMID if needed
-	if [[ "${team_id:-undefined}" != undefined ]]; then
-		__replace_development_team $team_id
-	fi
 
 	logi "$ARROW Set up '$release' configurations"
 	logi "Configuration: $CONFIGURATION"
@@ -432,11 +442,19 @@ setup_build () {
 
 	## Provisioning Profile
 	if [[ -n $provisioning_profile ]]; then
-		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
 		# Custom Sigining
-		sed -i .$BAK_EXT \
-		-e "/DevelopmentTeam/d; s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-		"$PROJECT_FILE_PATH"/project.pbxproj 
+		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+			sed -i .$BAK_EXT \
+			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+			"$PROJECT_FILE_PATH"/project.pbxproj 
+		else
+			s='[[:space:] ]*'
+			sed -i .$BAK_EXT \
+			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+			\1ProvisioningStyle = Manual;\
+			/" "$PROJECT_FILE_PATH"/project.pbxproj 
+		fi
+		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
 	fi
 
 	## Bundle Version
@@ -530,4 +548,5 @@ declare -x -f load_xcode_build_settings get_build_params_file
 declare -x -f print_info_plist print_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
-declare -x -f find_mobileprovision is_distribution_profile
+declare -x -f find_mobileprovision
+declare -x -f __is_distribution_profile
