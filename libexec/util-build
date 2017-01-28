@@ -168,15 +168,16 @@ __check_scheme () {
 }
 
 # __replace_development_team <team-id>
+# PROJECT_FILE_PATH must be defined
 __replace_development_team () {
 	local team_id=$1
 
-	for p in $(find $HERE -name project.pbxproj); do
-		sed -i .$BAK_EXT -e "
-		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
-		s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
-		" $p
-	done
+	sed -i.$BAK_EXT -e "
+	s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
+	s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
+	" "$PROJECT_FILE_PATH/project.pbxproj"
+
+	export DEVELOPMENT_TEAM=$team_id
 }
 
 # get_build_base_params <scheme> [buildsettings=value] ...
@@ -412,18 +413,17 @@ setup_build () {
 
 	params_file=$(get_build_params_file "$scheme")
 
-	## Replace TEAMID if needed
+	load_xcode_build_settings $params_file
+	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
+
 	if [[ "${team_id:-undefined}" != undefined ]]; then
 		__replace_development_team $team_id
 	fi
-
-	load_xcode_build_settings $params_file
 
 	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
 		die "This scheme($scheme) isn't for an Application, Framework or Library target"
 	fi
 
-	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
 
 	logi "$ARROW Set up '$release' configurations"
 	logi "Configuration: $CONFIGURATION"
