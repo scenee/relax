@@ -1,7 +1,7 @@
 #!/usr/bin/env bash -eu
 # Usage: relax [--version] [--config <Relfile>] <command>
 
-export VERSION="0.2.0"
+export VERSION="0.3.0"
 
 ###################
 ### Environment ###
