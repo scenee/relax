@@ -95,7 +95,7 @@ while [ $# -ne 0 ];  do
 			service=$arg
 		else
 			ipa_file=$arg
-			[[ ! -f "$ipa_file" ]] || die "Not found $ipa_file"
+			[[ -f "$ipa_file" ]] || die "Not found $ipa_file"
 		fi
 		;;
 	esac
