@@ -70,25 +70,27 @@ resign_app () {
 
 	logi "$ARROW Resigning ${app_path##*/}"
 
-	local stdtemp=$REL_TEMP_DIR/stdtemp
-
-	exec 3> $stdtemp
+	success=false
 	set +e
-
+	local stdtemp=$REL_TEMP_DIR/stdtemp
+	exec 3> $stdtemp
 	while IFS= read -r bundle || [[ -n "$bundle" ]]
 	do
 		local keychain=$(security default-keychain | xargs)
-		/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 1>&3 2>&3
+		/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 2>&3
 		if [[ $? != 0 ]]; then
-			die "$(cat $stdtemp)"
-		else
-			cat $stdtemp | logv
+			success=false
+			break
 		fi
+		success=true
+		cat $stdtemp | logv
+		# Clear stdtemp
+		: > $stdtemp
 	done < <(find -d "${app_path}/.." \
 		\( -name "*.app" -o -name "*.appex" -o -name "*.framework" -o -name "*.dylib" \))
-
-	set -e
 	exec 3>&-
+	[[ $success = true ]] || die "$(cat $stdtemp)"
+	set -e
 }
 
 [[ $# != 0 ]] || usage
