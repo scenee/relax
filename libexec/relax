@@ -27,6 +27,12 @@ export REL_LOG_LEVEL=
 export REL_RELEASES=
 export REL_CONFIG_PATH=
 
+set +u
+if [[ -z ${NOCOLOR} ]]; then
+	export NOCOLOR=false
+fi
+set -u
+
 ################
 ### Includes ###
 ################
@@ -67,13 +73,13 @@ usage () {
 	    keychain	See 'relax keychain help'
 	    profile	See 'relax profile help'
 	EOM
+	fin
 }
 
 ### Main ###
 
 if [ $# = 0 ]; then
 	usage
-	fin
 fi
 
 
@@ -87,23 +93,23 @@ case $1 in
 	set -x
 	shift
 	;;
+--no-color)
+	export NOCOLOR=true
+	source color
+	shift
+	;;
 -h|--help)
 	usage
-	fin
 	;;
 esac
 
-if [ $# = 0 ]; then
-	usage
-	fin
-fi
+[ $# != 0 ] || usage
 
 command=$1
 shift
 case $command in 
 "")
 	usage
-	fin
 	;;
 * )
 	module_path=""
