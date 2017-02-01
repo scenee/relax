@@ -48,11 +48,12 @@ export PROVISION_PROFILE_ADHOC="Relax AdHoc"
 ############
 
 
+trap "relax keychain reset" EXIT
 relax keychain use $keychain -p relax
 
+export NOCOLOR=true
+rm -rf sample/SampleApp/bats.log
 bats test
-
-relax keychain reset
 
 ######################
 # Tear down keychain #

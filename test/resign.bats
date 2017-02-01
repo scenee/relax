@@ -14,11 +14,11 @@ load test_helper
 
   rm -rf *-resigned.ipa
   run relax resign -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
-  echo "$output" >> ../../bats.log
+  echo "$output" >> bats.log
   assert_success
 
   run relax validate "Sample App-resigned.ipa"
-  echo "$output" >> ../../bats.log
+  echo "$output" >> bats.log
   assert_success
 }
 
