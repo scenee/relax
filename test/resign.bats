@@ -13,7 +13,8 @@ load test_helper
   [[ $output =~ "Relax AdHoc" ]]
 
   rm -rf *-resigned.ipa
-  run relax resign -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
+
+  run relax resign -k relax.keychain -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
   echo "$output" >> bats.log
   assert_success
 
@@ -27,3 +28,10 @@ load test_helper
   assert_failure
 }
 
+# This doesn't work on Travis CI
+#@test "relax resign with invalid keychain" {
+#  rm -rf *-resigned.ipa
+#  run relax resign -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
+#  echo "$output" >> bats.log
+#  assert_failure
+#}

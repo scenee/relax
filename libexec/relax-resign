@@ -3,7 +3,7 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} resign [-i <bundl-identifer>] -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
+	Usage: ${ME} resign [-k <keychain>] [-i <bundl-identifer>]  -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
 
 	Resign a product with a mobileprovision and a certificate
 	This command doens't check consistencies between them.
@@ -76,8 +76,11 @@ resign_app () {
 	exec 3> $stdtemp
 	while IFS= read -r bundle || [[ -n "$bundle" ]]
 	do
-		local keychain=$(security default-keychain | xargs)
-		/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 2>&3
+		if [[ "${keychain:-undefined}" == undefined ]]; then
+			/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$bundle" 2>&3
+		else
+			/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 2>&3
+		fi
 		if [[ $? != 0 ]]; then
 			success=false
 			break
@@ -95,9 +98,9 @@ resign_app () {
 
 [[ $# != 0 ]] || usage
 
-
 mobileprovision=
 bundle_identifier=
+keychain=
 certificate=
 file_name=
 app_path=
@@ -116,6 +119,11 @@ do
 	-p)
 		[[ $# != 0 ]] || usage
 		mobileprovision=$1
+		shift
+		;;
+	-k)
+		[[ $# != 0 ]] || usage
+		keychain=$1
 		shift
 		;;
 	-c)
