@@ -170,7 +170,7 @@ validate_app () {
 		fi
 	fi
 
-	logi "$ARROW Detect duplicate bundle identifiers in ${app_path##*/}"
+	logi "$ARROW Checking duplicate bundle identifiers in ${app_path##*/}"
 	find "$app_path" -name "Info.plist" -mindepth 2 |\
 	while IFS= read info
 	do
@@ -180,8 +180,8 @@ validate_app () {
 		logd "$bundle_info_plist_path"
 		new_id="$(print_info_plist bundle_identifier "$bundle_info_plist_path")"
 		if [[ -n $new_id ]]; then
-			bundle_path=${info##$app_path}
-			app_name=${app_path##*/}
+			bundle_path="${info##$app_path}"
+			app_name="${app_path##*/}"
 			logi "${app_name}${bundle_path}: $new_id"
 			if [[ $bundle_ids =~ $new_id ]]; then
 				success=false

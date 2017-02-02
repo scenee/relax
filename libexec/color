@@ -1,5 +1,20 @@
 #!/bin/bash
 
+if [[ $NOCOLOR == true ]]; then
+
+export NC=""
+export BLACK=""
+export RED=""
+export GREEN=""
+export YELLOW=""
+export BLUE=""
+export PURPLE=""
+export CYAN=""
+export WHITE=""
+export BOLD=""
+
+else
+
 export  NC='\033[0m'       # Reset Color
 
 # Regular Colors
@@ -12,3 +27,6 @@ export PURPLE='\033[0;35m'       # Purple
 export CYAN='\033[0;36m'         # Cyan
 export WHITE='\033[0;37m'        # White
 export BOLD='\033[1m'            # Black
+
+
+fi
