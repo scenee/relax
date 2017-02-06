@@ -18,4 +18,4 @@ if cd "${BASH_SOURCE%/*}" 2>/dev/null && git remote -v 2>/dev/null | grep -q rel
 	git_revision="${git_revision#v}"
 fi
 
-echo "relax ${git_revision:-$VERSION}"
+echo "relax ${git_revision:-$REL_VERSION}"

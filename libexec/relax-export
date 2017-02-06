@@ -198,8 +198,9 @@ if [[ -z "$target_archive_file" ]]; then
 fi
 
 
+
 trap 'teardown_build' EXIT INT TERM
-setup_build $release
+setup_build --export "$target_archive_file" $release
 prepare_export
 
 export_archive "$target_archive_file"
