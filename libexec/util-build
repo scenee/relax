@@ -75,6 +75,68 @@ dec_provisioning_profile () {
 	set -e
 }
 
+# print_progress_time <pid>
+print_progress_time () {
+	local pid=$1
+	local delay=0.16666666 # 0.016666666 * 10
+	local stime=$(date "+%s")
+	local i=1
+
+	# For a interrupt timing issue
+	trap "__kill_bg_xcodebuid_task $XCODEBUILD_PID; \
+		stty echo; tput cnorm; " INT TERM
+
+	star="$BOLD"'\xE2\x88\x97'"$NC"
+	lbr="$BLUE[$NC"
+	rbr="$BLUE]$NC"
+	sp=("$lbr$star  $rbr"  "$lbr $star $rbr"  "$lbr  $star$rbr"  "$lbr $star $rbr")
+
+	# Invisible cursor.
+	tput civis
+	# Don't echo back any chars typed.
+	stty -echo
+
+	while ps -p $pid | grep -q $pid; do
+		now=$(date "+%s")
+		dt=$(date -r "$(( $now - $stime ))" "+%s")
+		printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
+		sleep $delay
+	done
+
+	tput el # Clear to end of line
+	printf "Time: ${dt}s\n"
+
+	# Retore tty and tput
+	stty echo
+	tput cnorm
+
+	if wait $pid; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# progress_bar <pid>
+progress_bar()
+{
+	local pid=$1
+	local delay=0.75
+	printf "["
+	while ps -p $pid | grep -q $pid; do
+		printf  "▓"
+		sleep $delay
+	done
+	if wait $pid; then
+		printf "] done!\n"
+		return 0
+	else
+		printf "]\n"
+		return 1
+	fi
+}
+
+
 __kill_bg_xcodebuid_task () {
 	if [[ -n ${XCODEBUILD_PID} ]]; then
 		if ps -p $XCODEBUILD_PID > /dev/null; then
@@ -594,6 +656,7 @@ update_archived_entitlements_xcent () {
 	cp "$_entitlements_xcent" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT"
 }
 
+declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team
 declare -x -f load_xcode_build_settings get_build_params_file
