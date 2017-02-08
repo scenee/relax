@@ -75,6 +75,68 @@ dec_provisioning_profile () {
 	set -e
 }
 
+# print_progress_time <pid>
+print_progress_time () {
+	local pid=$1
+	local delay=0.16666666 # 0.016666666 * 10
+	local stime=$(date "+%s")
+	local i=1
+
+	# For a interrupt timing issue
+	trap "stty echo; tput cnorm;  \
+		__kill_bg_xcodebuid_task $XCODEBUILD_PID;" INT TERM
+
+	star="$BOLD"'\xE2\x88\x97'"$NC"
+	lbr="$BLUE[$NC"
+	rbr="$BLUE]$NC"
+	sp=("$lbr$star  $rbr"  "$lbr $star $rbr"  "$lbr  $star$rbr"  "$lbr $star $rbr")
+
+	# Invisible cursor.
+	tput civis
+	# Don't echo back any chars typed.
+	stty -echo
+
+	while ps -p $pid | grep -q $pid; do
+		now=$(date "+%s")
+		dt=$(date -r "$(( $now - $stime ))" "+%s")
+		printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
+		sleep $delay
+	done
+
+	tput el # Clear to end of line
+	printf "Time: ${dt}s\n"
+
+	# Retore tty and tput
+	stty echo
+	tput cnorm
+
+	if wait $pid; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# progress_bar <pid>
+progress_bar()
+{
+	local pid=$1
+	local delay=0.75
+	printf "["
+	while ps -p $pid | grep -q $pid; do
+		printf  "▓"
+		sleep $delay
+	done
+	if wait $pid; then
+		printf "] done!\n"
+		return 0
+	else
+		printf "]\n"
+		return 1
+	fi
+}
+
+
 __kill_bg_xcodebuid_task () {
 	if [[ -n ${XCODEBUILD_PID} ]]; then
 		if ps -p $XCODEBUILD_PID > /dev/null; then
@@ -129,6 +191,8 @@ __map_vals () {
 		build_settings=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
 	test -z $bundle_identifier && \
 		bundle_identifier=$(eval echo '$'REL_CONFIG_${release}_bundle_identifier)
+	test -z $version && \
+		version=$(eval echo '$'REL_CONFIG_${release}_version)
 	test -z $bundle_version && \
 		bundle_version=$(eval echo '$'REL_CONFIG_${release}_bundle_version)
 	test -z $team_id && \
@@ -379,8 +443,20 @@ teardown_build () {
 	fi
 }
 
-# prepare_build <release>
+# setup_build [--export <archive-path>] <release>
 setup_build () {
+	local for_export=false
+	local archived_info_plist version
+
+	case "$1" in
+	--export) 
+		for_export=true
+		shift
+		archived_info_plist="$1"/Info.plist
+		shift
+		;;
+	esac
+
 	if test ! -d $REL_TEMP_DIR; then
 		die "Not found Temporary directory"
 	fi
@@ -429,7 +505,7 @@ setup_build () {
 	logi "Configuration: $CONFIGURATION"
 	configuration=$CONFIGURATION
 
-	INFO_PLIST_PATH=$PRODUCT_SETTINGS_PATH
+	INFO_PLIST_PATH="$PRODUCT_SETTINGS_PATH"
 
 	# StaticLibrary doesn't have a Info.plist
 	if [ -z $INFO_PLIST_PATH ]; then
@@ -439,8 +515,8 @@ setup_build () {
 		return
 	fi
 
-	cp $INFO_PLIST_PATH $INFO_PLIST_PATH.$BAK_EXT
-	logd "Info plist: $INFO_PLIST_PATH"
+	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$BAK_EXT"
+	logv "Info plist: $INFO_PLIST_PATH"
 
 	set +e
 	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
@@ -462,6 +538,8 @@ setup_build () {
 		"$PROJECT_FILE_PATH"/project.pbxproj
 		/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_identifier" "$INFO_PLIST_PATH"
 		PRODUCT_BUNDLE_IDENTIFIER=$bundle_identifier
+	elif [[ $for_export == true ]]; then
+		PRODUCT_BUNDLE_IDENTIFIER="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" "$archived_info_plist")"
 	fi
 
 	## Support a xcode project file not including PRODUCT_BUNDLE_IDENTIFIER 
@@ -475,18 +553,22 @@ setup_build () {
 		fi
 	else # PRODUCT_BUNDLE_IDENTIFIER sometimes can be differenct from Info.plist
 
-		local info_plist_bundle_identifier=$(print_info_plist bundle_identifier "$INFO_PLIST_PATH")
-
-		# Should eval a CFBundleIdentifier value because it's can be $(PRODUCT_BUNDLE_IDENTIFIER)
-		if [[ "$info_plist_bundle_identifier" = "\$(PRODUCT_BUNDLE_IDENTIFIER)" ]]; then
+		if [[ $for_export == true ]]; then
 			:
 		else
-			if [[ ${PRODUCT_BUNDLE_IDENTIFIER} != "$info_plist_bundle_identifier" ]]; then
-				logi "$ERR PRODUCT_BUNDLE_IDENTIFIER($PRODUCT_BUNDLE_IDENTIFIER) setting is different from the value($info_plist_bundle_identifier) of CFBundleIdentifier in Info.plist."
-				die "$NOTE Please edit 'Product Bundle Identifier' in '$PRODUCT_NAME' > 'Build Settings' pane."
-			fi
+			local info_plist_bundle_identifier="$(print_info_plist bundle_identifier "$INFO_PLIST_PATH")";
 
-			PRODUCT_BUNDLE_IDENTIFIER=$info_plist_bundle_identifier
+			# Should eval a CFBundleIdentifier value because it's can be $(PRODUCT_BUNDLE_IDENTIFIER)
+			if [[ "$info_plist_bundle_identifier" = "\$(PRODUCT_BUNDLE_IDENTIFIER)" ]]; then
+				:
+			else
+				if [[ ${PRODUCT_BUNDLE_IDENTIFIER} != "$info_plist_bundle_identifier" ]]; then
+					logi "$ERR PRODUCT_BUNDLE_IDENTIFIER($PRODUCT_BUNDLE_IDENTIFIER) setting is different from the value($info_plist_bundle_identifier) of CFBundleIdentifier in Info.plist."
+					die "$NOTE Please edit 'Product Bundle Identifier' in '$PRODUCT_NAME' > 'Build Settings' pane."
+				fi
+
+				PRODUCT_BUNDLE_IDENTIFIER=$info_plist_bundle_identifier
+			fi
 		fi
 	fi
 
@@ -509,31 +591,44 @@ setup_build () {
 		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
 	fi
 
-	## Bundle Version
-	local version=$(print_info_plist version "$INFO_PLIST_PATH")
-	local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
-	local abbcommit=$(git log -1 --format='%h')
-	local branch=$(git symbolic-ref --short HEAD)
-	local config=$(echo $configuration | tr [:upper:] [:lower:])
-
-	if test "${bundle_version:-undefined}" = undefined; then
-		BUNDLE_VERSION=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
+	if [[ ${version:-undefined} == undefined ]]; then
+		BUNDLE_SHORT_VERSION="$(print_info_plist version "$INFO_PLIST_PATH")"
 	else
-		BUNDLE_VERSION=$bundle_version
+		BUNDLE_SHORT_VERSION="$version"
 	fi
 
-	BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
-	{
-		gsub(/%V/, "'"$version"'");
-		gsub(/%B/, "'"$bundle"'");
-		gsub(/%C/, "'"$config"'");
-		gsub(/%h/, "'"$abbcommit"'");
-		gsub(/%D/, "'"${branch//\//_}"'");
-		print
-	}') # See [Semantic Versioning 2.0.0](http://semver.org)
 
+	if [[ $for_export == true && "${bundle_version:-undefined}" = undefined ]]; then
+		BUNDLE_VERSION="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
+		BUNDLE_SHORT_VERSION="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleShortVersionString" "$archived_info_plist")"
+	else
+		## Bundle Version
+		local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
+		local abbcommit=$(git log -1 --format='%h')
+		local branch=$(git symbolic-ref --short HEAD)
+		local config=$(echo $configuration | tr [:upper:] [:lower:])
+
+		if test "${bundle_version:-undefined}" = undefined; then
+			BUNDLE_VERSION=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
+		else
+			BUNDLE_VERSION=$bundle_version
+		fi
+
+		BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
+		{
+			gsub(/%V/, "'"$version"'");
+			gsub(/%B/, "'"$bundle"'");
+			gsub(/%C/, "'"$config"'");
+			gsub(/%h/, "'"$abbcommit"'");
+			gsub(/%D/, "'"${branch//\//_}"'");
+			print
+		}') # See [Semantic Versioning 2.0.0](http://semver.org)
+	fi
+
+	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $BUNDLE_SHORT_VERSION" "$INFO_PLIST_PATH"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_VERSION" "$INFO_PLIST_PATH"
 
+	logi "Version: $BUNDLE_SHORT_VERSION"
 	logi "Bundle Version: $BUNDLE_VERSION"
 
 	## Product Build Root
@@ -543,7 +638,7 @@ setup_build () {
 		if [[ $BUNDLE_VERSION =~ (.*)\$\(CURRENT_PROJECT_VERSION\)(.*) ]]; then
 			BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
 		fi
-		if [[ ! $BUNDLE_VERSION =~ "$config" ]]; then
+		if [[ $for_export == false ]] && ! echo $BUNDLE_VERSION  | grep -iqF $configuration;  then
 			BUNDLE_VERSION=$BUNDLE_VERSION-$configuration
 		fi
 		PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release/$scheme-$BUNDLE_VERSION")
@@ -594,6 +689,7 @@ update_archived_entitlements_xcent () {
 	cp "$_entitlements_xcent" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT"
 }
 
+declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team
 declare -x -f load_xcode_build_settings get_build_params_file

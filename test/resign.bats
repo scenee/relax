@@ -15,11 +15,9 @@ load test_helper
   rm -rf *-resigned.ipa
 
   run relax resign -k relax.keychain -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
-  echo "$output" >> bats.log
   assert_success
 
   run relax validate "Sample App-resigned.ipa"
-  echo "$output" >> bats.log
   assert_success
 }
 
@@ -34,7 +32,6 @@ load test_helper
 
   rm -rf *-resigned.ipa
   run relax resign -k System.keychain -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
-  echo "$output" >> bats.log
   assert_failure
 
   relax keychain use relax.keychain -p relax

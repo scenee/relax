@@ -10,6 +10,8 @@ development:
   configuration: Debug
   provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
   team_id: J3D7L9FHSS
+  bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
+  bundle_version:  "%h-%C"
   build_settings:
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
@@ -21,7 +23,6 @@ development:
     compileBitcode: false
   info_plist:
     CFBundleName: Sample (Debug)
-    CFBundleVersion: "%h-%C"
     CFBundleDevelopmentRegion: $COUNTRY
     UISupportedExternalAccessoryProtocols:
       - com.example.SampleApp
@@ -31,6 +32,8 @@ development2:
   scheme: Sample App
   bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
   configuration: Debug
+  version: "$VERSION"
+  bundle_version: "%h-debug-internal"
   provisioning_profile: "$PROVISION_PROFILE_DEV"
   export_options:
     method: development
@@ -38,8 +41,6 @@ development2:
 
 adhoc:
   scheme: Sample App
-  bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version:  "%h-%C"
   provisioning_profile: "$PROVISION_PROFILE_ADHOC"
   export_options:
     method: ad-hoc 
