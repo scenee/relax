@@ -96,47 +96,80 @@ And also check [this 'Refile' section](#relfile) and [the reference Refile](http
 ```yaml
 workspace: SampleApp
 
-company_debug: # Define a deployment type
+company_test: # Define a deployment type
   scheme: SampleApp
+
   team_id: __MY_COMPANY_TEAM_ID__
-  configuration: Debug
-  bundle_version:  "%h-debug" # See 'Bundle Version Format section'
+
+  version: 0.1.0
+  bundle_version:  "%h-$C" # See 'Bundle Version Format section'
+
   build_settings:
+    SWIFT_VERSION: 3.0
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
       - "-DDEBUG" 
+
   info_plist: # You can change Info.plist settings for a deployment.
-    CFBundleName: SmapleApp (DEBUG)
+    CFBundleName: SmapleApp(Test)
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory.mock
+
   export_options:
     method:  ad-hoc
 
 company_adhoc: # Define a deployment type
   scheme: SampleApp
+
   team_id: __MY_COMPANY_TEAM_ID__
-  bundle_version: "%h-beta" # See 'Bundle Version Format section'
+
+  version: 0.1.0
+  bundle_version: "%h-%C-${BUILD_NUMBER}"
+
+  build_settings:
+    SWIFT_VERSION: 3.0
+
   info_plist:
+    CFBundleName: SmapleApp(AdHoc)
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
+
   export_options:
     method:  ad-hoc
 
 company_appstore:
   scheme: SampleApp
+
   team_id: __MY_COMPANY_TEAM_ID__
+
+  version: 1.0
+  bundle_version: "$BUILD_NUMBER"
+
+  build_settings:
+    SWIFT_VERSION: 3.0
+
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
+
   export_options:
     method:  appstore
 
 enterprise:
   scheme: SampleApp
+
   team_id: __MY_ENTERPRISE_TEAM_ID__
+
+  version: 1.0
+  bundle_version: "%h-%C"
+
+  build_settings:
+    SWIFT_VERSION: 3.0
+
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
+
   export_options:
     method:  enterprise
 
