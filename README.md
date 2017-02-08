@@ -100,8 +100,10 @@ company_debug: # Define a deployment type
   scheme: SampleApp
   team_id: __MY_COMPANY_TEAM_ID__
   configuration: Debug
+  version: 0.1.0
   bundle_version:  "%h-debug" # See 'Bundle Version Format section'
   build_settings:
+    SWIFT_VERSION: 3.0
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
       - "-DDEBUG" 
@@ -115,7 +117,10 @@ company_debug: # Define a deployment type
 company_adhoc: # Define a deployment type
   scheme: SampleApp
   team_id: __MY_COMPANY_TEAM_ID__
+  version: 0.1.0
   bundle_version: "%h-beta" # See 'Bundle Version Format section'
+  build_settings:
+    SWIFT_VERSION: 3.0
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
@@ -125,6 +130,9 @@ company_adhoc: # Define a deployment type
 company_appstore:
   scheme: SampleApp
   team_id: __MY_COMPANY_TEAM_ID__
+  version: 1.0
+  build_settings:
+    SWIFT_VERSION: 3.0
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
@@ -134,6 +142,8 @@ company_appstore:
 enterprise:
   scheme: SampleApp
   team_id: __MY_ENTERPRISE_TEAM_ID__
+  build_settings:
+    SWIFT_VERSION: 3.0
   info_plist:
     UISupportedExternalAccessoryProtocols:
       - com.example.accessory
