@@ -173,12 +173,20 @@ build_framework () {
 		logi "Added ${framework_location}/Modules/module.modulemap"
 	done < <(find "$HERE" -name module.modulemap | head -n 1)
 
-	# 6 - Copy the framework to the current workspace
-	if test ${framework_location} != "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"; then
-		 ditto "${framework_location}" "${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
-	fi
+	dest="${HERE}/${framework_name}.framework"
 
-	logi "$ARROW Framework: ${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
+	# 6 - Copy the framework to the current workspace
+	ditto "${framework_location}" "$dest"
+
+	logi "$ARROW Framework: ./${framework_name}.framework"
+
+	if [[ -d "$framework_location" ]];
+	then
+		ditto -c -k --sequesterRsrc --keepParent "$framework_location" "$dest".zip
+		logi "zip: ./${framework_name}.framework.zip"
+	else
+		die "Cound not find any zipping framework: ${framework_location}"
+	fi
 }
 
 BUILD_CMD_SEMAPHORE=
@@ -226,14 +234,7 @@ mkdir -p $PRODUCT_BUILD_ROOT
 
 if $is_framework; then
 	build_framework "$framework_name"
-	framework="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
-	if [[ -d $framework ]];
-	then
-		ditto -c -k --sequesterRsrc --keepParent "$framework" "$framework".zip
-		logi "zip: ${framework}.zip"
-	else
-		die "Cound not find any zipping framework: ${framework}"
-	fi
+
 else
 	build_project "${scheme}" "${sdk}" "${configuration}"
 	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"

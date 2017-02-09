@@ -10,5 +10,7 @@ load test_helper
 @test "relax build staticlib" {
   run relax build staticlib --framework Sample
   assert_success
+  [[ -d ./Sample.framework ]] \
+  && [[ -f ./Sample.framework.zip ]]
 }
 
