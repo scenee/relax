@@ -56,17 +56,11 @@ generate_relfile () {
 	## Generate Relfile configuration
 	scheme="${xcode_schemes[0]}"
 	cat <<-EOF >> $REL_TEMP_DIR/Relfile
-	development:
-	  scheme: ${scheme}
-	  configuration: Debug
-	  export_options:
-	    method: development
-
 	adhoc:
 	  scheme: ${scheme}
-	  #bundle_version:  %h-%C
-	  #team_id: YOUR_TEAM_ID
-	  #bundle_identifier: APP_BUNDLE_ID
+	  #bundle_version: "%h-%C" # %h: commit hash, %C: Xcode project configuration
+	  #team_id: __YOUR_TEAM_ID__
+	  #bundle_identifier: __ADHOC_BUNDLE_ID__
 	  export_options:
 	    method: ad-hoc
 
