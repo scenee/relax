@@ -158,14 +158,19 @@ validate_app () {
 		logi "$ARROW Check archived-expanded-entitlements in ${app_path##*/}"
 		local xcent="$app_path/archived-expanded-entitlements.xcent"
 		if [[ -f "$xcent" ]]; then
-			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$xcent")
-			cat <<-EOM | logi
-			Signed entitlements: $cs_team_id.$cs_app_id
-			Archived expanded entitlements: $xcent_app_id
-			EOM
-			if [ "$cs_team_id.$cs_app_id" != "$xcent_app_id" ]; then
-				success=false
-				die "Not match the signed entitlements and the archived expanded entitlements"
+			local xcent_app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" \
+				"$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" 2>/dev/null | grep -v "Does Not Exist")
+			if [[ -z ${xcent_app_id} ]]; then
+				logi "$WARN $ARCHIVED_ENTITLEMENTS_XCENT is empty."
+			else
+				cat <<-EOM | logi
+				Signed entitlements: $cs_team_id.$cs_app_id
+				Archived expanded entitlements: $xcent_app_id
+				EOM
+				if [ "$cs_team_id.$cs_app_id" != "$xcent_app_id" ]; then
+					success=false
+					die "Not match the signed entitlements and the archived expanded entitlements"
+				fi
 			fi
 		fi
 	fi

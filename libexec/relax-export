@@ -87,7 +87,6 @@ export_archive () {
 	if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$team_id"; then
 		:
 	else
-		logi "$ARROW Update $ARCHIVED_ENTITLEMENTS_XCENT. IPA file will be exported in $export_path"
 		update_archived_entitlements_xcent "$team_id" "$app_path"
 	fi
 

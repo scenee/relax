@@ -667,7 +667,13 @@ update_archived_entitlements_xcent () {
 	#codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" > $REL_TEMP_DIR/codesign_info
 	#local cs_team_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/TeamIdentifier=\(.*\)/\1/p")
 
-	local app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT")
+	local app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" 2>/dev/null | grep -v "Does Not Exist")
+	if [[ -z ${app_id} ]]; then
+		logi "$WARN $ARCHIVED_ENTITLEMENTS_XCENT is empty."
+		return
+	fi
+
+	logi "$ARROW Update $ARCHIVED_ENTITLEMENTS_XCENT. IPA file will be exported in $export_path"
 	_src_team=${app_id%%.*}
 
 	cp "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" "$_entitlements_xcent"
