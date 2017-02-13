@@ -17,7 +17,7 @@ ls_mobileprovision () {
 	while IFS= read -r file; do
 		mp_file="${file##*/}"
 		mp_temp="$REL_TEMP_DIR/${mp_file}"
-		security cms -D -i "$file" > "$mp_temp"
+		security cms -D -i "$file" > "$mp_temp" 2>/dev/null
 		mp_name=$(/usr/libexec/PlistBuddy -c "Print :Name" "$mp_temp")
 		mp_team=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp_temp")
 		mp_team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp_temp")
