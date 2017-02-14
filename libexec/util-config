@@ -51,7 +51,7 @@ config_collect_releases () {
 _check_config () {
 	if [[ "${REL_CONFIG_xcodeproj:-undefined}" = undefined ]]; then
 		if [[ "${REL_CONFIG_workspace:-undefined}" = undefined ]]; then
-			die "Please configure XCODEPROJ or WORKSPACE in config file."
+			die "Please configure 'xcodeproj:' or 'workspace:' field on the top of config file."
 		fi
 	fi
 
