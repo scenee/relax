@@ -116,7 +116,7 @@ add_identities () {
 	fi
 
 
-	cmd="$SECURITY import ${p12// /\ } -k ${keychain// /\ } -P $password -T /usr/bin/codesign"
+	cmd="$SECURITY import \"${p12}\" -k \"${keychain}\" -P \"$password\" -T /usr/bin/codesign"
 	{
 	if [[ $is_sudo = true ]]; then
 		sudo bash -c "$cmd"
