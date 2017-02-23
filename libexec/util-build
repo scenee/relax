@@ -55,8 +55,7 @@ find_mobileprovision () {
 
 	local result=$REL_TEMP_DIR/results
 
-	grep -rw "$PROVISIONING_DST_DIR" -e "$name" | \
-	sed -n "s:[^\/]*\(\/.*mobileprovision\).*:\1:p" | \
+	find "$PROVISIONING_DST_DIR" -depth 1 -name "*.mobileprovision" | \
 	while IFS= read file; do
 		local mp=$REL_TEMP_DIR/temp_mobileprovision
 		dec_provisioning_profile "$file" -o "$mp"
@@ -64,6 +63,10 @@ find_mobileprovision () {
 		local full_name=$(/usr/libexec/PlistBuddy -c "Print :Name" "$mp")
 		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp")
 		local _team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp")
+
+		if [[ ! $full_name =~ $name ]]; then
+			continue
+		fi
 
 		local ret
 		if [[ ${verbose} == true ]]; then
