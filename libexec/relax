@@ -120,8 +120,10 @@ case $command in
 		module_path="$(command -v "$module" || true)"
 		if ! [ -n "$module_path" ]; then
 			die "No such command \`$command'"
-		else
+		elif grep -q "relax" <<< "$module_path"; then
 			"$module_path" "$@"
+		else
+			die "No such command \`$command'"
 		fi
 	else
 		[[ $command != "help" ]] || exec "$command_path" "$@"
