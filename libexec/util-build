@@ -298,7 +298,7 @@ get_build_params_file () {
 		build_params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
 	fi
 
-	build_params+=( ONLY_ACTIVE_ARCH=NO )
+	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
 
 	if test "${build_settings:-undefined}" != undefined; then

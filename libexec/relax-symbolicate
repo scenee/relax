@@ -1,0 +1,48 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `symbolicate` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} symbolicate <crashlog> <archive>
+
+	EOM
+	fin
+}
+
+# symbolicate <crashlog> <archive>
+symbolicate () {
+	local crashlog archive app_path dsym_path out
+	[ $# -eq 2 ] || usage
+
+	crashlog=$1
+	archive=$2
+
+	[[ -d /Applications/Xcode.app ]] || die "Please install Xcode.app"
+	
+	export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+
+	symbolicatecrash_path=/Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources/symbolicatecrash
+	
+	logi "$ARROW Symbolicating '$crashlog'..."
+
+	app_path=$(find "$archive" -name "*.app")
+	dsym_path=$(find "$archive" -name "*.app.dSYM")
+
+	out=${crashlog%%\.crash}-symbolicated.crash
+
+	logv "Using $app_path"
+	logv "Using $dsym_path"
+	if "$symbolicatecrash_path" "$crashlog" "$app_path" "$dsym_path" -o "$out"; then
+		logi "$out"
+	else
+		die
+	fi
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h) usage ;;
+esac
+
+symbolicate "$@"
