@@ -11,17 +11,18 @@ usage () {
 
 # rm_provisioning_profile <provisioning-profile>
 rm_provisioning_profile () {
-	local mobileprovision="$(find_mobileprovision "$1")"
-	if [[ ! -f "$mobileprovision" ]]; then
-		fin "'$1' mobileprovision doesn't exist"
-	fi
-	rm -f "$mobileprovision"
-	logi "Removed '$1':$mobileprovision"
+	find_mobileprovision "$1" | \
+	while IFS= read mobileprovision || [ -n $mobileprovision ]
+	do
+		if [[ ! -f "$mobileprovision" ]]; then
+			fin "'$1' mobileprovision doesn't exist"
+		fi
+		rm -f "$mobileprovision"
+		logi "Removed '$1':$mobileprovision"
+	done
 }
 
-if test $# = 0; then
-	usage
-fi
+[[ $# != 0 ]] || usage
 
 case $1 in
 -h)

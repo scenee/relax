@@ -3,20 +3,32 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} profile find <provisioning-profile-name>
+	usage: ${ME} profile find [--team <teamid>] [--latest] <provisioning-profile-name>
 
 	EOM
 	fin
 }
 
-if test $# = 0; then
-	usage
-fi
+[[ $# != 0 ]] || usage
 
 case $1 in
--h)
-	usage
+-h|--help) usage ;;
+--complete)
+	[[ $# != 0 ]] || usage
+	shift
+	prev=$1
+	shift
+	comp="--team --latest"
+	if ! [[ $prev =~ $prev ]]; then
+		echo "$comp"
+	fi
+	fin
 	;;
 esac
 
-find_mobileprovision "$@" # Defined in util-build
+# `find_mobileprovision()` is defined in `libexec/util-build`
+if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
+	find_mobileprovision -v "$@"
+else
+	find_mobileprovision "$@"
+fi
