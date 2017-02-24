@@ -8,6 +8,8 @@ print_completions () {
 	_command="$1"
 	shift
 
+	#echo "print_completions $@"
+
 	[[ -n "$_command" ]] || fin
 
 	case "$_command" in

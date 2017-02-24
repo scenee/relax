@@ -206,7 +206,14 @@ while [ $# -ne 0 ];  do
 		shift
 		;;
 	--completions)
-		echo "--framework -c"
+		if [[ $# == 0 ]]; then
+			echo "${REL_RELEASES[@]}"
+		else
+			prev=$1
+			if [[  " ${REL_RELEASES[@]} " =~ " $prev " ]]; then
+				echo "--framework -c"
+			fi
+		fi
 		fin
 		;;
 	--framework)

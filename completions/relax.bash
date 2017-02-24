@@ -20,15 +20,7 @@ _relax() {
 
 	if [[ -n $special ]]; then
 		case $special in
-			archive|build|export|show|package)
-				if [[ $prev = $special ]]; then
-					COMPREPLY=( $( compgen -W "$(relax completions releases)" -- $cur ) )
-				else
-					COMPREPLY=( $( compgen -W "$(relax completions $special $prev)" -- $cur ) )
-				fi
-				return
-				;;
-			upload|resign)
+			archive|build|export|show|package|upload|resign)
 				if [[ $prev = $special ]]; then
 					COMPREPLY=( $( compgen -W "$(relax completions $special)" -- $cur ) )
 				else
@@ -55,6 +47,7 @@ _relax() {
 				;;
 		esac
 	fi
+
 
 	case "$prev" in
 		--config)

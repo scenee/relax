@@ -1,5 +1,6 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `package` command
+# completions
 
 usage() {
 	cat <<-EOM
@@ -39,8 +40,20 @@ make_package() {
 
 [[ $# != 0 ]] || usage
 
-case $1 in
--h|--help) usage ;;
+arg=$1
+shift
+case $arg in
+-h|--help) 
+	usage 
+	;;
+--completions)
+	if [[ $# == 0 ]]; then
+		echo "${REL_RELEASES[@]}"
+	else
+		:
+	fi
+	fin
+	;;
 esac
 
 make_package "$@"

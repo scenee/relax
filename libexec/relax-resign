@@ -119,12 +119,20 @@ do
 		if [[ $# == 0 ]]; then
 			echo "${comps[@]}"
 		elif [[ $# == 1 ]]; then
-			if [[ "${comps[@]#$1}" == "${comps[@]}" ]]; then
+			if [[ " ${comps[@]} " =~ " $1 " ]]; then
+				:
+			else
 				echo "${comps[@]}"
 			fi
-		elif [[ $# == 2 ]]; then
-			if [[ "${comps[@]#$2}" != "${comps[@]}" ]]; then
-				echo "${comps[@]}"
+		else
+			prev=$1
+			cur=$2
+			if [[ " ${comps[@]} " =~ " $prev " ]]; then
+				:
+			else
+				if [[ "${comps[@]}" =~ "$cur" ]]; then
+					echo "${comps[@]}"
+				fi
 			fi
 		fi
 		fin
