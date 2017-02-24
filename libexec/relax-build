@@ -205,7 +205,7 @@ while [ $# -ne 0 ];  do
 		configuration=$1
 		shift
 		;;
-	--complete)
+	--completions)
 		echo "--framework -c"
 		fin
 		;;

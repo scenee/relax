@@ -53,7 +53,7 @@ else
 		-h|--help)
 			usage
 			;;
-		--complete)
+		--completions)
 			echo "build archive ipa"
 			fin
 			;;

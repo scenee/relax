@@ -1,9 +1,10 @@
 #!/usr/bin/env bash -eu
 # Summary: Resign ipa or xcarchive
+# completions
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} resign [-k <keychain>] [-i <bundl-identifer>]  -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
+	Usage: ${ME} resign [-k|--keychain <keychain>] [-i|--identifer <bundl-identifer>]  -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
 
 	Resign a product with a mobileprovision and a certificate
 	This command doens't check consistencies between them.
@@ -110,10 +111,32 @@ do
 	arg=$1
 	shift
 	case $arg in
-	-h) usage ;;
-	-i)
+	-h) 
+		usage 
+		;;
+	--completions)
+		comps=(-i --identifer -k --keychain -p -c)
+		if [[ $# == 0 ]]; then
+			echo "${comps[@]}"
+		elif [[ $# == 1 ]]; then
+			if [[ "${comps[@]#$1}" == "${comps[@]}" ]]; then
+				echo "${comps[@]}"
+			fi
+		elif [[ $# == 2 ]]; then
+			if [[ "${comps[@]#$2}" != "${comps[@]}" ]]; then
+				echo "${comps[@]}"
+			fi
+		fi
+		fin
+		;;
+	-i|--identifer)
 		[[ $# != 0 ]] || usage
 		bundle_identifier=$1
+		shift
+		;;
+	-k|--keychain)
+		[[ $# != 0 ]] || usage
+		keychain=$1
 		shift
 		;;
 	-p)
@@ -121,12 +144,7 @@ do
 		mobileprovision=$1
 		shift
 		;;
-	-k)
-		[[ $# != 0 ]] || usage
-		keychain=$1
-		shift
-		;;
-	-c)
+		-c)
 		[[ $# != 0 ]] || usage
 		certificate=$1
 		shift

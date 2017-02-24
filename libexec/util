@@ -18,51 +18,6 @@ export NOTE=${BOLD}Note:${NC}
 ### Functions ###
 #################
 
-# print_completions <module> <command>
-print_completions () {
-	[[ $# != 0 ]] || return
-	local module="$1"
-	shift
-	[[ $# != 0 ]] || $module-commands
-	local command="$1"
-	shift
-
-	[[ -n "$command" ]] || fin
-
-	command_path="$(command -v "$module-$command")"
-	if grep -qiE "^# completions" "$command_path"; then
-		exec "$command_path" --completions "$@"
-	fi
-}
-
-# print_commans <module>
-print_commands () {
-	IFS=: paths=($PATH)
-
-	shopt -s nullglob
-
-	[[ $# == 1 ]] || die "print_commands: bad arguments"
-
-	{
-		for path in "${paths[@]}"; do
-			if grep -q "relax" <<< $path; then
-				local prefix
-				if [[ $1 = relax ]]; then
-					prefix="$path/$1-"
-				else
-					prefix="$path/$1/$1-"
-				fi
-				for command in "$prefix"*; do
-					command="${command##*$1-}"
-					echo $command
-				done
-				break
-			fi
-		done
-	} | grep -v "completions" | sort -u
-}
-
-
 compare_versions()
 {
     local v1=( $(echo "$1" | tr '.' ' ') )
@@ -197,7 +152,6 @@ logi () {
 }
 
 
-declare -x -f print_commands print_completions
 declare -x -f check_toolchain compare_versions 
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log

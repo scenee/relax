@@ -122,7 +122,7 @@ do
 	shift
 	case $arg in
 	-h|--help) usage ;;
-	--complete)
+	--completions)
 		[[ $# != 0 ]] || usage
 		prev=$1
 		shift

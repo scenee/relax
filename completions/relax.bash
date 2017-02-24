@@ -24,13 +24,19 @@ _relax() {
 				if [[ $prev = $special ]]; then
 					COMPREPLY=( $( compgen -W "$(relax completions releases)" -- $cur ) )
 				else
-					COMPREPLY=( $( compgen -W "$(relax $special --complete $prev)" -- $cur ) )
+					COMPREPLY=( $( compgen -W "$(relax completions $special $prev)" -- $cur ) )
 				fi
 				return
 				;;
-			upload)
+			upload|resign)
 				if [[ $prev = $special ]]; then
-					COMPREPLY=( $( compgen -W "$(relax $special --complete)" -- $cur ) )
+					COMPREPLY=( $( compgen -W "$(relax completions $special)" -- $cur ) )
+				else
+					#relax completions $special $prev $cur
+					COMPREPLY=( $( compgen -W "$(relax completions $special $prev $cur)" -- $cur ) )
+				fi
+				if [[ ${#COMPREPLY[@]} == 0 ]]; then
+					_filedir
 				fi
 				return
 				;;

@@ -171,7 +171,7 @@ do
 	-h|--help)
 		usage
 		;;
-	--complete)
+	--completions)
 		fin
 		;;
 	*)

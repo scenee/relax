@@ -79,9 +79,15 @@ while [ $# -ne 0 ];  do
 	arg=$1
 	shift
 	case $arg in
-	-h|--help) usage ;;
-	--complete)
-		echo "crashlytics testfairy"
+	-h|--help) 
+		usage 
+		;;
+	--completions)
+		if [[ $# == 0 ]]; then
+			echo "crashlytics testfairy"
+		else
+			:
+		fi
 		fin
 		;;
 	-f)

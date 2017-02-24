@@ -42,6 +42,7 @@ source color
 source util
 source util-build
 source util-config
+source util-completions
 source util-keychain
 
 #################
@@ -128,11 +129,17 @@ case $command in
 	else
 		[[ $command != "help" ]] || exec "$command_path" "$@"
 
+		REL_CONFIG_PATH="$(config_find)"
+
+		if [[ -n $REL_CONFIG_PATH  ]]; then
+			REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+		fi
+
+		[[ $command != "completions" ]] || exec "$command_path" "$@"
+		[[ ! "$@" =~ "--completions" ]] || exec "$command_path" "$@"
+
 		TRAP "clean_temp; teardown;"
 		make_temp
-
-		REL_CONFIG_PATH="$(config_find)"
-		REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
 
 		case $command in
 		build|archive|export|upload)

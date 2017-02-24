@@ -1,0 +1,82 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: completions helpers
+
+
+# print_completions <command>
+print_completions () {
+	local _command _command_path
+	_command="$1"
+	shift
+
+	[[ -n "$_command" ]] || fin
+
+	case "$_command" in
+		releases)
+			echo "${REL_RELEASES[@]}"
+			;;
+		--completions)
+			exec relax-commands
+			;;
+		*)
+			_command_path="$(command -v "relax-$_command")"
+
+			[[ -f "$_command_path" ]] || fin
+
+			if grep -q "^# completions" "$_command_path"; then
+				exec "$_command_path" --completions "$@"
+			fi
+			;;
+	esac
+}
+
+# print_module_completions <module> <command>
+print_module_completions () {
+	local _module _command _command_path
+
+	[[ $# != 0 ]] || return
+	_module="$1"
+	shift
+	[[ $# != 0 ]] || $_module-commands
+	_command="$1"
+	shift
+
+	[[ -n "$_command" ]] || fin
+
+	_command_path="$(command -v "$_module-$_command")"
+
+	[[ -f "$_command_path" ]] || fin
+
+	if grep -q "^# completions" "$_command_path"; then
+		exec "$_command_path" --completions "$@"
+	fi
+}
+
+# print_commans <module>
+print_commands () {
+	IFS=: paths=($PATH)
+
+	shopt -s nullglob
+
+	[[ $# == 1 ]] || die "print_commands: bad arguments"
+
+	{
+		for path in "${paths[@]}"; do
+			if grep -q "relax" <<< $path; then
+				local prefix
+				if [[ $1 = relax ]]; then
+					prefix="$path/$1-"
+				else
+					prefix="$path/$1/$1-"
+				fi
+				for command in "$prefix"*; do
+					command="${command##*$1-}"
+					echo $command
+				done
+				break
+			fi
+		done
+	} | grep -v "completions" | sort -u
+}
+
+
+declare -x -f print_commands print_completions print_module_completions
