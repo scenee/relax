@@ -1,5 +1,6 @@
 #!/usr/bin/env bash -eu
 # @(#) relax: `profile-find` command
+# completions
 
 usage () {
 	cat <<-EOM
@@ -12,16 +13,11 @@ usage () {
 [[ $# != 0 ]] || usage
 
 case $1 in
--h|--help) usage ;;
---complete)
-	[[ $# != 0 ]] || usage
-	shift
-	prev=$1
-	shift
-	comp="--team --latest"
-	if ! [[ $prev =~ $prev ]]; then
-		echo "$comp"
-	fi
+-h|--help) 
+	usage 
+	;;
+--completions)
+	echo "--team --latest"
 	fin
 	;;
 esac

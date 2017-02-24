@@ -18,7 +18,7 @@ export NOTE=${BOLD}Note:${NC}
 ### Functions ###
 #################
 
-# print_completions <module>
+# print_completions <module> <command>
 print_completions () {
 	[[ $# != 0 ]] || return
 	local module="$1"
