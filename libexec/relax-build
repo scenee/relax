@@ -205,8 +205,15 @@ while [ $# -ne 0 ];  do
 		configuration=$1
 		shift
 		;;
-	--complete)
-		echo "--framework -c"
+	--completions)
+		if [[ $# == 0 ]]; then
+			echo "${REL_RELEASES[@]}"
+		else
+			prev=$1
+			if [[  " ${REL_RELEASES[@]} " =~ " $prev " ]]; then
+				echo "--framework -c"
+			fi
+		fi
 		fin
 		;;
 	--framework)

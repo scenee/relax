@@ -171,7 +171,12 @@ do
 	-h|--help)
 		usage
 		;;
-	--complete)
+	--completions)
+		if [[ $# == 0 ]]; then
+			echo "${REL_RELEASES[@]}"
+		else
+			:
+		fi
 		fin
 		;;
 	*)

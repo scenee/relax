@@ -122,13 +122,12 @@ do
 	shift
 	case $arg in
 	-h|--help) usage ;;
-	--complete)
-		[[ $# != 0 ]] || usage
-		prev=$1
-		shift
-		comp="-c"
-		if ! [[ $prev =~ $prev ]]; then
-			echo "$comp"
+	--completions)
+		if [[ $# == 0 ]]; then
+			echo "${REL_RELEASES[@]}"
+		else
+			comps=(-c)
+			echo "${comps[@]}"
 		fi
 		fin
 		;;

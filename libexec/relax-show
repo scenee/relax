@@ -53,8 +53,14 @@ else
 		-h|--help)
 			usage
 			;;
-		--complete)
-			echo "build archive ipa"
+		--completions)
+			if [[ $# == 0 ]]; then
+				echo "${REL_RELEASES[@]}"
+			else
+				if [[ " ${REL_RELEASES[@]} " =~ " $1 " ]]; then
+					echo "build archive ipa"
+				fi
+			fi
 			fin
 			;;
 		*)

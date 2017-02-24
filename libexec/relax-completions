@@ -1,24 +1,5 @@
 #!/usr/bin/env bash
 # Usage: relax completions <command> [arg1 arg2...]
 
-set -e
+print_completions "$@"
 
-COMMAND="$1"
-
-[[ -n "$COMMAND" ]] || fin
-
-case $1 in
-	releases)
-		echo "${REL_RELEASES[@]}"
-		;;
-	--complete)
-		exec relax-commands
-		;;
-	*)
-		COMMAND_PATH="$(command -v "relax-$COMMAND")"
-		if grep -iE "^# completions" "$COMMAND_PATH" >/dev/null; then
-			shift
-			exec "$COMMAND_PATH" --complete "$@"
-		fi
-		;;
-esac
