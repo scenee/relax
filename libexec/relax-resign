@@ -28,7 +28,7 @@ resign_app () {
 
 	if [[ ! -f "$mobileprovision" ]]; then
 		local mobileprovision_name="$mobileprovision"
-		mobileprovision="$(find_mobileprovision "$mobileprovision_name")"
+		mobileprovision="$(find_mobileprovision --latest "$mobileprovision_name")"
 		[[ -f "$mobileprovision" ]] || die "Not found $mobileprovision_name"
 	fi
 	
