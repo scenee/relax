@@ -2,22 +2,23 @@
 
 # Relax
 
-Relax is a comfortable release tool for your iOS Application. 
+Relax is a comfortable release tool for iOS Application Development.
 
 It's hard to understand stuff of `xcodebuild` and codesigning mechanism.
 It takes care of much of the hassle of them, so you can focus on development
 
-You can
-
-- **Manage** multi distributions(i.e. adhoc, enterprise and appstore) in a Relax configuration file(aka. Relfile)
-- **Validate** your product(ipa/archive) has a correct codesign, entitlements and mobileprovision.
-- **Resign** your product(ipa, archive) with a different bundle id and provisioning profile
-
 Relax can
 
-- Modify and revert specific properties in Info.plist and xcode build settings on each deployment
-- Switch codesign modes(Automatic or Manual) automatically as your preferences
-- Make it easy to manage your keychain with 'relax keychain'
+- **Easy to manage** multi distributions(i.e. adhoc, enterprise and appstore) in a YAML configuration file(aka. Relfile)
+- **Validate an ipa** to check if it has a correct codesign, entitlements and mobileprovision
+- **Resign an ipa** for a differenct ditribution(a bundle id, cetificate and provisioning profile)
+- **Quick set up** a build environment with `keychain` and `profile` modules.
+
+In background, it works to 
+
+- Modify and revert build properties in Info.plist and xcode build settings on each deployment
+- Switch codesign modes(Automatic or Manual) automatically as a Relfile configuration
+- Set up keychain settings to prevent any codesign build break(with `keychain` module)
 
 # Installation
 
@@ -36,15 +37,17 @@ $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | 
 
 # Requirements
 
-Relax must only depend on pre-installed command line tools in macOS and Xcode.
-Because it aims to get rid of any stuff of a host envornment to make it easy to manage a build server.
-As a result, You can set it up on a macOS build machine quickly even if it's a virtual machine.
-
 - macOS 10.11+
 - Xcode8.0+
 
-NOTE: Relax might be working on Xcode 7.3.1
+Relax must only depend on pre-installed command line tools in macOS and Xcode.
+Because it aims to get rid of any stuff of a host envornment to make it easy to manage a build server.
+As a result, You can set up iOS build environment on a new machine quickly so that it's easy to create and destory
+a macOS instance for each build plan.
 
+And you can maintain macOS build machines with a provisioning tool like Ansible.
+
+NOTE: Relax might be working on Xcode 7.3.1
 
 # Known Issues
 
@@ -56,53 +59,102 @@ NOTE: Relax might be working on Xcode 7.3.1
 
 ## Quick start
 
+### Set up Relfile
+
 ```bash
 $ cd /path/to/your/project
-
-# Create a Relfile template
-$ relax init 
-
-# Build a xcarchive file
-$ relax archive development 
-
-# Print a path to a built archive
-$ relax show development archive 
-
-# Export an ipa file
-$ relax export development 
-
-# Print a path to a exported ipa file
-$ relax show development ipa 
-
-# Validate the ipa file
-$ relax validate "$(relax show development ipa)"
-
-# Upload the ipa file (It's necessary to add a token and secret in Relfile)
-$ relax upload crashlytics "$(relax show development ipa)"
-
-```
-
-## Set up Relfile
-
-Run this command and set up each configurations in `Relfile`.
-
-```bash
 $ relax init
 ```
 
-An example of Relfile is here.
+### Archive and Export
+
+```bash
+# Build a xcarchive file
+$ relax -v archive adhoc
+# `xcodebuild` stdout is always written to a log file.
+# If you would like to print logs in your console, please use with '-v' option.
+
+# Print a path to a built archive
+$ relax show adhoc archive
+
+# Export an ipa file
+$ relax export adhoc
+# Relax can export it on a different team and certificate from one signed xcarchive.
+
+# Print a path to a exported ipa file
+$ relax show adhoc ipa
+```
+
+### Validate the ipa
+
+```bash
+# Validate the ipa file
+$ relax validate "$(relax show adhoc ipa)"
+```
+
+### Upload it
+
+```bash
+# Upload the ipa file (Need to add a token and secret in Relfile)
+$ relax upload crashlytics "$(relax show adhoc ipa)"
+
+```
+
+### Resign an ipa for an enterprise distribution
+
+```bash
+
+$ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show adhoc ipa)"
+$ relax validate SampleApp-resigned.ipa
+```
+
+### Symbolicate a crash log
+
+```bash
+$ relax symbolicate sampleapp.crash SampleApp.xcarchive
+```
+
+## Commands
+
+```bash
+$ relax commands
+```
+
+## Modules
+
+```bash
+$ relax commands --modules
+```
+
+### Keychain
+
+The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
+Actually this is an usefull wrapper of `security` command.
+
+### (Provisioning) Profile
+
+The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
+
+# Relfile
+
+Relfile is a relax configuration file. 
+
+The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them.
+
+An example of Relfile is as below.
+
 And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
 
-company_test: # Define a deployment type
+adhoc: # Define a deployment type
   scheme: SampleApp
 
   team_id: __MY_COMPANY_TEAM_ID__
 
   version: 0.1.0
-  bundle_version:  "%h-$C" # See 'Bundle Version Format section'
+  bundle_version: "%h-%C-${BUILD_NUMBER}" # See 'Bundle Version Format section'
 
   build_settings:
     SWIFT_VERSION: 3.0
@@ -111,33 +163,14 @@ company_test: # Define a deployment type
       - "-DDEBUG" 
 
   info_plist: # You can change Info.plist settings for a deployment.
-    CFBundleName: SmapleApp(Test)
-    UISupportedExternalAccessoryProtocols:
-      - com.example.accessory.mock
-
-  export_options:
-    method:  ad-hoc
-
-company_adhoc: # Define a deployment type
-  scheme: SampleApp
-
-  team_id: __MY_COMPANY_TEAM_ID__
-
-  version: 0.1.0
-  bundle_version: "%h-%C-${BUILD_NUMBER}"
-
-  build_settings:
-    SWIFT_VERSION: 3.0
-
-  info_plist:
     CFBundleName: SmapleApp(AdHoc)
     UISupportedExternalAccessoryProtocols:
-      - com.example.accessory
+      - com.example.test-accessory
 
   export_options:
     method:  ad-hoc
 
-company_appstore:
+appstore:
   scheme: SampleApp
 
   team_id: __MY_COMPANY_TEAM_ID__
@@ -155,24 +188,6 @@ company_appstore:
   export_options:
     method:  appstore
 
-enterprise:
-  scheme: SampleApp
-
-  team_id: __MY_ENTERPRISE_TEAM_ID__
-
-  version: 1.0
-  bundle_version: "%h-%C"
-
-  build_settings:
-    SWIFT_VERSION: 3.0
-
-  info_plist:
-    UISupportedExternalAccessoryProtocols:
-      - com.example.accessory
-
-  export_options:
-    method:  enterprise
-
 framework:
   scheme: Sample Framework
   configuration: Release
@@ -183,56 +198,6 @@ crashlytics:
   secret: __MY_SECRET__
   group:  __MY_GROUP__
 ```
-
-## Build an archive for your product
-
-```bash
-$ relax -v archive adhoc
-```
-
-`xcodebuild` stdout is always written to a log file. 
-If you would like to print it in your console, please use with '-v' option.
-
-## Export an .ipa file
-
-```bash
-$ relax export adhoc
-```
-
-You can specify a xcarchive file path after a release type like here.
-
-```bash
-$ relax export adhoc /path/to/archive
-```
-
-Relax can export it on a different team and certificate from one signed xcarchive.
-
-## Check the mobileprovision, entitlements and version of an .ipa file
-
-```bash
-$ relax validate /path/to/SampleApp.ipa
-```
-
-## Upload an .ipa file to Crashlytics
-
-```bash
-$ relax upload crashlytics /path/to/SampleApp.ipa
-```
-
-## Resign an .ipa file with other provisioning profile and a certificate
-
-```bash
-$ relax resign -p "<my-provisioning-profile>" -c "iPhone Distribution: <Me>" /path/to/SampleApp.ipa
-```
-## Other commands
-
-```bash
-$ relax commands
-```
-
-# Relfile
-
-Relfile is a relax configuration file. The reference file is [Here](https://github.com/SCENEE/relax/blob/master/samples/Relfile)
 
 ## Use an Environment variable
 
@@ -249,12 +214,14 @@ development2:
 ```bash
 $ BUNDLE_SUFFIX=debug relax archive development2
 ```
+
 or
 
 ```bash
 $ export BUNDLE_SUFFIX=debug 
 $ relax archive development2
 ```
+
 But you can't use Xcode build setting variables (PRODUCT_NAME etc.) in Relfile.
 Because they can be overridden by Relfile's definitions.
 
