@@ -1,7 +1,7 @@
 #!/usr/bin/env bash -eu
 # Usage: relax [--version] [--config <Relfile>] <command>
 
-export REL_VERSION="0.3.2"
+export REL_VERSION="0.3.3"
 
 ###################
 ### Environment ###
@@ -58,17 +58,18 @@ usage () {
 	    -h		: Show help
 
 	Commands:
+	    init	Set up $ME 
 	    add		Add a provisioning profile
 	    archive	Create an archive file
 	    build	Make a framework bundle from a static library
 	    export	Export an ipa file
-	    help	Show help
-	    init	Set up $ME 
+	    show	Print the latest archive/ipa file path.
 	    package	Make artifact package 
 	    resign	Resign an .ipa file
-	    show	Print the latest archive/ipa file path.
 	    upload	Upload an ipa file to a distribution service(i.e. Crashlytics Beta)
 	    validate	Print the embedded provisioning profile and entitlements of an app
+	    symbolicate	Symbolicate a crash log with the related archive
+	    help	Show help
 
 	Modules:
 	    keychain	See 'relax keychain help'

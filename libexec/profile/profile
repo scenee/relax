@@ -12,7 +12,7 @@ usage () {
 	    add		Add a provisioning profile
 	    rm		Remove a provisioning profile
 	    dec		Decode a provisioning profile
-	    find	Find a provisioning profile
+	    find	Find provisioning profiles
 	    help	Show help
 	EOM
 	fin
