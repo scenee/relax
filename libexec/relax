@@ -136,7 +136,9 @@ case $command in
 			REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
 		fi
 
+		[[ $command != "commands" ]] || exec "$command_path" "$@"
 		[[ $command != "completions" ]] || exec "$command_path" "$@"
+
 		[[ ! "$@" =~ "--completions" ]] || exec "$command_path" "$@"
 
 		TRAP "clean_temp; teardown;"
