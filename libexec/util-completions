@@ -38,17 +38,20 @@ print_module_completions () {
 	[[ $# != 0 ]] || return
 	_module="$1"
 	shift
-	[[ $# != 0 ]] || $_module-commands
+
+	[[ $# != 0 ]] || return
 	_command="$1"
 	shift
 
-	[[ -n "$_command" ]] || fin
+	[[ -n "$_command" ]] || return
 
 	_command_path="$(command -v "$_module-$_command")"
 
-	[[ -f "$_command_path" ]] || fin
+	[[ -f "$_command_path" ]] || return
 
-	if grep -q "^# completions" "$_command_path"; then
+	if [[ $_command == "commands" ]]; then
+		exec $_command_path
+	elif grep -q "^# completions" "$_command_path"; then
 		exec "$_command_path" --completions "$@"
 	fi
 }
@@ -64,12 +67,7 @@ print_commands () {
 	{
 		for path in "${paths[@]}"; do
 			if grep -q "relax" <<< $path; then
-				local prefix
-				if [[ $1 = relax ]]; then
-					prefix="$path/$1-"
-				else
-					prefix="$path/$1/$1-"
-				fi
+				local prefix="$path/$1-"
 				for command in "$prefix"*; do
 					command="${command##*$1-}"
 					echo $command

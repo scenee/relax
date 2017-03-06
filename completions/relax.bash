@@ -34,7 +34,7 @@ _relax() {
 				;;
 			$module)
 				if [[ $prev = $special ]]; then
-					COMPREPLY=( $( compgen -W "$(relax $module completions)" -- $cur ) )
+					COMPREPLY=( $( compgen -W "$(relax $module completions commands)" -- $cur ) )
 				else
 					command=${words[2]}
 					COMPREPLY=( $( compgen -W "$(relax $module completions ${command} $prev $cur)" -- $cur ) )
