@@ -10,3 +10,8 @@ load test_helper
 	  [[ -f artifact/Sample\ App.xcarchive.zip ]]
 }
 
+@test "relax package development2 artifact" {
+  run relax package development2 artifact
+  assert_failure
+}
+
