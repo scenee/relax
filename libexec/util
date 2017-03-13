@@ -80,6 +80,8 @@ teardown () {
 fin () {
 	if [ $# -gt 0 ]; then
 		echo -e "$@"
+	elif [[ -p /dev/stdin ]]; then
+		echo -e "$(</dev/stdin)"
 	fi
 	exit 0
 }
@@ -96,14 +98,14 @@ die_with_status () {
 	status=$1
 	shift
 
+	printf "$ERR $@${NC}\n"
+
 	if test $# = 1 && test "$1" = "Interrupted"; then
-		printf >&2 "$*\n"
 		echo -e "${RED}Cancelled${NC}"
-		exit "$status"
+	else
+		echo -e "${RED}Failed${NC}"
 	fi
 
-	printf >&2 "$ERR $*\n"
-	echo -e "${RED}Failed${NC}"
 	exit "$status"
 }
 
