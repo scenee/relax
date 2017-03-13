@@ -20,6 +20,35 @@ export BUNDLE_VERSION=
 export INFO_PLIST_PATH=
 export XCODEBUILD_PID=
 
+# read_path <release> <type>
+read_path () {
+	[[ $# == 2 ]] || usage
+
+	local release=$1
+	local type=$2
+
+	local data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
+
+	local link_path=""
+	case $type in
+	ipa)
+		link_path=$data_root/LATEST_IPA
+		;;
+	build)
+		link_path=$data_root/LATEST_EXPORT_DIR
+		;;
+	archive)
+		link_path=$data_root/LATEST_ARCHIVE
+		;;
+	esac
+
+	if ! test -L "$link_path"; then
+		return 1
+	fi
+	readlink "$link_path"
+}
+
+
 # find_mobileprovision [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 find_mobileprovision () {
 	[ $# -gt 0 ] || die "bad argument"
@@ -765,5 +794,6 @@ declare -x -f print_info_plist print_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
+declare -x -f read_path
 declare -x -f dec_provisioning_profile
 declare -x -f __is_distribution_profile
