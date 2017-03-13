@@ -54,8 +54,8 @@ usage () {
 	Usage: ${ME} [option] <command|module> ...
 
 	Options:
-	    -v		: Be verbose when executing commands
-	    -h		: Show help
+	    -v		Be verbose when executing commands
+	    -h		Show help
 
 	Commands:
 	    init	Set up $ME 
