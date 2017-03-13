@@ -136,23 +136,22 @@ case $command in
 			REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
 		fi
 
-		[[ $command != "commands" ]] || exec "$command_path" "$@"
-		[[ $command != "completions" ]] || exec "$command_path" "$@"
-
 		[[ ! "$@" =~ "--completions" ]] || exec "$command_path" "$@"
 
-		TRAP "clean_temp; teardown;"
-		make_temp
+		check_toolchain
 
 		case $command in
-		build|archive|export|upload)
-			check_toolchain
-			config_load "$REL_CONFIG_PATH"
-			;;
-		init|validate|resign|ls-certs|ls-profiles)
-			check_toolchain
+		commands|completions|show|ls-certs)
 			;;
 		*)
+			TRAP "clean_temp; teardown;"
+			make_temp
+
+			case $command in
+			build|archive|export|upload)
+				config_load "$REL_CONFIG_PATH"
+				;;
+			esac
 			;;
 		esac
 

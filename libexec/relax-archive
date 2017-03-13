@@ -38,7 +38,7 @@ set_archive_config () {
 	fi
 
 	logi "$ARROW Set \""$configuration"\" to BuildConfiguration in xcscheme"
-	sed -i ."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$configuration\"/" "$xcscheme_path"
+	sed -i."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$configuration\"/" "$xcscheme_path"
 }
 
 # make_archive <archive_path>

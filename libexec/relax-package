@@ -26,9 +26,14 @@ make_package() {
 	rm -rf "$package_dir" > /dev/null 2>&1
 	mkdir -p "$package_dir" > /dev/null 2>&1
 
-	cp "$(relax-show $release ipa)" "$package_dir"
+	local ipa_path="$(read_path $release ipa)"
+	[[ -f "$ipa_path" ]] || die "Not found '$release' ipa"
 
-	archive="$(relax-show $release archive)"
+	cp "$ipa_path" "$package_dir"
+
+	local archive="$(read_path $release archive)"
+	[[ -d "$archive" ]] || die "Not found '$release' archive"
+
 	zipname="$(basename "$archive")".zip
 
 	logi "$ARROW Install ipa and xcarchive"
