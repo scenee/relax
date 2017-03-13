@@ -10,9 +10,7 @@ usage() {
 }
 
 make_package() {
-	if test $# != 2; then
-		usage
-	fi
+	[[ $# == 2 ]] || usage
 
 	local dist=$1
 	local package_dir=$2

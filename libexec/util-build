@@ -22,8 +22,6 @@ export XCODEBUILD_PID=
 
 # read_path <release> <type>
 read_path () {
-	[[ $# == 2 ]] || usage
-
 	local release=$1
 	local type=$2
 
@@ -42,9 +40,7 @@ read_path () {
 		;;
 	esac
 
-	if ! test -L "$link_path"; then
-		return 1
-	fi
+	test -L "$link_path" || return 1
 	readlink "$link_path"
 }
 
