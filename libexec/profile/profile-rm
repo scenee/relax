@@ -12,7 +12,7 @@ usage () {
 # rm_provisioning_profile <provisioning-profile>
 rm_provisioning_profile () {
 	find_mobileprovision "$1" | \
-	while IFS= read mobileprovision || [ -n $mobileprovision ]
+	while IFS= read mobileprovision || [[ -n "$mobileprovision" ]]
 	do
 		if [[ ! -f "$mobileprovision" ]]; then
 			fin "'$1' mobileprovision doesn't exist"
@@ -20,6 +20,7 @@ rm_provisioning_profile () {
 		rm -f "$mobileprovision"
 		logi "Removed '$1':$mobileprovision"
 	done
+
 }
 
 [[ $# != 0 ]] || usage

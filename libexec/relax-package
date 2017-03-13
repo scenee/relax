@@ -17,6 +17,8 @@ make_package() {
 	local release=$1
 	local package_dir=$2
 
+	[[ " ${REL_RELEASES[@]} " =~ " $release "  ]]  || die "Not found '$release' release"
+
 	### Make artifacts
 
 	logi "$ARROW Clean up $package_dir"
@@ -54,6 +56,8 @@ case $arg in
 	fi
 	fin
 	;;
+*)
+	;;
 esac
 
-make_package "$@"
+make_package "$arg" "$@"

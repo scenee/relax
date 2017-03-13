@@ -6,5 +6,7 @@ load test_helper
   run relax export development
   run relax package development artifact
   assert_success
+  [[ -f artifact/Sample\ App.ipa ]]; \
+	  [[ -f artifact/Sample\ App.xcarchive.zip ]]
 }
 
