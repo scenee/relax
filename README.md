@@ -16,7 +16,7 @@ Relax can
 
 In background, it works to 
 
-- Modify and revert build properties in Info.plist and xcode build settings on each deployment
+- Modify and revert build properties in Info.plist and xcode build settings on each distribution
 - Switch codesign modes(Automatic or Manual) automatically as a Relfile configuration
 - Set up keychain settings to prevent any codesign build break(with `keychain` module)
 
@@ -148,7 +148,8 @@ And also check [this 'Refile' section](#relfile) and [the reference Refile](http
 ```yaml
 workspace: SampleApp
 
-adhoc: # Define a deployment type
+# Define a distribution
+adhoc: 
   scheme: SampleApp
 
   team_id: __MY_COMPANY_TEAM_ID__
@@ -162,7 +163,8 @@ adhoc: # Define a deployment type
       - "-DMOCK"
       - "-DDEBUG" 
 
-  info_plist: # You can change Info.plist settings for a deployment.
+  # Override Info.plist settings for this distribution
+  info_plist: 
     CFBundleName: SmapleApp(AdHoc)
     UISupportedExternalAccessoryProtocols:
       - com.example.test-accessory

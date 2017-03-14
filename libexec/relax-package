@@ -4,7 +4,7 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} package <release> <package_path>
+	usage: ${ME} package <dist> <package_path>
 	EOM
 	fin
 }
@@ -14,10 +14,10 @@ make_package() {
 		usage
 	fi
 
-	local release=$1
+	local dist=$1
 	local package_dir=$2
 
-	[[ " ${REL_RELEASES[@]} " =~ " $release "  ]]  || die "Not found '$release' release"
+	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " $dist "  ]]  || die "Not found '$dist' dist"
 
 	### Make artifacts
 
@@ -26,13 +26,13 @@ make_package() {
 	rm -rf "$package_dir" > /dev/null 2>&1
 	mkdir -p "$package_dir" > /dev/null 2>&1
 
-	local ipa_path="$(read_path $release ipa)"
-	[[ -f "$ipa_path" ]] || die "Not found '$release' ipa"
+	local ipa_path="$(read_path $dist ipa)"
+	[[ -f "$ipa_path" ]] || die "Not found '$dist' ipa"
 
 	cp "$ipa_path" "$package_dir"
 
-	local archive="$(read_path $release archive)"
-	[[ -d "$archive" ]] || die "Not found '$release' archive"
+	local archive="$(read_path $dist archive)"
+	[[ -d "$archive" ]] || die "Not found '$dist' archive"
 
 	zipname="$(basename "$archive")".zip
 
@@ -55,7 +55,7 @@ case $arg in
 	;;
 --completions)
 	if [[ $# == 0 ]]; then
-		echo "${REL_RELEASES[@]}"
+		echo "${REL_DISTRIBUTIONS[@]}"
 	else
 		:
 	fi

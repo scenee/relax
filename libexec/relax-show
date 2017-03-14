@@ -4,7 +4,7 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} show <release> <item>
+	usage: ${ME} show <distribution> <item>
 
 	Print the latest artifacts
 
@@ -26,21 +26,21 @@ case $arg in
 	;;
 --completions)
 	if [[ $# == 0 ]]; then
-		echo "${REL_RELEASES[@]}"
+		echo "${REL_DISTRIBUTIONS[@]}"
 	else
-		if [[ " ${REL_RELEASES[@]} " =~ " $1 " ]]; then
+		if [[ " ${REL_DISTRIBUTIONS[@]} " =~ " $1 " ]]; then
 			echo "build archive ipa"
 		fi
 	fi
 	fin
 	;;
 *)
-	release=$arg
+	distribution=$arg
 
-	[[ " ${REL_RELEASES[@]} " =~ " $release "  ]]  || die "Not found '$release' release"
+	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " $distribution "  ]]  || die "Not found '$distribution' distribution"
 
 	[[ $# == 1 ]] || usage
-	if ! read_path "$release" "$1"; then
+	if ! read_path "$distribution" "$1"; then
 		die "Not found the latest $1"
 	fi
 	;;

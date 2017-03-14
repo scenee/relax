@@ -24,7 +24,7 @@ export LIBEXEC_DIR="$SOURCE_PATH/libexec"
 
 # Set a value dynamically
 export REL_LOG_LEVEL=
-export REL_RELEASES=
+export REL_DISTRIBUTIONS=
 export REL_CONFIG_PATH=
 
 set +u
@@ -133,7 +133,7 @@ case $command in
 		REL_CONFIG_PATH="$(config_find)"
 
 		if [[ -n $REL_CONFIG_PATH  ]]; then
-			REL_RELEASES="$(config_collect_releases $REL_CONFIG_PATH | tr '\r\n' ' ')"
+			REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
 		fi
 
 		[[ ! "$@" =~ "--completions" ]] || exec "$command_path" "$@"

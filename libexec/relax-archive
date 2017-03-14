@@ -4,7 +4,7 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} archive <release> [-c <configuration>] [<xcodebuild-option>] ...
+	Usage: ${ME} archive <distribution> [-c <configuration>] [<xcodebuild-option>] ...
 
 	Options:
 	    --no-cache	Remove a DerivedData of the schema
@@ -121,7 +121,7 @@ make_archive () {
 
 XCSCHEME_PATH=
 
-release=
+distribution=
 no_cache=false
 
 while [ $# -ne 0 ];
@@ -132,7 +132,7 @@ do
 	-h|--help) usage ;;
 	--completions)
 		if [[ $# == 0 ]]; then
-			echo "${REL_RELEASES[@]}"
+			echo "${REL_DISTRIBUTIONS[@]}"
 		else
 			comps=(-c)
 			echo "${comps[@]}"
@@ -148,19 +148,19 @@ do
 		no_cache=true
 		;;
 	*)
-		release=$arg
+		distribution=$arg
 		;;
 	esac
 done
 
 source $REL_TEMP_DIR/config
 
-[[ ${release:-undefined} != undefined ]] || usage
+[[ ${distribution:-undefined} != undefined ]] || usage
 
 trap 'teardown_build;' EXIT INT TERM
-setup_build $release
+setup_build $distribution
 
-data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
+data_root=$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR
 mkdir -p "$data_root"
 
 LATEST_ARCHIVE="$data_root/LATEST_ARCHIVE"
