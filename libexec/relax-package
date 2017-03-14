@@ -4,43 +4,47 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} package <dist> <package_path>
+	Usage: ${ME} package <distribution> <package_path>
 	EOM
 	fin
 }
 
 make_package() {
-	if test $# != 2; then
-		usage
-	fi
+	[[ $# == 2 ]] || usage
 
-	local dist=$1
+	local distribution=$1
 	local package_dir=$2
+	local temp_dir=$REL_TEMP_DIR/package
 
-	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " $dist "  ]]  || die "Not found '$dist' dist"
+	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " $distribution "  ]]  || die "Not found '$distribution' distribution"
 
 	### Make artifacts
 
 	logi "$ARROW Clean up $package_dir"
+	{
+		rm -rf "$package_dir"
+		mkdir -p "$temp_dir"
+	} > /dev/null 2>&1
+	
 
-	rm -rf "$package_dir" > /dev/null 2>&1
-	mkdir -p "$package_dir" > /dev/null 2>&1
+	local ipa_path="$(read_path $distribution ipa)"
+	[[ -f "$ipa_path" ]] || die "Not found '$distribution' ipa"
 
-	local ipa_path="$(read_path $dist ipa)"
-	[[ -f "$ipa_path" ]] || die "Not found '$dist' ipa"
+	logi "$ARROW Packaging ..."
+	logi "ipa: $ipa_path"
+	cp "$ipa_path" "$temp_dir"
 
-	cp "$ipa_path" "$package_dir"
+	local archive="$(read_path $distribution archive)"
+	if [[ -d "$archive" ]]; then
+		local zipname="$(basename "$archive")".zip
+		logi "archive: $archive"
+		ditto -c -k --sequesterRsrc --keepParent "$archive" "$temp_dir/$zipname"
+	else
+		logi "$WARN Not found '$distribution' archive"
+	fi
 
-	local archive="$(read_path $dist archive)"
-	[[ -d "$archive" ]] || die "Not found '$dist' archive"
-
-	zipname="$(basename "$archive")".zip
-
-	logi "$ARROW Install ipa and xcarchive"
+	cp -a "$temp_dir" "$package_dir"
 	logi "Package Directory: $HERE/$package_dir"
-
-	ditto -c -k --sequesterRsrc --keepParent "$archive" "$package_dir/$zipname"
-
 	ls "$package_dir"
 }
 
@@ -66,3 +70,4 @@ case $arg in
 esac
 
 make_package "$arg" "$@"
+
