@@ -556,7 +556,7 @@ setup_build () {
 
 	release="$1"
 
-	if [[ ! " ${REL_RELEASES[@]} " =~ " ${release} " ]]; then
+	if [[ ! " ${REL_DISTRIBUTIONS[@]} " =~ " ${release} " ]]; then
 		die "'$release' is undefined."
 	fi
 

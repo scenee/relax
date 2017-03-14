@@ -39,7 +39,7 @@ _parse_yaml() {
 	}' | sed 's/_=/+=/g'
 }
 
-config_collect_releases () {
+config_get_distributions () {
 	if [[ $# != 0 ]] && [[ -f $1 ]]; then
 		local s='[[:space:] ]*' w='[a-zA-Z0-9_]*'
 		sed -ne "s|^\($w\)$s:$s\(#.*\)*$s\$|\1|p" $1 \
@@ -122,4 +122,4 @@ config_load () {
 
 declare -x -f _parse_yaml
 declare -x -f _check_config _export_config
-declare -x -f config_load config_find config_collect_releases
+declare -x -f config_load config_find config_get_distributions

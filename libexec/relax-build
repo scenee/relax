@@ -4,7 +4,7 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <release> [--framework <name>] [-c <configuration>]
+	usage: ${ME} build <distribution> [--framework <name>] [-c <configuration>]
 	options:
 	    --framework		: Make a framework bundle from a static library
 	    -c			: Specify a configuration
@@ -207,10 +207,10 @@ while [ $# -ne 0 ];  do
 		;;
 	--completions)
 		if [[ $# == 0 ]]; then
-			echo "${REL_RELEASES[@]}"
+			echo "${REL_DISTRIBUTIONS[@]}"
 		else
 			prev=$1
-			if [[  " ${REL_RELEASES[@]} " =~ " $prev " ]]; then
+			if [[  " ${REL_DISTRIBUTIONS[@]} " =~ " $prev " ]]; then
 				echo "--framework -c"
 			fi
 		fi
@@ -223,17 +223,17 @@ while [ $# -ne 0 ];  do
 		shift
 		;;
 	*)
-		release=$arg
+		distribution=$arg
 		;;
 	esac
 done
 
 source $REL_TEMP_DIR/config
 
-[[ ${release:-undefined} != undefined ]] || usage
+[[ ${distribution:-undefined} != undefined ]] || usage
 
 trap "teardown_build" EXIT INT TERM
-setup_build $release
+setup_build $distribution
 
 
 rm -rf $PRODUCT_BUILD_ROOT

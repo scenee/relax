@@ -4,10 +4,10 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} export <release> [<archive-path>]
+	usage: ${ME} export <distribution> [<archive-path>]
 
-	If you don't specify an archive, it will export the last one of
-	a release type.
+	If an archive path isn't set, the latest archive of the distribution
+	will be exported.
 	EOM
 	fin
 }
@@ -151,7 +151,7 @@ export_archive () {
 }
 
 prepare_export() {
-	local data_root="$REL_RELEASE_ROOT/$release/$REL_DATA_DIR"
+	local data_root="$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR"
 	mkdir -p "$data_root"
 	LATEST_IPA="$data_root/LATEST_IPA"
 	LATEST_EXPORT_DIR="$data_root/LATEST_EXPORT_DIR"
@@ -161,7 +161,7 @@ prepare_export() {
 [[ $# != 0 ]] || usage
 
 target_archive_file=""
-release=
+distribution=
 
 while [ $# -ne 0 ];
 do
@@ -173,7 +173,7 @@ do
 		;;
 	--completions)
 		if [[ $# == 0 ]]; then
-			echo "${REL_RELEASES[@]}"
+			echo "${REL_DISTRIBUTIONS[@]}"
 		else
 			:
 		fi
@@ -186,25 +186,25 @@ do
 				die "Not found $target_archive_file "
 			fi
 		else
-			release=$arg
+			distribution=$arg
 		fi
 		;;
 	esac
 done
 
-[[ ${release:-undefined} != undefined ]] || usage
+[[ ${distribution:-undefined} != undefined ]] || usage
 
 if [[ -z "$target_archive_file" ]]; then
-	target_archive_file="$(relax-show $release archive)"
+	target_archive_file="$(relax-show $distribution archive)"
 	if [[ ! -d $target_archive_file ]]; then
-		die "Not found the last archive. Please archive '$release'"
+		die "Not found the last archive. Please archive '$distribution'"
 	fi
 fi
 
 
 
 trap 'teardown_build' EXIT INT TERM
-setup_build --export "$target_archive_file" $release
+setup_build --export "$target_archive_file" $distribution
 prepare_export
 
 export_archive "$target_archive_file"

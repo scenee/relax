@@ -14,7 +14,7 @@ print_completions () {
 
 	case "$_command" in
 		releases)
-			echo "${REL_RELEASES[@]}"
+			echo "${REL_DISTRIBUTIONS[@]}"
 			;;
 		--completions)
 			exec relax-commands

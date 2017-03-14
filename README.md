@@ -2,21 +2,24 @@
 
 # Relax
 
-Relax is a comfortable release tool for iOS Application Development.
+Relax is a declarative release management tool for iOS Application.
 
-It's hard to understand stuff of `xcodebuild` and codesigning mechanism.
-It takes care of much of the hassle of them, so you can focus on development
+You don't need to write the same build scripts any more when you deliver your great apps.
+Relax will save your time. You just write a declarative configuration file of Relax to make ipa files.
+
+It's hard to understand stuff of `xcodebuild`, for example, codesigning mechanism.
+Relax takes care of much of the hassle of them. so you can focus on development.
 
 Relax can
 
-- **Easy to manage** multi distributions(i.e. adhoc, enterprise and appstore) in a YAML configuration file(aka. Relfile)
+- **Easy to manage** multi distributions(i.e. adhoc, enterprise & appstore) with each code signing in a YAML configuration file(aka. Relfile)
 - **Validate an ipa** to check if it has a correct codesign, entitlements and mobileprovision
 - **Resign an ipa** for a differenct ditribution(a bundle id, cetificate and provisioning profile)
 - **Quick set up** a build environment with `keychain` and `profile` modules.
 
-In background, it works to 
+Additionally in background, it works as below.
 
-- Modify and revert build properties in Info.plist and xcode build settings on each deployment
+- Modify and revert build properties in Info.plist and xcode build settings on each distribution
 - Switch codesign modes(Automatic or Manual) automatically as a Relfile configuration
 - Set up keychain settings to prevent any codesign build break(with `keychain` module)
 
@@ -40,14 +43,23 @@ $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | 
 - macOS 10.11+
 - Xcode8.0+
 
-Relax must only depend on pre-installed command line tools in macOS and Xcode.
-Because it aims to get rid of any stuff of a host envornment to make it easy to manage a build server.
-As a result, You can set up iOS build environment on a new machine quickly so that it's easy to create and destory
-a macOS instance for each build plan.
-
-And you can maintain macOS build machines with a provisioning tool like Ansible.
-
 NOTE: Relax might be working on Xcode 7.3.1
+
+Relax depends on only command line tools pre-installed in macOS and Xcode.
+You don't need to take care of a host envornment(i.e. ruby version and gem settings).
+
+As a result, You can set up iOS build environment on a new machine quickly
+including keychain and provisionig profiles. 
+
+For example, it's easy to manage a build server with a provisioning tool like Ansible.
+
+# What's different from GYM?
+
+- Multi disbribution management
+- Focus on use cases on a macOS build machine
+- Less dependancies 
+- Support ipa resign and validation
+- Support keychain managment
 
 # Known Issues
 
@@ -137,7 +149,7 @@ The `profile` module commands make it easy to find, use or remove provisioning p
 
 # Relfile
 
-Relfile is a relax configuration file. 
+Relfile is a Relax configuration file.
 
 The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them.
 
@@ -148,7 +160,8 @@ And also check [this 'Refile' section](#relfile) and [the reference Refile](http
 ```yaml
 workspace: SampleApp
 
-adhoc: # Define a deployment type
+# Define a distribution
+adhoc: 
   scheme: SampleApp
 
   team_id: __MY_COMPANY_TEAM_ID__
@@ -162,7 +175,8 @@ adhoc: # Define a deployment type
       - "-DMOCK"
       - "-DDEBUG" 
 
-  info_plist: # You can change Info.plist settings for a deployment.
+  # Override Info.plist settings for this distribution
+  info_plist: 
     CFBundleName: SmapleApp(AdHoc)
     UISupportedExternalAccessoryProtocols:
       - com.example.test-accessory
@@ -246,7 +260,7 @@ The characters and their meanings are as follows.
 | compileBitcode | OK |
 | team_id | OK(Automatic assigned) |
 | thinning | OK |
-| embedOnDemandResourcesAssetPacksInBundle | No |
-| manifest | No |
-| onDemandResourcesAssetPacksBaseURL | No |
-| iCloudContainerEnvironment | No |
+| embedOnDemandResourcesAssetPacksInBundle | Not yet |
+| manifest | Not yet |
+| onDemandResourcesAssetPacksBaseURL | Not yet |
+| iCloudContainerEnvironment | Not yet |
