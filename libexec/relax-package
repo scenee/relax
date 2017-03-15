@@ -22,8 +22,14 @@ make_package() {
 
 	logi "$ARROW Clean up $package_dir"
 	{
-		rm -rf "$package_dir"
-		mkdir -p "$temp_dir"
+	mkdir -p "$temp_dir"
+	rm -rf "$package_dir"
+	if grep -q "/" <<< "$package_dir"; then
+		local package_parent_dir="${package_dir%/*}"
+		if [[ ! -d "$package_parent_dir" ]]; then
+			mkdir -p "$package_parent_dir"
+		fi
+	fi
 	} > /dev/null 2>&1
 	
 
@@ -43,6 +49,8 @@ make_package() {
 		logi "$WARN Not found '$distribution' archive"
 	fi
 
+	echo $package_dir
+	echo $temp_dir
 	cp -a "$temp_dir" "$package_dir"
 	logi "Package Directory: $HERE/$package_dir"
 	ls "$package_dir"
