@@ -157,46 +157,61 @@ dec_provisioning_profile () {
 	set -e
 }
 
-# print_progress_time <pid>
+# print_progress_time <pid> [--quiet]
 print_progress_time () {
-	local pid=$1
+	local pid quiet
+	quiet=false
+
+	while [[ $# != 0 ]];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		--quiet)
+			quiet=true
+			;;
+		*)
+			pid="$arg"
+			;;
+		esac
+	done
+
 	local delay=0.16666666 # 0.016666666 * 10
 	local stime=$(date "+%s")
 	local i=1
 
-	# For a interrupt timing issue
-	trap "stty echo; tput cnorm;  \
-		__kill_bg_xcodebuid_task $XCODEBUILD_PID;" INT TERM
+	(
+		if [[ $quiet == false ]]; then
+			# For a interrupt timing issue
+			# Retore tty and tput
+			trap "stty echo; \
+				tput cnorm >/dev/null; \
+				__kill_bg_xcodebuid_task $XCODEBUILD_PID;" INT TERM EXIT
 
-	star="$BOLD"'\xE2\x88\x97'"$NC"
-	lbr="$BLUE[$NC"
-	rbr="$BLUE]$NC"
-	sp=("$lbr$star  $rbr"  "$lbr $star $rbr"  "$lbr  $star$rbr"  "$lbr $star $rbr")
+			star="$BOLD"'\xE2\x88\x97'"$NC"
+			lbr="$BLUE[$NC"
+			rbr="$BLUE]$NC"
+			sp=("$lbr$star  $rbr"  "$lbr $star $rbr"  "$lbr  $star$rbr"  "$lbr $star $rbr")
 
-	# Invisible cursor.
-	tput civis
-	# Don't echo back any chars typed.
-	stty -echo
+			# Invisible cursor.
+			tput civis
+			# Don't echo back any chars typed.
+			stty -echo
+		fi
 
-	while ps -p $pid | grep -q $pid; do
-		now=$(date "+%s")
-		dt=$(date -r "$(( $now - $stime ))" "+%s")
-		printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
-		sleep $delay
-	done
+		while ps -p $pid | grep -q $pid; do
+			now=$(date "+%s")
+			dt=$(date -r "$(( $now - $stime ))" "+%s")
+			if [[ $quiet == false ]]; then
+				printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
+			fi
+			sleep $delay
+		done
 
-	tput el # Clear to end of line
-	printf "Time: ${dt}s\n"
-
-	# Retore tty and tput
-	stty echo
-	tput cnorm
-
-	if wait $pid; then
-		return 0
-	else
-		return 1
-	fi
+		tput el # Clear to end of line
+		printf "Time: ${dt}s\n"
+	)
+	wait $pid || return 1
 }
 
 # progress_bar <pid>
