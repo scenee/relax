@@ -38,3 +38,8 @@ load test_helper
   && [[ "${lines[31]}" =~ "Relax AdHoc" ]] \
   && [[ "${lines[33]}" =~ "J3D7L9FHSS" ]]
 }
+
+@test "relax export: check workspace restoration" {
+  run git diff --exit-code --quiet
+  assert_success
+}

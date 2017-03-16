@@ -14,3 +14,7 @@ load test_helper
   && [[ -f ./Sample.framework.zip ]]
 }
 
+@test "relax build: check workspace restoration" {
+  run git diff --exit-code --quiet
+  assert_success
+}

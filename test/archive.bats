@@ -33,3 +33,8 @@ load test_helper
   assert_success
   [[ "${output}" =~ "Clean DerivedData" ]]
 }
+
+@test "relax archive: check workspace restoration" {
+  run git diff --exit-code --quiet
+  assert_success
+}
