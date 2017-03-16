@@ -547,6 +547,7 @@ teardown_build () {
 
 # setup_build [--export <archive-path>] <release>
 setup_build () {
+
 	local for_export=false
 	local archived_info_plist version
 
@@ -571,6 +572,8 @@ setup_build () {
 		die "'$release' is undefined."
 	fi
 
+	# Load Relfile
+	config_load "$REL_CONFIG_PATH"
 	{
 		stdtemp=$REL_TEMP_DIR/stdtemp
 		build_settings_file=$REL_TEMP_DIR/build_settings_file

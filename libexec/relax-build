@@ -228,8 +228,6 @@ while [ $# -ne 0 ];  do
 	esac
 done
 
-source $REL_TEMP_DIR/config
-
 [[ ${distribution:-undefined} != undefined ]] || usage
 
 trap "teardown_build" EXIT INT TERM
