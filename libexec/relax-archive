@@ -136,7 +136,7 @@ do
 		if [[ $# == 0 ]]; then
 			echo "${REL_DISTRIBUTIONS[@]}"
 		else
-			comps=(-c --progress)
+			comps=(-c --progress --no-cache)
 			echo "${comps[@]}"
 		fi
 		fin

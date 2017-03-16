@@ -26,10 +26,10 @@ load test_helper
   [[ ! "${output}" =~ "Clean DerivedData" ]]
 }
 
-@test "relax archive --no-cache development2" {
+@test "relax archive development2 --no-cache " {
   export BUNDLE_SUFFIX=debug
   export VERSION="0.0.1"
-  run  relax archive --no-cache development2
+  run  relax archive development2 --no-cache
   assert_success
   [[ "${output}" =~ "Clean DerivedData" ]]
 }
