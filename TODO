@@ -5,9 +5,9 @@ Common
 ------
 
 - [M] Add 'extends' term to inherit a target settings
+- [M] Improve Relfile loader
+- [M] Unify messing code styles
 - [L] Write man page with Ronn.
-- [L] Unify disjointed code styles
-- [L] Enrich the command/option completion
 
 Export
 ------
