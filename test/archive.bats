@@ -6,6 +6,7 @@ load test_helper
   export COUNTRY=ja
   run relax archive development
   assert_success
+  [[ ! "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
   [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
 }
 
@@ -13,7 +14,6 @@ load test_helper
   export COUNTRY=ja
   run relax archive development --progress
   assert_success
-  echo "$output" > bats.log
   [[ "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
   [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
 }

@@ -5,7 +5,17 @@ load test_helper
 @test "relax build framework" {
   run relax build framework
   assert_success
+  [[ ! "${lines[${#lines[@]}-3]}" =~ "\[[ \*]*\]" ]]
+  [[ "${lines[${#lines[@]}-3]}" =~ "Time:" ]]
 }
+
+@test "relax build framework --progress" {
+  run relax build framework
+  assert_success
+  [[ "${lines[${#lines[@]}-3]}" =~ "\[[ \*]*\]" ]]
+  [[ "${lines[${#lines[@]}-3]}" =~ "Time:" ]]
+}
+
 
 @test "relax build staticlib" {
   run relax build staticlib --framework Sample

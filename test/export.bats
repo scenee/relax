@@ -6,6 +6,7 @@ load test_helper
   run relax export development
   assert_success
   echo "$output" > bats.log
+  [[ ! "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
   [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
 }
 

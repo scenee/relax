@@ -4,10 +4,11 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <distribution> [--framework <name>] [-c <configuration>]
+	usage: ${ME} build <distribution> [--progress] [--framework <name>] [-c <configuration>]
 	options:
-	    --framework		: Make a framework bundle from a static library
-	    -c			: Specify a configuration
+	    --progress	Show a progress indicator
+	    --framework	Make a framework bundle from a static library
+	    -c		Specify a configuration
 	EOM
 	fin
 }
@@ -51,8 +52,10 @@ build_project () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
 		XCODEBUILD_PID=$!
-		if ! print_progress_time $XCODEBUILD_PID; then
-			return 1
+		if [[ $show_progress == true ]]; then
+			print_progress_time $XCODEBUILD_PID || return 1
+		else
+			print_progress_time $XCODEBUILD_PID --quiet || return 1
 		fi
 	fi
 
@@ -193,6 +196,7 @@ BUILD_CMD_SEMAPHORE=
 
 is_framework=false
 framework_name=
+show_progress=false
 
 while [ $# -ne 0 ];  do
 	arg=$1
@@ -211,10 +215,13 @@ while [ $# -ne 0 ];  do
 		else
 			prev=$1
 			if [[  " ${REL_DISTRIBUTIONS[@]} " =~ " $prev " ]]; then
-				echo "--framework -c"
+				echo "-c --framework --progress"
 			fi
 		fi
 		fin
+		;;
+	--progress)
+		show_progress=true
 		;;
 	--framework)
 		[[ $# != 0 ]] || usage
