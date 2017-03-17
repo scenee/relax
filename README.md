@@ -52,6 +52,16 @@ including keychain and provisionig profiles.
 
 For example, it's easy to manage a build server with a provisioning tool like Ansible.
 
+## Development 
+
+
+Golang Environment
+
+```bash
+export GOPATH=/path/to/repo
+export GOBIN=$GOPATH/libexec
+```
+
 # What's different from GYM?
 
 - Multi disbribution management

@@ -334,7 +334,7 @@ __check_scheme () {
 
 # Update global/local 'build_params' variable
 __setup_build_params () {
-	if [[ ${REL_CONFIG_workspace-undefined} != "undefined" ]]; then
+	if [[ ${REL_CONFIG_workspace:-undefined} != "undefined" ]]; then
 		build_params=( -workspace "$REL_CONFIG_workspace.xcworkspace" )
 	else
 		build_params=( -project "$REL_CONFIG_xcodeproj.xcodeproj" )
@@ -586,26 +586,25 @@ setup_build () {
 	local release stdtemp build_settings_file params_file
 
 	release="$1"
+	stdtemp=$REL_TEMP_DIR/stdtemp
 
 	if [[ ! " ${REL_DISTRIBUTIONS[@]} " =~ " ${release} " ]]; then
 		die "'$release' is undefined."
 	fi
 
 	# Load Relfile
-	config_load "$REL_CONFIG_PATH"
+	build_settings_file=$REL_TEMP_DIR/build_settings_file
 	{
-		stdtemp=$REL_TEMP_DIR/stdtemp
-		build_settings_file=$REL_TEMP_DIR/build_settings_file
 		set +e
-		$LIBEXEC_DIR/config_parser.rb \
-			"$REL_CONFIG_PATH" "$release" >"${build_settings_file}" \
-			2>"${stdtemp}"
+		touch "$build_settings_file"
+		relparser -f "$REL_CONFIG_PATH" -o "$build_settings_file" export $release 2>"$stdtemp"
 		if [[ $? != 0 ]]; then
 			printf "$ERR "; cat "${stdtemp}"
 			die "Failed to parse $REL_CONFIG_PATH"
 		fi
 		set -e
 	}
+	cat "$build_settings_file"
 	source "${build_settings_file}"
 
 	__map_vals "$release"
@@ -641,14 +640,15 @@ setup_build () {
 
 	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$BAK_EXT"
 	logv "Info plist: $INFO_PLIST_PATH"
-
-	set +e
-	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
-	if [[ $? != 0 ]]; then
-		printf "$ERR "; cat "${stdtemp}"
-		die "Failed to parse $REL_CONFIG_PATH"
-	fi
-	set -e
+	{
+		set +e
+		$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
+		if [[ $? != 0 ]]; then
+			printf "$ERR "; cat "${stdtemp}"
+			die "Failed to parse $REL_CONFIG_PATH"
+		fi
+		set -e
+	}
 
 	## Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
