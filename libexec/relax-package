@@ -20,10 +20,9 @@ make_package() {
 
 	### Make artifacts
 
-	logi "$ARROW Clean up $package_dir"
+	logi "$ARROW Packaging ipa and xcarchive ..."
 	{
 	mkdir -p "$temp_dir"
-	rm -rf "$package_dir"
 	if grep -q "/" <<< "$package_dir"; then
 		local package_parent_dir="${package_dir%/*}"
 		if [[ ! -d "$package_parent_dir" ]]; then
@@ -36,24 +35,22 @@ make_package() {
 	local ipa_path="$(read_path $distribution ipa)"
 	[[ -f "$ipa_path" ]] || die "Not found '$distribution' ipa"
 
-	logi "$ARROW Packaging ..."
-	logi "ipa: $ipa_path"
+	logi "Found ipa: $ipa_path"
 	cp "$ipa_path" "$temp_dir"
 
 	local archive="$(read_path $distribution archive)"
 	if [[ -d "$archive" ]]; then
 		local zipname="$(basename "$archive")".zip
-		logi "archive: $archive"
+		logi "Found archive: $archive"
 		ditto -c -k --sequesterRsrc --keepParent "$archive" "$temp_dir/$zipname"
 	else
 		logi "$WARN Not found '$distribution' archive"
 	fi
 
-	echo $package_dir
-	echo $temp_dir
+	rm -rf "$package_dir"
 	cp -a "$temp_dir" "$package_dir"
-	logi "Package Directory: $HERE/$package_dir"
-	ls "$package_dir"
+	logi "Successfully packaged in ./$package_dir:"
+	ls -1 "$package_dir" | awk '{ print "    ✓ "$0 }'
 }
 
 

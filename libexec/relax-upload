@@ -107,6 +107,8 @@ while [ $# -ne 0 ];  do
 	esac
 done
 
+config_load "$REL_CONFIG_PATH"
+
 if [[ -z $release_note_file ]]; then
 	release_note_file="$REL_TEMP_DIR/release_note"
 	echo $(git log -1 --decorate) > "$release_note_file"

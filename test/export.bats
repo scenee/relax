@@ -5,6 +5,16 @@ load test_helper
 @test "relax export development" {
   run relax export development
   assert_success
+  echo "$output" > bats.log
+  [[ ! "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
+  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
+}
+
+@test "relax export development --progress" {
+  run relax export development --progress
+  assert_success
+  [[ "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
+  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
 }
 
 @test "relax export adhoc <development-archive>" {
@@ -28,4 +38,9 @@ load test_helper
   && [[  "${lines[11]}" =~ "Bundle Identifier: com.scenee.SampleApp.debug" ]] \
   && [[ "${lines[31]}" =~ "Relax AdHoc" ]] \
   && [[ "${lines[33]}" =~ "J3D7L9FHSS" ]]
+}
+
+@test "relax export: check workspace restoration" {
+  run git diff --exit-code --quiet
+  assert_success
 }

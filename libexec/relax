@@ -146,12 +146,6 @@ case $command in
 		*)
 			TRAP "clean_temp; teardown;"
 			make_temp
-
-			case $command in
-			build|archive|export|upload)
-				config_load "$REL_CONFIG_PATH"
-				;;
-			esac
 			;;
 		esac
 

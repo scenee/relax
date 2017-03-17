@@ -83,7 +83,7 @@ load test_helper
 
 @test "relax completions build development" {
   run relax completions build development
-  [[ ${output} = "--framework -c" ]]
+  [[ ${output} = "-c --framework --progress" ]]
 }
 
 @test "relax completions package" {

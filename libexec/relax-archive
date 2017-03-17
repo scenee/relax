@@ -4,12 +4,12 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} archive <distribution> [-c <configuration>] [<xcodebuild-option>] ...
+	Usage: ${ME} archive <distribution>  [-c <configuration>] [--progress] [--no-cache] [<xcodebuild-option>] ...
 
 	Options:
-	    --no-cache	Remove a DerivedData of the schema
 	    -c		Specify a configuration
-	
+	    --no-cache	Remove a DerivedData of the schema
+	    --progress	Show a progress indicator
 	EOM
 	fin
 }
@@ -109,9 +109,10 @@ make_archive () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) & 
 		XCODEBUILD_PID=$!
-
-		if ! print_progress_time $XCODEBUILD_PID; then
-			return 1
+		if [[ $show_progress == true ]]; then
+			print_progress_time $XCODEBUILD_PID || return 1
+		else
+			print_progress_time $XCODEBUILD_PID --quiet || return 1
 		fi
 	fi
 
@@ -123,6 +124,7 @@ XCSCHEME_PATH=
 
 distribution=
 no_cache=false
+show_progress=false
 
 while [ $# -ne 0 ];
 do
@@ -134,10 +136,13 @@ do
 		if [[ $# == 0 ]]; then
 			echo "${REL_DISTRIBUTIONS[@]}"
 		else
-			comps=(-c)
+			comps=(-c --progress --no-cache)
 			echo "${comps[@]}"
 		fi
 		fin
+		;;
+	--progress)
+		show_progress=true
 		;;
 	-c)
 		[[ $# != 0 ]] || usage
@@ -152,8 +157,6 @@ do
 		;;
 	esac
 done
-
-source $REL_TEMP_DIR/config
 
 [[ ${distribution:-undefined} != undefined ]] || usage
 
