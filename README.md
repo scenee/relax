@@ -12,10 +12,9 @@ Relax takes care of much of the hassle of them. so you can focus on development.
 
 Relax can
 
-- **Easy to manage** multi distributions(i.e. adhoc, enterprise & appstore) with each code signing in a YAML configuration file(aka. Relfile)
+- **Easy to manage** multi distributions(i.e. adhoc, enterprise & appstore) with each code signing
 - **Validate an ipa** to check if it has a correct codesign, entitlements and mobileprovision
 - **Resign an ipa** for a differenct ditribution(a bundle id, cetificate and provisioning profile)
-- **Quick set up** a build environment with `keychain` and `profile` modules.
 
 Additionally in background, it works as below.
 
@@ -155,7 +154,7 @@ The declarative file will really make you easy to understand what build settings
 
 An example of Relfile is as below.
 
-And also check [this 'Refile' section](#relfile) and [the reference Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
+And also check [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
 workspace: SampleApp
