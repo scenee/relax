@@ -3,19 +3,20 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} symbolicate <crashlog> <archive>
+	usage: ${ME} symbolicate <crashlog> <archive|ipa>
 
+	If you use an IPA file, a crash log can't be fullly symbolicated.
 	EOM
 	fin
 }
 
-# symbolicate <crashlog> <archive>
+# symbolicate <crashlog> <material>
 symbolicate () {
-	local crashlog archive app_path dsym_path out
+	local crashlog material out
 	[ $# -eq 2 ] || usage
 
 	crashlog=$1
-	archive=$2
+	material=$2
 
 	[[ -d /Applications/Xcode.app ]] || die "Please install Xcode.app"
 	
@@ -25,13 +26,23 @@ symbolicate () {
 	
 	logi "$ARROW Symbolicating '$crashlog'..."
 
-	app_path=$(find "$archive" -name "*.app")
-	dsym_path=$(find "$archive" -name "*.app.dSYM")
+	local app_path dsym_path
+	if grep -q "\.ipa$" <<< "$material"; then
+		local payload=$REL_TEMP_DIR
+		unzip -q "$material" -d "$payload"
+		app_path=$(find "$payload" -name "*.app")
+	elif grep -q "\.xcarchive$" <<< "$material"; then
+		app_path=$(find "$material" -name "*.app")
+		dsym_path=$(find "$material" -name "*.app.dSYM")
+	else
+		die "Unexpected file: $material"
+	fi
 
 	out=${crashlog%%\.crash}-symbolicated.crash
-
 	logv "Using $app_path"
-	logv "Using $dsym_path"
+	if [[ -d "$dsym_path" ]]; then
+		logv "Using $dsym_path"
+	fi
 	if "$symbolicatecrash_path" "$crashlog" "$app_path" "$dsym_path" -o "$out"; then
 		logi "$out"
 	else
