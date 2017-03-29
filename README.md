@@ -163,10 +163,11 @@ workspace: SampleApp
 adhoc: 
   scheme: SampleApp
 
-  team_id: __MY_COMPANY_TEAM_ID__
+  team_id: __MY_COMPANY_TEAM_ID__ # Fill in your team ID if needed
 
+  configuration: "$CONFIG" # Yes, You can use shell environment variables!
   version: 0.1.0
-  bundle_version: "%h-%C-${BUILD_NUMBER}" # See 'Bundle Version Format section'
+  bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
 
   build_settings:
     SWIFT_VERSION: 3.0
@@ -176,7 +177,7 @@ adhoc:
 
   # Override Info.plist settings for this distribution
   info_plist: 
-    CFBundleName: SmapleApp(AdHoc)
+    CFBundleName: "SmapleApp($CONFIG)"
     UISupportedExternalAccessoryProtocols:
       - com.example.test-accessory
 
@@ -244,11 +245,9 @@ The characters and their meanings are as follows.
 
 | Character | Meaning |
 |:---------|:-------|
-|%V| Release version number|
-|%B| Build version number|
-|%C| Build configuration|
+|%c| Build configuration|
 |%h| Git abbreviated commit hash|
-|%D| Git branch name|
+|%b| Git branch name|
 
 ## Export Option Support
 
