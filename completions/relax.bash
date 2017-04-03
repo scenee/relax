@@ -39,6 +39,9 @@ _relax() {
 					command=${words[2]}
 					COMPREPLY=( $( compgen -W "$(relax $module completions ${command} $prev $cur)" -- $cur ) )
 				fi
+				if [[ ${#COMPREPLY[@]} == 0 ]]; then
+					_filedir
+				fi
 				return
 				;;
 			*)

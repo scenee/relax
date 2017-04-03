@@ -145,7 +145,7 @@ case $1 in
 	do
 		case $1 in
 			-) fin "-k -P -p" ;;
-			-k) list_keychain | xargs ;;
+			-k) list_keychain | grep -v "metadata" | xargs ;;
 		esac
 		shift
 	done

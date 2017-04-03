@@ -38,7 +38,7 @@ delete_keychain () {
 case $1 in
 -h|--help) usage ;;
 --completions) 
-	list_keychain | grep -v "\(System\|login\)" | xargs
+	list_keychain | grep -v "\(System\|login\|metadata\)" | xargs
 	fin
 	;;
 esac
