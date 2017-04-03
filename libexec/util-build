@@ -431,18 +431,21 @@ load_xcode_build_settings () {
 	fi
 
 	logd "${params[@]}"
+	local filename="$(echo "${params[@]}"| shasum | cut -d ' ' -f1)"
+	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/$filename"
+	local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
+	local xcode_settings_conf="${xcode_settings_file}.conf"
 
-	local file_name
-	file_name="${params[@]}"
-	file_name="${file_name// /-}"
-	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/${file_name//\"/}"
-	local export_xcode_settings="$REL_TEMP_DIR/xcode-settings/${file_name//\"/}-export"
+	if [[ ! -f $xcode_settings_file ]]; then
+		set +e
+		xcodebuild -showBuildSettings "${params[@]}" 2>"$xcode_settings_error" >"$xcode_settings_file"
+		set -e
 
-	if ! test -f "$xcode_settings_file"; then
+		if [[ -s "$xcode_settings_error" ]]; then
+			die "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
+		fi
+
 		# Get ride of 'DeveloperPortal: Using pre-existing current store at URL'
-
-		xcodebuild -showBuildSettings "${params[@]}" 2>/dev/null >"$xcode_settings_file"
-
 		cat "$xcode_settings_file" | tail -n +2 | \
 		sed -e "
 		s/^ *//;
@@ -460,20 +463,18 @@ load_xcode_build_settings () {
 		-e "CURRENT_PROJECT_VERSION" \
 		| while read line
 		do 
-			echo "export $line" >> "$export_xcode_settings"
+			echo "export $line" >> "$xcode_settings_conf"
 		done
 	fi
 
-	if ! test -f "$export_xcode_settings"; then
+	if ! test -f "$xcode_settings_conf"; then
 		die "load_xcode_build_settings: Could not load the build settings."
 	fi
 
-	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_DEBUG".* ]]; then
-		echo "$export_xcode_settings"
-		cat "$export_xcode_settings"
-	fi
-	source "$export_xcode_settings"
-	logd "$export_xcode_settings"
+	cat "$xcode_settings_conf" | logd
+
+	source "$xcode_settings_conf"
+	logd "$xcode_settings_conf"
 }
 
 print_xcode_version() {
