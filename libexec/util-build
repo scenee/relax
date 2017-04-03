@@ -382,12 +382,16 @@ get_build_params_file () {
 		local mobileprovision=$(find_mobileprovision --latest "$provisioning_profile")
 		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
 
+
 		# Should use development signing for archive. Refer to this session, 
 		# https://developer.apple.com/videos/play/wwdc2016/401/.
 		# But it's not working when exporint ana adhoc IPA file.
 		# I confirmed It's working well in Xcode 7.3.1.
 		if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
-			build_params+=( CODE_SIGN_IDENTITY="iPhone Distribution" )
+			local temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
+			dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
+			local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$temp_mobileprovision")
+			build_params+=( CODE_SIGN_IDENTITY="iPhone Distribution: $team_name" )
 		else
 			build_params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
 		fi
@@ -431,18 +435,21 @@ load_xcode_build_settings () {
 	fi
 
 	logd "${params[@]}"
+	local filename="$(echo "${params[@]}"| shasum | cut -d ' ' -f1)"
+	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/$filename"
+	local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
+	local xcode_settings_conf="${xcode_settings_file}.conf"
 
-	local file_name
-	file_name="${params[@]}"
-	file_name="${file_name// /-}"
-	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/${file_name//\"/}"
-	local export_xcode_settings="$REL_TEMP_DIR/xcode-settings/${file_name//\"/}-export"
+	if [[ ! -f $xcode_settings_file ]]; then
+		set +e
+		xcodebuild -showBuildSettings "${params[@]}" 2>"$xcode_settings_error" >"$xcode_settings_file"
+		set -e
 
-	if ! test -f "$xcode_settings_file"; then
+		if [[ -s "$xcode_settings_error" ]]; then
+			die "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
+		fi
+
 		# Get ride of 'DeveloperPortal: Using pre-existing current store at URL'
-
-		xcodebuild -showBuildSettings "${params[@]}" 2>/dev/null >"$xcode_settings_file"
-
 		cat "$xcode_settings_file" | tail -n +2 | \
 		sed -e "
 		s/^ *//;
@@ -460,20 +467,18 @@ load_xcode_build_settings () {
 		-e "CURRENT_PROJECT_VERSION" \
 		| while read line
 		do 
-			echo "export $line" >> "$export_xcode_settings"
+			echo "export $line" >> "$xcode_settings_conf"
 		done
 	fi
 
-	if ! test -f "$export_xcode_settings"; then
+	if ! test -f "$xcode_settings_conf"; then
 		die "load_xcode_build_settings: Could not load the build settings."
 	fi
 
-	if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_DEBUG".* ]]; then
-		echo "$export_xcode_settings"
-		cat "$export_xcode_settings"
-	fi
-	source "$export_xcode_settings"
-	logd "$export_xcode_settings"
+	cat "$xcode_settings_conf" | logd
+
+	source "$xcode_settings_conf"
+	logd "$xcode_settings_conf"
 }
 
 print_xcode_version() {
