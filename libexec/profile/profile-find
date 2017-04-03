@@ -22,6 +22,7 @@ case $1 in
 	;;
 esac
 
+logi "$ARROW Finding provisioning profiles ..."
 # `find_mobileprovision()` is defined in `libexec/util-build`
 if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 	find_mobileprovision -v "$@"
