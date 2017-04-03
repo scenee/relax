@@ -34,6 +34,13 @@ load test_helper
   [[ "${output}" =~ "Clean DerivedData" ]]
 }
 
+@test "relax archive adhoc" {
+  run  relax archive adhoc
+  assert_success
+  [[ "${lines[${#lines[@]}-4]}" =~ "iPhone Distribution: Shin Yamamoto" ]]
+}
+
+
 @test "relax archive: check workspace restoration" {
   run git diff --exit-code --quiet
   assert_success
