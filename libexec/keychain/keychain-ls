@@ -1,0 +1,18 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-ls` command
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain ls
+
+	EOM
+	fin
+}
+
+if [[ $# == 1 ]]; then
+	case $1 in
+		-h|--help|*) usage ;;
+	esac
+else
+	list_keychain | grep -v "metadata.keychain"
+fi
