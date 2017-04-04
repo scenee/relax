@@ -688,6 +688,7 @@ setup_build () {
 	## Provisioning Profile
 	if [[ -n $provisioning_profile ]]; then
 		# Custom Sigining
+		# TODO: When the project isn't automatic signing
 		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
 			sed -i .$BAK_EXT \
 			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
@@ -699,7 +700,7 @@ setup_build () {
 			\1ProvisioningStyle = Manual;\
 			/" "$PROJECT_FILE_PATH"/project.pbxproj 
 		fi
-		logi "$ARROW Change ProvisioningStyle to Manual for \"$provisioning_profile\""
+		logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
 	fi
 
 	if [[ ${version:-undefined} == undefined ]]; then
