@@ -7,6 +7,7 @@ load test_helper
 	touch temp
 	run relax symbolicate temp "$(relax show development ipa)"
 	assert_success
+	rm temp
 }
 
 # Test a xcarchive file detection
@@ -14,6 +15,7 @@ load test_helper
 	touch temp
 	run relax symbolicate temp "$(relax show development archive)"
 	assert_success
+	rm temp
 }
 
 # Test a unexpected file detection
@@ -21,5 +23,6 @@ load test_helper
 	touch temp
 	run relax symbolicate temp temp
 	assert_failure
+	rm temp
 }
 
