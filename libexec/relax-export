@@ -6,18 +6,13 @@ usage () {
 	cat <<-EOM
 	Usage: ${ME} export <distribution> [--legacy] [--progress] [<archive-path>]
 
-	If an archive path isn't set, the latest archive of the distribution
-	will be exported.
+	By default, the latest archive geenrated \`archive' command will be exported.
+	If you encoounter "exportOptionsPlist error for key \`method'" error, please 
+	use \`--legacy' option.
 
-	When you encoounter the below error, please use `--legacy\' option.
-
-	```
-	error: exportArchive: exportOptionsPlist error for key `method\': expected one of {}
-	```
 	Options:
 	    --progress	Show a progress indicator
-	    --legacy	Use `xcrun PackageApplication\' instead of `xcodebuild exportArchive\'
-
+	    --legacy	Use \`PackageApplication'
 	EOM
 	fin
 }
