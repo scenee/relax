@@ -663,9 +663,11 @@ setup_build () {
 		/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_identifier" "$INFO_PLIST_PATH"
 		PRODUCT_BUNDLE_IDENTIFIER=$bundle_identifier
 	elif [[ $for_export == true ]]; then
-		PRODUCT_BUNDLE_IDENTIFIER="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" "$archived_info_plist")"
+		PRODUCT_BUNDLE_IDENTIFIER="$(get_info_plist_value ":ApplicationProperties:CFBundleIdentifier" "$archived_info_plist")"
+		if [[ -z "$PRODUCT_BUNDLE_IDENTIFIER" ]]; then
+			PRODUCT_BUNDLE_IDENTIFIER="$(get_info_plist_value ":CFBundleIdentifier" "$archived_info_plist")"
+		fi
 	fi
-
 	## Support a xcode project file not including PRODUCT_BUNDLE_IDENTIFIER 
 	if test ${PRODUCT_BUNDLE_IDENTIFIER:-undefined} = undefined; then
 		PRODUCT_BUNDLE_IDENTIFIER="$(print_info_plist bundle_identifier $INFO_PLIST_PATH)"
@@ -717,15 +719,20 @@ setup_build () {
 	fi
 
 	if [[ ${version:-undefined} == undefined ]]; then
-		BUNDLE_SHORT_VERSION="$(print_info_plist version "$INFO_PLIST_PATH")"
+		BUNDLE_SHORT_VERSION="$(get_info_plist_value ":CFBundleShortVersionString" "$INFO_PLIST_PATH")"
 	else
 		BUNDLE_SHORT_VERSION="$version"
 	fi
 
-
 	if [[ $for_export == true && "${bundle_version:-undefined}" = undefined ]]; then
-		BUNDLE_VERSION="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
-		BUNDLE_SHORT_VERSION="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleShortVersionString" "$archived_info_plist")"
+		BUNDLE_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
+		if [[ -z "$BUNDLE_VERSION" ]]; then
+			BUNDLE_VERSION="$(get_info_plist_value ":CFBundleVersion" "$archived_info_plist")"
+		fi
+		BUNDLE_SHORT_VERSION="$(get_info_plist_value ":CFBundleShortVersionString" "$archived_info_plist")"
+		if [[ -z "$BUNDLE_SHORT_VERSION" ]]; then
+			BUNDLE_SHORT_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleShortVersionString" "$archived_info_plist")"
+		fi
 	else
 		## Bundle Version
 		local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
