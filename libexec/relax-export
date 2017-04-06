@@ -4,13 +4,20 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} export <distribution> [--progress] [<archive-path>]
+	Usage: ${ME} export <distribution> [--legacy] [--progress] [<archive-path>]
 
 	If an archive path isn't set, the latest archive of the distribution
 	will be exported.
 
+	When you encoounter the below error, please use `--legacy\' option.
+
+	```
+	error: exportArchive: exportOptionsPlist error for key `method\': expected one of {}
+	```
 	Options:
 	    --progress	Show a progress indicator
+	    --legacy	Use `xcrun PackageApplication\' instead of `xcodebuild exportArchive\'
+
 	EOM
 	fin
 }
@@ -67,8 +74,6 @@ export_generate_optoin_list() {
 
 	cat $plistbuddy_cmd_file | \
 		xargs -I{} /usr/libexec/PlistBuddy -c {} $EXPORT_OPTIONS_PLIST >/dev/null 2>&1
-
-	cat $EXPORT_OPTIONS_PLIST
 }
 
 export_archive () {
@@ -79,14 +84,19 @@ export_archive () {
 	logi "$ARROW Exporting $1"
 
 	local export_path="${PRODUCT_BUILD_ROOT}"
-	local export_option_plist=$EXPORT_OPTIONS_PLIST
+
 
 	local archive_path="$REL_TEMP_DIR/xcarchive"
 	cp -a "$1" "$archive_path"
 
-	export_generate_optoin_list
-	
 	local app_path="$(find "$archive_path" -name *.app)";
+
+	if [[ $use_packageapp == false ]]; then
+		local export_option_plist=$EXPORT_OPTIONS_PLIST
+		export_generate_optoin_list
+		cat $EXPORT_OPTIONS_PLIST
+	fi
+
 	if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$team_id"; then
 		:
 	else
@@ -113,30 +123,41 @@ export_archive () {
 		rm -rf "$export_path/$PRODUCT_NAME.ipa"
 	fi
 
-	local params=()
-	params+=(-exportArchive -archivePath "$archive_path" -exportPath "$export_path")
-	params+=(-exportOptionsPlist "$export_option_plist")
+	if [[ $use_packageapp == false ]]; then
+		local params=()
+		params+=(-exportArchive -archivePath "$archive_path" -exportPath "$export_path")
+		params+=(-exportOptionsPlist "$export_option_plist")
 
-	### Deprecated
-	#params=(-exportFormat ipa)
-	#params+=(-exportProvisioningProfile "$provisioning_name")
+		### Deprecated
+		#params=(-exportFormat ipa)
+		#params+=(-exportProvisioningProfile "$provisioning_name")
 
-	logfile="$export_path/export.log"
-	logi "Run: xcodebuild ${params[@]}"
-	logi "Log: ${logfile}"
+		logfile="$export_path/export.log"
+		logi "Run: xcodebuild ${params[@]}"
+		logi "Log: ${logfile}"
 
-	rm -rf "${logfile}"
-	if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
-		xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2)  || return 1
-	else
-		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
-		XCODEBUILD_PID=$!
-
-		if [[ $show_progress == true ]]; then
-			print_progress_time $XCODEBUILD_PID || return 1
+		rm -rf "${logfile}"
+		if [[ "${REL_LOG_LEVEL:-undefined}" =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
+			xcodebuild "${params[@]}" > >(tee -a "${logfile}") 2> >(tee -a "${logfile}" >&2)  || return 1
 		else
-			print_progress_time $XCODEBUILD_PID --quiet || return 1
+			xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
+			XCODEBUILD_PID=$!
+
+			if [[ $show_progress == true ]]; then
+				print_progress_time $XCODEBUILD_PID || return 1
+			else
+				print_progress_time $XCODEBUILD_PID --quiet || return 1
+			fi
 		fi
+	else
+		local mobileprovision="$(find_mobileprovision --latest "$provisioning_profile")"
+		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
+		xcrun \
+			-sdk iphoneos \
+			PackageApplication \
+			-v "$app_path" \
+			-o "$HERE/$export_path/$PRODUCT_NAME.ipa" \
+			--embed "PROVISIONING_PROFILE=$mobileprovision" >/dev/null
 	fi
 	
 	local ipa_path=$(find "$export_path" -maxdepth 1 -mindepth 1 -name "*.ipa" -print0 \
@@ -168,6 +189,7 @@ prepare_export() {
 target_archive_file=""
 distribution=
 show_progress=false
+use_packageapp=false
 
 while [ $# -ne 0 ];
 do
@@ -188,6 +210,9 @@ do
 		;;
 	--progress)
 		show_progress=true
+		;;
+	--legacy)
+		use_packageapp=true
 		;;
 	*)
 		if [[ $arg =~ (.).xcarchive ]]; then
