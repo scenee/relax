@@ -98,13 +98,15 @@ die_with_status () {
 	status=$1
 	shift
 
-	printf "$ERR $@${NC}\n"
+	{
+		printf "$ERR $@${NC}\n"
 
-	if test $# = 1 && test "$1" = "Interrupted"; then
-		echo -e "${RED}Cancelled${NC}"
-	else
-		echo -e "${RED}Failed${NC}"
-	fi
+		if test $# = 1 && test "$1" = "Interrupted"; then
+			echo -e "${RED}Cancelled${NC}"
+		else
+			echo -e "${RED}Failed${NC}"
+		fi
+	} >&2
 
 	exit "$status"
 }
