@@ -489,6 +489,15 @@ print_xcode_version() {
 	xcodebuild -version
 }
 
+
+get_info_plist_value () {
+	local path=$1
+	local info_plist=$2
+	echo $(/usr/libexec/PlistBuddy -c \
+		"Print $path" "$info_plist" 2>&1\
+		| grep -v "Does Not Exist")
+}
+
 ###############
 # $1 -- command
 # commands:
@@ -820,7 +829,7 @@ declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team __setup_build_params
 declare -x -f load_xcode_build_settings get_build_params_file
-declare -x -f print_info_plist print_xcode_version
+declare -x -f get_info_plist_value print_info_plist print_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
