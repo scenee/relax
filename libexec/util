@@ -87,8 +87,9 @@ teardown () {
 fin () {
 	if [[ $# -gt 0 ]]; then
 		echo -e "$@"
-	elif [[ -p /dev/stdin ]]; then
-		echo -e "$(</dev/stdin)"
+	# It sometimes makes a caller process hang
+	#elif [[ -p /dev/stdin ]]; then
+	#	echo -e "$(</dev/stdin)"
 	fi
 	exit 0
 }
@@ -96,8 +97,9 @@ fin () {
 die () {
 	if [[ $# -gt 0 ]]; then
 		die_with_status 1 "$@"
-	elif [[ -p /dev/stdin ]]; then
-		die_with_status 1 "$(</dev/stdin)"
+	# It sometimes makes a caller process hang
+	#elif [[ -p /dev/stdin ]]; then
+	#	die_with_status 1 "$(</dev/stdin)"
 	fi
 }
 

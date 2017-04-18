@@ -13,13 +13,13 @@ teardown () {
 }
 
 
-die_stdin () {
-	echo "hello" | die
-}
-
-fin_stdin () {
-	echo "hello" | fin
-}
+#die_stdin () {
+#	echo "hello" | die
+#}
+#
+#fin_stdin () {
+#	echo "hello" | fin
+#}
 
 @test "die" {
 	run die "hello"
@@ -33,14 +33,14 @@ fin_stdin () {
 	[[ "$output" =~ "hello" ]]
 }
 
-@test "die(stdin)" {
-	run die_stdin
-	assert_failure
-	[[ "$output" =~ "hello" ]]
-}
-
-@test "fin(stdin)" {
-	run fin_stdin 
-	assert_success
-	[[ "$output" =~ "hello" ]]
-}
+#@test "die(stdin)" {
+#	run die_stdin
+#	assert_failure
+#	[[ "$output" =~ "hello" ]]
+#}
+#
+#@test "fin(stdin)" {
+#	run fin_stdin 
+#	assert_success
+#	[[ "$output" =~ "hello" ]]
+#}
