@@ -42,12 +42,19 @@ check_toolchain () {
 	which security > /dev/null || die "Not found security"
 }
 
+kill_childprocesses () {
+	local cpids=$(jobs -p)
+	if [[ -n $cpids ]]; then
+		kill $cpids
+	fi
+}
+
 TRAP() {
 	local cmd=$1
-	trap "${cmd}" EXIT
-	trap "${cmd} die \"Interrupted\"" INT HUP
-	trap "${cmd} die \"Aborted \"" ABRT
-	trap "${cmd} die \"Terminate\"" TERM
+	trap "${cmd} kill_childprocesses;" EXIT
+	trap "${cmd} kill_childprocesses; die \"Interrupted\"" INT HUP
+	trap "${cmd} kill_childprocesses; die \"Aborted \"" ABRT
+	trap "${cmd} kill_childprocesses; die \"Terminate\"" TERM
 }
 	
 
@@ -80,8 +87,9 @@ teardown () {
 fin () {
 	if [[ $# -gt 0 ]]; then
 		echo -e "$@"
-	elif [[ -p /dev/stdin ]]; then
-		echo -e "$(</dev/stdin)"
+	# It sometimes makes a caller process hang
+	#elif [[ -p /dev/stdin ]]; then
+	#	echo -e "$(</dev/stdin)"
 	fi
 	exit 0
 }
@@ -89,8 +97,9 @@ fin () {
 die () {
 	if [[ $# -gt 0 ]]; then
 		die_with_status 1 "$@"
-	elif [[ -p /dev/stdin ]]; then
-		die_with_status 1 "$(</dev/stdin)"
+	# It sometimes makes a caller process hang
+	#elif [[ -p /dev/stdin ]]; then
+	#	die_with_status 1 "$(</dev/stdin)"
 	fi
 }
 
@@ -147,4 +156,4 @@ declare -x -f check_toolchain compare_versions
 declare -x -f fin die die_with_status
 declare -x -f logi logv logd __log
 declare -x -f make_temp clean_temp 
-declare -x -f teardown TRAP
+declare -x -f teardown TRAP kill_childprocesses
