@@ -48,76 +48,7 @@ read_path () {
 # find_mobileprovision [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 find_mobileprovision () {
 	[ $# -gt 0 ] || die "bad argument"
-
-	local team_id="" 
-	local name=""
-	local verbose=false
-	local latest=false
-	while [ $# -ne 0 ];
-	do
-		arg="$1"
-		shift
-		case $arg in
-		--team)
-			team_id="$1"
-			shift
-			;;
-		-v)
-			# '-v' option is distinguished from  REL_LOG_LEVEL_VERBOSE.
-			# Because the function is shared by some commands.
-			verbose=true
-			;;
-		--latest)
-			latest=true
-			;;
-		*)
-			name="$arg"
-			;;
-		esac
-	done
-
-	[ -n "$name" ] || die "bad argument"
-
-	local result=$REL_TEMP_DIR/results
-
-	find "$PROVISIONING_DST_DIR" -depth 1 -name "*.mobileprovision" | \
-	while IFS= read file; do
-		local mp=$REL_TEMP_DIR/temp_mobileprovision
-		dec_provisioning_profile "$file" -o "$mp"
-		local date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" "$mp")
-		local full_name=$(/usr/libexec/PlistBuddy -c "Print :Name" "$mp")
-		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp")
-		local _team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp")
-
-		if [[ ! $full_name =~ $name ]]; then
-			continue
-		fi
-
-		local ret
-		if [[ ${verbose} == true ]]; then
-			ret="${full_name}#${file} -- ${full_name} / ${team_name}(${_team_id})"
-		else
-			ret="${date}#${file}"
-		fi
-		if [[ -n $team_id ]]; then
-			if [[ $team_id == $_team_id ]]; then
-				echo "$ret"
-			fi
-		else
-			echo "$ret"
-		fi
-	done | sort -ur | awk -F# '{ print $2 }' > "$result"
-
-	if [[ $latest = true ]]; then
-		ret="$(
-			cat "$result" \
-			| head -n 1
-		)"
-		[[ -n "$ret" ]] || echo ""
-		echo "$ret"
-	else
-		cat "$result"
-	fi
+	lspp "$@"
 }
 
 # dec_provisioning_profile <provisioning-profile> [-o <out>]
