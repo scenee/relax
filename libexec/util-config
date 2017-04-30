@@ -5,47 +5,8 @@
 ### YAML ###
 ############
 
-# TODO It can be replacted with a ruby script.
-_parse_yaml() {
-	local prefix=$2
-	local s='[[:space:] ]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-	sed -n\
-	-e "s|^\($s\)\($w\)$s:$s\([^#]*\)$s#\(.*\)*$s\$|\1$fs\2$fs\3|p" \
-	-e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" \
-	-e "/^$s-.*/{
-		s|^\($s\)-$s\($w\)$s:$s\(.*\)$s\$|\1$fs+\2$fs\3|p;
-		s|^\($s\)-$s\($w\)$s:$s\(\"\.*\"\)$s\$|\1$fs+\2$fs\3|p;
-		s|^\($s\)-$s\"*\($w\)\"*$s\$|\1$fs\2|p;
-	}" $1 |
-	awk -F$fs '{
-		indent = length($1)/2;
-		vname[indent] = $2;
-		for (i in vname) {if (i > indent) {delete vname[i]}}
-		vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-		if ( vn !~ /(info_plist|build_settings)/ ) { 
-			if (NF == 2) {
-				printf("%s%s=(\"%s\")\n", "'$prefix'",vn, $2); # Array
-			} else if (length($3) > 0) {
-				gsub(/^ */,"", $3); gsub(/ *$/,"", $3); #chomp whilespaces
-				gsub(/^"*/,"", $3); gsub(/"*$/,"", $3); #chomp whilespaces
-				if ( $2  ~ /^\+.*/) {
-					gsub(" ","{}", $3) # For "build_settings" key
-					printf("%s%s=(\"%s=%s\")\n", "'$prefix'",vn, substr($2, 2, length($2) -1), $3); # Dictionary
-				} else {
-					printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-				}
-			}
-		}
-	}' | sed 's/_=/+=/g'
-}
-
 config_get_distributions () {
-	if [[ $# != 0 ]] && [[ -f $1 ]]; then
-		local s='[[:space:] ]*' w='[a-zA-Z0-9_]*'
-		sed -ne "s|^\($w\)$s:$s\(#.*\)*$s\$|\1|p" $1 \
-		| grep -v "log_formatter\|xcodeproj\|workspace"\
-		| grep -v "crashlytics\|testfairy"
-	fi
+	relparser -f "$1" list
 }
 
 _check_config () {
@@ -74,16 +35,7 @@ _export_config() {
 	###################################################################
 	echo "set +u" > $REL_TEMP_DIR/config
 
-	_parse_yaml $1 "REL_CONFIG_" | awk '{
-		if ( $0 ~ /.*\+=.*/ ) {
-			print $0
-			i = index($0, "+=")
-			lhr= substr($0, 0, i-1)
-			print "export "lhr
-		} else {
-			print "export "$0
-		}
-	}' >> $REL_TEMP_DIR/config
+	relparser -f "$1" export $REL_TEMP_DIR/config
 
 	echo "set -u" >> $REL_TEMP_DIR/config
 
@@ -110,16 +62,17 @@ config_load () {
 	if [ -f "$config_path" ]; then
 		_export_config $config_path
 	else
-		message=$(cat <<-EOM
+		message=$(
+		cat <<-EOM
 		$ERR Not found $REL_CONFIG in the current dir.
 		Please run \`/path/to/$ME init\` here, and then set up a config file.
-		EOM)
+		EOM
+		)
 		die "$message"
 	fi
 	
 	_check_config
 }
 
-declare -x -f _parse_yaml
 declare -x -f _check_config _export_config
 declare -x -f config_load config_find config_get_distributions
