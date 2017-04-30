@@ -9,7 +9,6 @@ export REL_VERSION="0.3.6"
 
 export CMDPATH=$(test -L ${BASH_SOURCE[0]:-$0} && echo $(readlink ${BASH_SOURCE[0]:-$0}) || echo $0)
 export ME=$(basename $CMDPATH)
-export HERE="${PWD}"
 
 find_source_path() {
 	cd "$(dirname "${BASH_SOURCE[0]:-$0}")"
