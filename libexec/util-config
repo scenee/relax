@@ -9,6 +9,22 @@ config_get_distributions () {
 	relparser -f "$1" list
 }
 
+# config_load <config-path> <release> <base> <out>
+config_gen_plist () {
+	local stdtemp=$REL_TEMP_DIR/stdtemp
+	local relfile=$1
+	local dist=$2
+	local base=$3
+	local out=$4
+	set +e
+	relparser -f "$relfile" -plist "$base" -o "$out" gen_plist "$dist" 2>"$stdtemp"
+	if [[ $? != 0 ]]; then
+		printf "$ERR "; cat "${stdtemp}"
+		die "Failed to generate a info plist: $base -> $out"
+	fi
+	set -e
+}
+
 _check_config () {
 	if [[ "${REL_CONFIG_xcodeproj:-undefined}" = undefined ]]; then
 		if [[ "${REL_CONFIG_workspace:-undefined}" = undefined ]]; then
@@ -28,25 +44,41 @@ _check_config () {
 	fi
 }
 
-_export_config() {
+# _config_load <config-path> [<release>]
+_load_config() {
 	###################################################################
 	# NOTE: Escape an unbound error when a env var is used in Relfile #
 	#       See test/SampleApp/Relfile in this repository             #
 	###################################################################
-	echo "set +u" > $REL_TEMP_DIR/config
 
-	relparser -f "$1" export $REL_TEMP_DIR/config
+	local stdtemp relfile dist out
+	stdtemp=$REL_TEMP_DIR/stdtemp
+	relfile="$1"
+	out=$REL_TEMP_DIR/relfile_rc
+	if [[ $# == 2 ]]; then
+		dist="$2"
+	fi
 
-	echo "set -u" >> $REL_TEMP_DIR/config
+	set +e
+	relparser -f "$relfile" -o $out gen_source "$dist" 2>"$stdtemp"
+	if [[ $? != 0 ]]; then
+		printf "$ERR "; cat "${stdtemp}"
+		die "Failed to parse $relfile"
+	fi
+	set -e
+	sed -i.bak '1i\
+set +u\
+' "$out"
+	echo "set -u" >> "$out"
 
-	source $REL_TEMP_DIR/config
+	source "$out"
 }
 
 config_find() {
 	echo "$(find . -name $REL_CONFIG -maxdepth 1)"
 }
 
-# config_load <config-path>
+# config_load <config-path> <release>
 config_load () {
 	if test ! -d $REL_TEMP_DIR; then
 		die "config_load: Not found Temporary directory"
@@ -56,11 +88,16 @@ config_load () {
 		die "config_load: argument is invalid"
 	fi
 
-	local config_path=$1
+
+	local config_path dist
+	config_path=$1
+	if [[ $# == 2 ]]; then
+		dist="$2"
+	fi
 	logi "$ARROW Loading ${config_path#\./}"
 	
 	if [ -f "$config_path" ]; then
-		_export_config $config_path
+		_load_config "$config_path" "$dist"
 	else
 		message=$(
 		cat <<-EOM
@@ -74,5 +111,5 @@ config_load () {
 	_check_config
 }
 
-declare -x -f _check_config _export_config
-declare -x -f config_load config_find config_get_distributions
+declare -x -f _check_config _load_config
+declare -x -f config_load config_find config_get_distributions config_gen_plist

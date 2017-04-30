@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
-	//"github.com/DHowett/go-plist"
 	"flag"
+	"fmt"
+	"github.com/DHowett/go-plist"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
-	//"reflect"
 	"strings"
 )
 
@@ -38,22 +37,35 @@ func (r Relfile) list() {
 	}
 }
 
-func (r Relfile) export(dist string, out string) {
-	d := r.Distributions[dist]
-
+func (r Relfile) prep_out(out string) (f *os.File) {
 	_, err := os.Stat(out)
 	if os.IsExist(err) {
 		os.Remove(out)
 	}
-	var file *os.File
-	file, err = os.Create(out)
+	f, err = os.Create(out)
 	checkError(err)
-	file.Close()
+	f.Close()
 
-	of, err := os.OpenFile(out, os.O_WRONLY, 0666)
+	f, err = os.OpenFile(out, os.O_WRONLY, 0666)
 	if err != nil {
 		panic(err)
 	}
+	return f
+}
+
+func (r Relfile) gen_plist(dist string, in string, out string) {
+	d := r.Distributions[dist]
+
+	of := r.prep_out(out)
+	defer of.Close()
+
+	d.make_plist(in, of)
+}
+
+func (r Relfile) gen_source(dist string, out string) {
+	d := r.Distributions[dist]
+
+	of := r.prep_out(out)
 	defer of.Close()
 
 	r.make_source(of)
@@ -81,9 +93,44 @@ type Distribution struct {
 	Team_id              string
 	Bundle_identifier    string
 	Bundle_version       string
+	Version              string
 	Build_settings       map[string]interface{}
 	Info_plist           map[string]interface{}
 	Export_options       map[string]interface{}
+}
+
+func (d Distribution) make_plist(base string, out *os.File) {
+	var decoder *plist.Decoder
+
+	if f, err := os.Open(base); err != nil {
+		//fmt.Println("open error:", err)
+		return
+	} else {
+		defer f.Close()
+		decoder = plist.NewDecoder(f)
+	}
+
+	var data map[string]interface{}
+
+	if err := decoder.Decode(&data); err != nil {
+		//fmt.Println("decode error:", err)
+		panic(err)
+	}
+
+	//fmt.Println(data)
+	//fmt.Println("--- Info.plist")
+
+	for k, v := range d.Info_plist {
+		data[k] = v
+		//fmt.Printf("---\t%v: %v\n", k, v)
+	}
+
+	encoder := plist.NewEncoder(out)
+	encoder.Indent("\t")
+	if err := encoder.Encode(data); err != nil {
+		//fmt.Println("encode error: ", err)
+		panic(err)
+	}
 }
 
 func (d Distribution) make_source(name string, out *os.File) {
@@ -96,6 +143,7 @@ func (d Distribution) make_source(name string, out *os.File) {
 	source += get_source_line2(name, "team_id", d.Team_id)
 	source += get_source_line2(name, "bundle_identifier", d.Bundle_identifier)
 	source += get_source_line2(name, "bundle_version", d.Bundle_version)
+	source += get_source_line2(name, "version", d.Version)
 
 	// "--- Build settings\n"
 	build_settings := strings.Join([]string{PREFIX, name, "build_settings"}, "_")
@@ -122,13 +170,6 @@ func (d Distribution) make_source(name string, out *os.File) {
 		source += get_source_line2(name, "export_options_"+k, v)
 	}
 
-	/**
-	fmt.Println("--- Info.plist")
-	for k, v := range d.Info_plist {
-		fmt.Printf("\t%v: %v\n", k, v)
-	}
-	*/
-
 	if _, err := out.WriteString(source); err != nil {
 		panic(err)
 	}
@@ -145,11 +186,13 @@ func main() {
 	cur, _ := os.Getwd()
 
 	var (
-		in  string
-		out string
+		in     string
+		out    string
+		plbase string
 	)
-	flag.StringVar(&in, "f", cur, "A output path")
-	flag.StringVar(&out, "o", "", "A output path")
+	flag.StringVar(&in, "f", cur+"/Relfile", "A output path")
+	flag.StringVar(&out, "o", cur+"/out_relparser", "A output path")
+	flag.StringVar(&plbase, "plist", "", "A Info plist")
 
 	flag.Parse()
 
@@ -159,6 +202,7 @@ func main() {
 	//fmt.Println("in", in)
 	//fmt.Println("out", out)
 	//fmt.Println("cmd", cmd)
+	//fmt.Println("plist", plbase)
 	//fmt.Println("dist", dist)
 
 	var rel Relfile
@@ -174,8 +218,10 @@ func main() {
 	}
 
 	switch cmd {
-	case "export":
-		rel.export(dist, out)
+	case "gen_source":
+		rel.gen_source(dist, out)
+	case "gen_plist":
+		rel.gen_plist(dist, plbase, out)
 	case "list":
 		rel.list()
 	}

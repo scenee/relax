@@ -583,7 +583,7 @@ setup_build () {
 		die "Not found Temporary directory"
 	fi
 
-	local release stdtemp build_settings_file params_file
+	local release stdtemp params_file
 
 	release="$1"
 	stdtemp=$REL_TEMP_DIR/stdtemp
@@ -593,20 +593,7 @@ setup_build () {
 	fi
 
 	# Load Relfile
-	build_settings_file=$REL_TEMP_DIR/build_settings_file
-	{
-		set +e
-		touch "$build_settings_file"
-		relparser -f "$REL_CONFIG_PATH" -o "$build_settings_file" export $release 2>"$stdtemp"
-		if [[ $? != 0 ]]; then
-			printf "$ERR "; cat "${stdtemp}"
-			die "Failed to parse $REL_CONFIG_PATH"
-		fi
-		set -e
-	}
-	cat "$build_settings_file"
-	source "${build_settings_file}"
-
+	config_load "$REL_CONFIG_PATH" "$release"
 	__map_vals "$release"
 	__check_scheme "$scheme"
 
@@ -640,15 +627,7 @@ setup_build () {
 
 	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$BAK_EXT"
 	logv "Info plist: $INFO_PLIST_PATH"
-	{
-		set +e
-		$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
-		if [[ $? != 0 ]]; then
-			printf "$ERR "; cat "${stdtemp}"
-			die "Failed to parse $REL_CONFIG_PATH"
-		fi
-		set -e
-	}
+	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$BAK_EXT" "$INFO_PLIST_PATH"
 
 	## Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
