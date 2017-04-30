@@ -9,4 +9,5 @@ bats.log
 /**/resign
 /src/gopkg.in
 /src/github.com
+/pkg
 
