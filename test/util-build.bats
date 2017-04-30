@@ -6,6 +6,7 @@ setup () {
 	source libexec/const
 	source libexec/util
 	source libexec/util-build
+	export PATH=libexec:$PATH
 	make_temp
 }
 
