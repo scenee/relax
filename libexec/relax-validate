@@ -13,11 +13,6 @@ usage () {
 	fin
 }
 
-prepare_validate () {
-	: # Do nothing now
-}
-
-
 validate_app () {
 	local app_path="$1"
 
@@ -218,6 +213,7 @@ validate_product () {
 
 	local product_path="${1%/}"
 	local app_path
+
 	if [[ "$product_path" =~ .*\.app  ]]; then
 		logd "app: $product_path"
 
@@ -254,7 +250,5 @@ validate_product () {
 case $1 in
 -h|--help) usage ;;
 esac
-
-prepare_validate
 
 validate_product "$@"
