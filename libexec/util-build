@@ -764,22 +764,14 @@ setup_build () {
 	logi "Bundle Version: $BUNDLE_VERSION"
 
 	## Product Build Root
-	if [[ $for_export == true ]]; then
-		PRODUCT_BUILD_ROOT="${archive_path%/*}"
-	else
-		if [ -z $BUNDLE_VERSION ]; then
-			PRODUCT_BUILD_ROOT="$REL_RELEASE_ROOT/$release/$scheme"
-		else
-			if [[ $BUNDLE_VERSION =~ (.*)\$\(CURRENT_PROJECT_VERSION\)(.*) ]]; then
-				BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
-			fi
-			if ! echo $BUNDLE_VERSION  | grep -iqF $configuration;  then
-				BUNDLE_VERSION=$BUNDLE_VERSION-$configuration
-			fi
-			PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release/$scheme-$BUNDLE_VERSION")
-		fi
+	if [[ $BUNDLE_VERSION =~ (.*)\$\(CURRENT_PROJECT_VERSION\)(.*) ]]; then
+		BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
 	fi
-
+	
+	if [[ $for_export == false ]] && ! echo $BUNDLE_VERSION  | grep -iqF $configuration;  then
+		BUNDLE_VERSION=$BUNDLE_VERSION-$configuration
+	fi
+	PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release/$scheme-$BUNDLE_VERSION")
 	logi "Build Root: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
 }
