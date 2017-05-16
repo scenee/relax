@@ -48,7 +48,7 @@ _check_config () {
 _load_config() {
 	###################################################################
 	# NOTE: Escape an unbound error when a env var is used in Relfile #
-	#       See test/SampleApp/Relfile in this repository             #
+	#       See sample/Relfile in this repository                     #
 	###################################################################
 
 	local stdtemp relfile dist out

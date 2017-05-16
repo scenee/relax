@@ -2,87 +2,76 @@
 # Relax configuration YAML
 #
 
-# Required 'xcodeproj' OR 'workspace'
-xcodeproj: WORKSPACE
-workspace: XCODEPROJ
+xcodeproj: SampleApp
+log_formatter: xcpretty
+distributions:
+  development:
+    scheme: Sample App
+    sdk: iphoneos
+    configuration: Debug
+    provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
+    team_id: J3D7L9FHSS
+    bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
+    bundle_version:  "%h-%c"
+    build_settings:
+      OTHER_SWIFT_FLAGS: 
+        - "-DMOCK"
+      OTHER_LINKER_FLAGS:
+        - "$(inherited)"
+        - "-ObjC"
+    export_options:
+      method: development
+      compileBitcode: false
+    info_plist:
+      CFBundleName: Sample (Debug)
+      CFBundleDevelopmentRegion: $COUNTRY
+      UISupportedExternalAccessoryProtocols:
+        - com.example.SampleApp
+        - com.example.SampleApp2
 
-release1: # Required
-  scheme: SCHEME # Required
+  development2:
+    scheme: Sample App
+    bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
+    configuration: Debug
+    version: "$VERSION"
+    bundle_version: "%h-debug-internal"
+    provisioning_profile: "$PROVISION_PROFILE_DEV"
+    export_options:
+      method: development
 
-  sdk:           SDK  # Optional. 'ipthoneos' is the default. i.e. iphoneos, iphoneos10.0
+  adhoc:
+    scheme: Sample App
+    provisioning_profile: "$PROVISION_PROFILE_ADHOC"
+    export_options:
+      method: ad-hoc 
+      thinning : iPhone7,1
+      compileBitcode: false
 
-  configuration: CONFIGURATION # Optional. The default is following the scheme. i.e. Release
+  enterprise:
+    scheme: Sample App
+    bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
+    bundle_version:  "%h-%C"
+    team_id: XXXXXXXXXX # Please replace your enterpise team id.
+    export_options:
+      method: enterprise
 
-  team_id: J3D7L9FHSS # Optional. The default is following the project settings.
+  appstore:
+    scheme: Sample App
+    provisioning_profile: "Relax AppStore"
+    export_options:
+      method: appstore
+      upload_symbols: true
+      #uploadSymbols: true
+      #uploadBitcode: true
 
-  provisioning_profile: "Scenee Wild Card Dev" # Optional. If it's set, Relax automatically build a product on 'Manual' provisioning style.
+  framework:
+    scheme: SampleFramework
+    build_settings:
+      OTHER_C_FLAGS:
+        - "-fembed-bitcode"
+        - "-fsanitize=address"
 
-  bundle_version:  "%h-%C" # Refer to Bundle Version Format section in Relfile
-
-  bundle_identifier: com.example.SampleApp # Optional. Change the default bundle identifier in a project
-
-  build_settings: # Optional
-    OTHER_SWIFT_FLAGS: "-DMOCK"
-    OTHER_C_FLAGS:
-      - "-fembed-bitcode"
-      - "-fsanitize=address"
-
-  info_plist:
-    CFBundleName: Sample (Debug)
-    CFBundleVersion: "%h-%C"
-    CFBundleDevelopmentRegion: $COUNTRY
-    UISupportedExternalAccessoryProtocols:
-      - com.example.SampleApp
-      - com.example.SampleApp2
-
-  export_options:
-    # Describes how Xcode should export the archive. 
-    # Available options: app-store, package, ad-hoc, enterprise, development, and developer-id. 
-    # The list of options varies based on the type of archive. Defaults to development.
-    method:  development # Required. 
-
-    # For App Store exports, should the package include symbols? Defaults to YES.
-    upload_symbols: true # Optional.
-
-    # For non-App Store exports, should Xcode re-compile the app from bitcode? Defaults to YES.
-    compileBitcode: true # Optional.
-    # The Developer Portal team to use for this export. Defaults to the team used to build the archive.
-    team_id: XXXXXX # Optional.
-
-    # For App Store exports, should the package include bitcode? Defaults to YES.
-    uploadBitcode : true # Optional.
-
-    # For non-App Store exports, should Xcode thin the package for one or more device variants? Available options: <none> (Xcode produces a non-thinned universal app), <thin-for-all-variants> (Xcode produces a universal app and all available thinned variants), or a model identifier for a specific device (e.g. "iPhone7,1"). Defaults to <none>.
-    thinning : "iPhone7,1" # Optional.
-
-    # TODO: For non-App Store exports, if the app uses On Demand Resources and this is YES, asset packs are embedded in the app bundle so that the app can be tested without a server to host asset packs. Defaults to YES unless onDemandResourcesAssetPacksBaseURL is specified.
-    #embedOnDemandResourcesAssetPacksInBundle: true # Optional.
-
-    # TODO: For non-App Store exports, users can download your app over the web by opening your distribution manifest file in a web browser. To generate a distribution manifest, the value of this key should be a dictionary with three sub-keys: appURL, displayImageURL, fullSizeImageURL. The additional sub-key assetPackManifestURL is required when using on demand resources.
-    # manifest : Dictionary
-
-    # TODO: For non-App Store exports, if the app uses On Demand Resources and embedOnDemandResourcesAssetPacksInBundle isn't YES, this should be a base URL specifying where asset packs are going to be hosted. This configures the app to download asset packs from the specified URL.
-    # onDemandResourcesAssetPacksBaseURL : String
-
-    # TODO: For non-App Store exports, if the app is using CloudKit, this configures the "com.apple.developer.icloud-container-environment" entitlement. Available options: Development and Production. Defaults to Development.
-    #iCloudContainerEnvironment:
-
-
-release2:
-  scheme: SCHEME
-
-log_formatter: xcpretty # Optional. Relax will pass xcodebuild's stdout to it.
-
-crashlytics:
-  token:  __TOKEN__
-  secret: __SECRET__
-  group:  __GROUP__
-
-testfairy:
-  api_key: __API_KEY__
-  metrics: __METRICS__
-  groups: __GROUPS__
-  video: __VIDEO__
-  notfiy: __NOTIFY__
+  staticlib:
+    scheme: SampleLib
 
 # vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬

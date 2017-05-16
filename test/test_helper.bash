@@ -1,7 +1,8 @@
 source libexec/util-keychain
 
 setup () {
-	pushd sample/SampleApp >/dev/null
+	LIBEXEC_PATH=$PWD/libexec
+	pushd sample >/dev/null
 }
 
 teardown () {

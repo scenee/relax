@@ -3,11 +3,11 @@
 load test_helper
 
 @test "config_load" {
-	source ../../libexec/const
-	source ../../libexec/util
-	source ../../libexec/util-config
+	source $LIBEXEC_PATH/const
+	source $LIBEXEC_PATH/util
+	source $LIBEXEC_PATH/util-config
 
-	export PATH=../../libexec:$PATH
+	export PATH=$LIBEXEC_PATH:$PATH
 	make_temp
 	run config_load Relfile adhoc
 
@@ -19,11 +19,11 @@ load test_helper
 }
 
 @test "config_get_distributions" {
-	source ../../libexec/const
-	source ../../libexec/util
-	source ../../libexec/util-config
+	source $LIBEXEC_PATH/const
+	source $LIBEXEC_PATH/util
+	source $LIBEXEC_PATH/util-config
 
-	export PATH=../../libexec:$PATH
+	export PATH=$LIBEXEC_PATH:$PATH
 	run config_get_distributions Relfile
 
 	[ "${#lines[@]}" = 7 ]
@@ -31,7 +31,7 @@ load test_helper
 
 
 @test "relparser gen_source" {
-	run ../../libexec/relparser -o $TMPDIR/source gen_source adhoc
+	run $LIBEXEC_PATH/relparser -o $TMPDIR/source gen_source adhoc
 	assert_success
 	source $TMPDIR/source
 	[ "$REL_CONFIG_xcodeproj" = "SampleApp" ] \

@@ -52,7 +52,6 @@ trap "relax keychain reset" EXIT
 relax keychain use $keychain -p relax
 
 export NOCOLOR=true
-rm -rf sample/SampleApp/bats.log
 bats test
 
 ######################
