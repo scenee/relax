@@ -1,0 +1,21 @@
+#!/usr/bin/env bash -eu
+# @(#) relax: `profile-ls` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} profile ls
+
+	EOM
+	fin
+}
+
+if [[ $# == 1 ]]; then
+	case $1 in
+	-h|--help) 
+		usage 
+		;;
+	esac
+fi
+
+find_mobileprovision -v

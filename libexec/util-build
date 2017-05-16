@@ -47,7 +47,6 @@ read_path () {
 
 # find_mobileprovision [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 find_mobileprovision () {
-	[ $# -gt 0 ] || die "bad argument"
 	lspp "$@"
 }
 

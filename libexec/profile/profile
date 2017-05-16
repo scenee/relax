@@ -13,6 +13,7 @@ usage () {
 	    rm		Remove a provisioning profile
 	    dec		Decode a provisioning profile
 	    find	Find provisioning profiles
+	    ls		List provisioning profiles
 	    help	Show help
 	EOM
 	fin
