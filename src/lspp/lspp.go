@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/DHowett/go-plist"
 	"io/ioutil"
-	//"log"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -56,30 +56,34 @@ func (p ByNameLatest) Less(i, j int) bool {
 func parse(in string, out string, c chan *Result) {
 	defer func() {
 		if err := os.Remove(out); err != nil {
-			fmt.Println("remove error:", err)
+			logErr.Println("remove error:", err)
 		}
 	}()
 
 	if _, err := exec.Command("/usr/bin/security", "cms", "-D", "-i", in, "-o", out).Output(); err != nil {
-		fmt.Println("command error:", err)
+		logErr.Println("command error:", err)
 		c <- nil
 		return
 	}
 
+	var err error
+	var file *os.File
 	var decoder *plist.Decoder
 
-	if file, err := os.Open(out); err != nil {
-		fmt.Println("open error:", err)
+	file, err = os.Open(out)
+	if err != nil {
+		logErr.Println("open error:", err)
 		c <- nil
 		return
-	} else {
-		decoder = plist.NewDecoder(file)
 	}
+	defer file.Close()
+
+	decoder = plist.NewDecoder(file)
 
 	var data ProvisioningProfile
 
 	if err := decoder.Decode(&data); err != nil {
-		fmt.Println("decode error:", err)
+		logErr.Println("decode error:", err)
 		c <- nil
 		return
 	}
@@ -91,7 +95,14 @@ func parse(in string, out string, c chan *Result) {
 	c <- &ret
 }
 
+var logErr *log.Logger
+
+func init() {
+	logErr = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
+}
+
 func main() {
+
 	usr, _ := user.Current()
 	var PP_PATH string = usr.HomeDir + "/Library/MobileDevice/Provisioning Profiles"
 
@@ -129,28 +140,30 @@ func main() {
 
 	infos, err := ioutil.ReadDir(PP_PATH)
 	if err != nil {
-		fmt.Println("error:", err)
-		return
+		logErr.Fatalf("error: %v", err)
 	}
 
 	temp, _ := ioutil.TempDir("", "relax/lspp")
 	err = os.MkdirAll(temp, 0700)
 	if err != nil {
-		fmt.Println("error:", err)
-		return
+		logErr.Fatalf("error: %v", err)
 	}
 
+	s := make(chan bool, 32)
 	c := make(chan *Result, len(infos))
-
 	count := 0
 	for _, info := range infos {
+		s <- true
 		name := info.Name()
 		if false == strings.HasSuffix(name, "mobileprovision") {
 			continue
 		}
 		in := PP_PATH + "/" + name
 		out := temp + "/" + name
-		go parse(in, out, c)
+		go func() {
+			defer func() { <-s }()
+			parse(in, out, c)
+		}()
 		count++
 	}
 
