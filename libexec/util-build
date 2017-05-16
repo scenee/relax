@@ -735,7 +735,6 @@ setup_build () {
 		fi
 	else
 		## Bundle Version
-		local bundle=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
 		local abbcommit=$(git log -1 --format='%h')
 		local branch=$(git symbolic-ref --short HEAD)
 		local config=$(echo $configuration | tr [:upper:] [:lower:])
@@ -748,11 +747,9 @@ setup_build () {
 
 		BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
 		{
-			gsub(/%V/, "'"$version"'");
-			gsub(/%B/, "'"$bundle"'");
-			gsub(/%C/, "'"$config"'");
+			gsub(/%c/, "'"$config"'");
 			gsub(/%h/, "'"$abbcommit"'");
-			gsub(/%D/, "'"${branch//\//_}"'");
+			gsub(/%b/, "'"${branch//\//_}"'");
 			print
 		}') # See [Semantic Versioning 2.0.0](http://semver.org)
 	fi

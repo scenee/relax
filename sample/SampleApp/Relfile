@@ -11,7 +11,7 @@ development:
   provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
   team_id: J3D7L9FHSS
   bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
-  bundle_version:  "%h-%C"
+  bundle_version:  "%h-%c"
   build_settings:
     OTHER_SWIFT_FLAGS: 
       - "-DMOCK"
