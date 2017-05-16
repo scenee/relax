@@ -4,6 +4,12 @@
 
 xcodeproj: SampleApp
 log_formatter: xcpretty
+uploader:
+  crashlytics:
+    token:  "$CL_TOKEN"
+    secret: "$CL_SECRET" 
+    group:  "$CL_GROUP"
+
 distributions:
   development:
     scheme: Sample App
