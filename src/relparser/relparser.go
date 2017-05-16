@@ -26,7 +26,7 @@ func get_source_line2(name string, key string, value interface{}) string {
 type Relfile struct {
 	Xcodeproj     string
 	Workspace     string
-	Uploader      string
+	Uploader      map[string]interface{}
 	Log_formatter string
 	Distributions map[string]Distribution
 }
@@ -77,8 +77,15 @@ func (r Relfile) make_source(out *os.File) {
 
 	source += get_source_line("xcodeproj", r.Xcodeproj)
 	source += get_source_line("workspace", r.Workspace)
-	source += get_source_line("uploader", r.Uploader)
 	source += get_source_line("log_formatter", r.Log_formatter)
+
+	for k, v := range r.Uploader {
+		up := v.(map[interface{}]interface{})
+		for name, value := range up {
+			//fmt.Printf("---\t%v: %v\n", name, value)
+			source += get_source_line2("uploader_"+k, name.(string), value.(string))
+		}
+	}
 
 	if _, err := out.WriteString(source); err != nil {
 		panic(err)
@@ -175,11 +182,24 @@ func (d Distribution) make_source(name string, out *os.File) {
 	}
 }
 
+func usage() {
+	fmt.Println("usage: relparser [-f <Relfile>] list")
+	fmt.Println("       relparser [-f <Relfile>] [-o <output>] gen_source <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] gen_plist <distribution>")
+	os.Exit(0)
+}
+
 func checkError(err error) {
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
+}
+
+var logger *log.Logger
+
+func init() {
+	logger = log.New(os.Stderr, "error: ", 0)
 }
 
 func main() {
@@ -210,11 +230,15 @@ func main() {
 	var err error
 
 	if data, err = ioutil.ReadFile(in); err != nil {
-		log.Fatalf("error: %v", err)
+		logger.Fatalf("%v", err)
 	}
 
 	if err = yaml.Unmarshal(data, &rel); err != nil {
-		log.Fatalf("error: %v", err)
+		logger.Fatalf("%v", err)
+	}
+
+	if cmd == "" {
+		usage()
 	}
 
 	switch cmd {
@@ -224,5 +248,7 @@ func main() {
 		rel.gen_plist(dist, plbase, out)
 	case "list":
 		rel.list()
+	default:
+		usage()
 	}
 }
