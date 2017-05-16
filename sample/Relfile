@@ -2,17 +2,23 @@
 # Relax configuration YAML
 #
 
-xcodeproj: SampleApp
+xcodeproj: SampleApp # Required. Or `workspace: YourApp` for a workspace
 log_formatter: xcpretty
 uploader:
   crashlytics:
-    token:  "$CL_TOKEN"
-    secret: "$CL_SECRET" 
-    group:  "$CL_GROUP"
+    token:   "$CL_TOKEN"
+    secret:  "$CL_SECRET" 
+    group:   "$CL_GROUP"
+  testfairy:
+    api_key: "$TF_API_KEY"
+    metrics: "$TF_METRICS"
+    groups:  "$TF_GROUPS"
+    video:   "$TF_VIDEO"
+    notify:  "$TF_NOTIFY"
 
 distributions:
   development:
-    scheme: Sample App
+    scheme: Sample App # Required
     sdk: iphoneos
     configuration: Debug
     provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
@@ -26,7 +32,7 @@ distributions:
         - "$(inherited)"
         - "-ObjC"
     export_options:
-      method: development
+      method: development # Required
       compileBitcode: false
     info_plist:
       CFBundleName: Sample (Debug)

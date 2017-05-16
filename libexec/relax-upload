@@ -4,7 +4,7 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} upload <services> [-f <release-note>] ipa_file
+	Usage: ${ME} upload [-f <release-note>] [-n] <services> <ipa_file>
 
 	Services:
 	    crashlytics
@@ -12,8 +12,17 @@ usage () {
 
 	Options:
 	    -f release_note	Specify a release note file
+	    -n			Dry run
 	EOM
 	fin
+}
+
+# print_release_note <ipa> <release_note>
+print_release_note () {
+	logi "$ARROW Start uploading ipa file: $ipa_file"
+	logi "----------Release Note---------------"
+	cat "$release_note_file" | logi
+	logi "-------------------------------------"
 }
 
 # upload_crashlytics <ipa> <release-note-file>
@@ -33,18 +42,23 @@ upload_crashlytics () {
 	local ipa_file="$1"
 	local release_note_file="$2"
 
+	print_release_note "$@"
+
 	logi "$ARROW Uploading to Crashlytics"
 
-	local upload_command="$crashlytics_path/submit\
-	  $REL_CONFIG_crashlytics_token\
-	  $REL_CONFIG_crashlytics_secret\
-	  -ipaPath $ipa_file \
-	  -groupAliases $REL_CONFIG_crashlytics_group \
-	  -notesPath $release_note_file"
+	local upload_command="\
+	$crashlytics_path/submit\
+	  $REL_CONFIG_uploader_crashlytics_token\
+	  $REL_CONFIG_uploader_crashlytics_secret\
+	  -ipaPath '$ipa_file' \
+	  -groupAliases '$REL_CONFIG_uploader_crashlytics_group' \
+	  -notesPath '$release_note_file'"
 
 	logi "${upload_command}"
 
-	#eval "${upload_command}"
+	[[ $dry_run = false ]] || return 0;
+		
+	eval "${upload_command}"
 }
 
 # upload_testfairy <ipa> <release-note-file>
@@ -53,19 +67,28 @@ upload_testfairy () {
 	local ipa_file="$1"
 	local release_note_file="$2"
 
+	print_release_note "$@"
+
 	local comment=$( cat $release_note_file  )
 
 	logi "$ARROW Uploading to TestFairy"
 
-	curl https://app.testfairy.com/api/upload \
-	  -F file=@"$ipa_file" \
-	  -F api_key=$REL_CONFIG_testfairy_api_key\
-	  # -F symbols_file=@"$DSYM_FILE" \
-	  -F metrics=$REL_CONFIG_testfairy_metrics\
-	  -F notify=$REL_CONFIG_testfairy_notify\
-	  -F video=$REL_CONFIG_testfairy_video \
-	  -F testers_groups="$REL_CONFIG_testfairy_groups"\
-	  -F comment="$comment"
+	local upload_command="\
+	curl https://app.testfairy.com/api/upload\
+	  -F file=@'$ipa_file'\
+	  -F api_key='$REL_CONFIG_uploader_testfairy_api_key'\
+	  -F metrics='$REL_CONFIG_uploader_testfairy_metrics'\
+	  -F notify='$REL_CONFIG_uploader_testfairy_notify'\
+	  -F video='$REL_CONFIG_uploader_testfairy_video'\
+	  -F testers_groups='$REL_CONFIG_uploader_testfairy_groups'\
+	  -F comment='$comment'"
+	  # -F symbols_file=@'$DSYM_FILE'\
+
+	logi "${upload_command}"
+
+	[[ $dry_run = false ]] || return 0;
+
+	eval "${upload_command}"
 }
 
 
@@ -73,7 +96,8 @@ upload_testfairy () {
 
 service=
 release_note_file=
-ipa_file==
+dry_run=false
+ipa_file=
 
 while [ $# -ne 0 ];  do
 	arg=$1
@@ -89,6 +113,9 @@ while [ $# -ne 0 ];  do
 			:
 		fi
 		fin
+		;;
+	-n)
+		dry_run=true
 		;;
 	-f)
 		[[ $# != 0 ]] ||  usage
@@ -107,19 +134,13 @@ while [ $# -ne 0 ];  do
 	esac
 done
 
-config_load "$REL_CONFIG_PATH"
-
+[[ -n $ipa_file ]] || usage
 if [[ -z $release_note_file ]]; then
 	release_note_file="$REL_TEMP_DIR/release_note"
 	echo $(git log -1 --decorate) > "$release_note_file"
 fi
 
-[[ -n $ipa_file ]] || usage
-
-logi "$ARROW Start uploading ipa file: $ipa_file"
-logi "----------Release Note---------------"
-cat "$release_note_file"
-logi "-------------------------------------"
+config_load "$REL_CONFIG_PATH"
 
 case $service in
 crashlytics)
