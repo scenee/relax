@@ -1,17 +1,9 @@
 TODO
 ====
 
-Common
-------
-
 - [M] Add 'extends' term to inherit a target settings
-- [M] Improve Relfile loader
-- [M] Unify messing code styles
 - [L] Write man page with Ronn.
-
-Export
-------
-
+- [L] Unify messing code styles
 - [L] Handle the remaining Export Options.
     - embedOnDemandResourcesAssetPacksInBundle
     - manifest
