@@ -94,7 +94,7 @@ config_load () {
 	if [[ $# == 2 ]]; then
 		dist="$2"
 	fi
-	logi "$ARROW Loading ${config_path#\./}"
+	#logi "$ARROW Loading ${config_path#\./}"
 	
 	if [ -f "$config_path" ]; then
 		_load_config "$config_path" "$dist"
