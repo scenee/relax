@@ -4,8 +4,12 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} profile find [--team <teamid>] [--latest] <provisioning-profile-name>
+	Usage: ${ME} profile find [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 
+	Options:
+	    -v			Verbose mode
+	    --team <team>	Print mobileprovision files for a team.
+	    --latest		Print the latest one if there are mobileprovision files with the same name.
 	EOM
 	fin
 }
@@ -22,7 +26,6 @@ case $1 in
 	;;
 esac
 
-logi "$ARROW Finding provisioning profiles ..."
 # `find_mobileprovision()` is defined in `libexec/util-build`
 if [[ ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_VERBOSE".* ]]; then
 	find_mobileprovision -v "$@"

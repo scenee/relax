@@ -23,7 +23,7 @@ build_project () {
 	local _sdk=$2
 	local _configuration=$3
 
-	logi "$ARROW Build $TARGETNAME ($_configuration) for $_sdk SDK"
+	logi "$ARROW Building $TARGETNAME ($_configuration) for $_sdk SDK"
 
 	local params=()
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
@@ -37,7 +37,7 @@ build_project () {
 
 	params+=( clean build )
 
-	logi "Run: xcodebuild ${params[@]}"
+	logi "$ARROW xcodebuild ${params[@]}"
 	logi "Log: $logfile"
 
 	rm -rf "${logfile}"
@@ -115,7 +115,7 @@ build_framework () {
 	fi
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logi "$ARROW Clean DerivedData of $TARGETNAME"
+		logi "$ARROW Cleaning DerivedData of $TARGETNAME"
 		rm -rf $OBJROOT
 		logi "Removed $OBJROOT"
 	fi
@@ -160,7 +160,7 @@ build_framework () {
 	other_built_product="$CODESIGNING_FOLDER_PATH"
 
 	# 4 - Make framework
-	logi "$ARROW Generate $TARGETNAME Framework ($configuration)"
+	logi "$ARROW Generating $TARGETNAME Framework ($configuration)"
 
 	framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	make_framework "$built_product" "$other_built_product" "$framework_location"
@@ -181,7 +181,7 @@ build_framework () {
 	# 6 - Copy the framework to the current workspace
 	ditto "${framework_location}" "$dest"
 
-	logi "$ARROW Framework: ./${framework_name}.framework"
+	logi "$ARROW ./${framework_name}.framework"
 
 	if [[ -d "$framework_location" ]];
 	then

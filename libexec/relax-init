@@ -18,6 +18,7 @@ generate_relfile () {
 	
 	EOF
 
+	echo 'version: "2"' >> $REL_TEMP_DIR/Relfile
 	# Check xcworkproj existance
 	if ls | grep xcworkspace > /dev/null; then
 		workspace=$(ls | grep xcworkspace)
@@ -25,6 +26,7 @@ generate_relfile () {
 
 		if [[ $workspace =~ (.*).xcworkspace ]]; then
 			workspace_name=${BASH_REMATCH[1]}
+			echo "" >> $REL_TEMP_DIR/Relfile
 			echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
 			echo "" >> $REL_TEMP_DIR/Relfile
 		fi
@@ -36,6 +38,7 @@ generate_relfile () {
 
 			if [[ $xcodeproj =~ (.*).xcodeproj ]]; then
 				xcodeproj_name=${BASH_REMATCH[1]}
+				echo "" >> $REL_TEMP_DIR/Relfile
 				echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
 				echo "" >> $REL_TEMP_DIR/Relfile
 			fi
@@ -56,22 +59,18 @@ generate_relfile () {
 	## Generate Relfile configuration
 	scheme="${xcode_schemes[0]}"
 	cat <<-EOF >> $REL_TEMP_DIR/Relfile
-	adhoc:
-	  scheme: ${scheme}
-	  #bundle_version: "%h-%C" # %h: commit hash, %C: Xcode project configuration
-	  #team_id: __YOUR_TEAM_ID__
-	  #bundle_identifier: __ADHOC_BUNDLE_ID__
-	  export_options:
-	    method: ad-hoc
+	distributions:
+	  adhoc:
+	    scheme: ${scheme}
+	    export_options:
+	      method: ad-hoc
 
-	appstore:
-	  scheme: ${scheme}
-	  export_options:
-	    method: appstore
+	  appstore:
+	    scheme: ${scheme}
+	    export_options:
+	      method: appstore
 
 	EOF
-
-	echo "#log_formatter: xcpretty" >> $REL_TEMP_DIR/Relfile
 
 	cp $REL_TEMP_DIR/Relfile ./Relfile
 

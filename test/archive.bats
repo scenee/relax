@@ -23,7 +23,7 @@ load test_helper
   export VERSION="0.0.1"
   run  relax archive development2
   assert_success
-  [[ ! "${output}" =~ "Clean DerivedData" ]]
+  [[ ! "${output}" =~ "Cleaning DerivedData" ]]
 }
 
 @test "relax archive development2 --no-cache " {
@@ -31,7 +31,7 @@ load test_helper
   export VERSION="0.0.1"
   run  relax archive development2 --no-cache
   assert_success
-  [[ "${output}" =~ "Clean DerivedData" ]]
+  [[ "${output}" =~ "Cleaning DerivedData" ]]
 }
 
 @test "relax archive adhoc" {
