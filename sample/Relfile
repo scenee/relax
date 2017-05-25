@@ -2,6 +2,7 @@
 # Relax configuration YAML
 #
 
+version: "2"
 xcodeproj: SampleApp # Required. Or `workspace: YourApp` for a workspace
 log_formatter: xcpretty
 uploader:
