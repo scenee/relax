@@ -56,7 +56,7 @@ make_archive () {
 
 	if [[ $no_cache == true ]]; then
 		if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-			logi "$ARROW Clean DerivedData of $TARGETNAME"
+			logi "$ARROW Cleaning DerivedData of $TARGETNAME"
 			rm -rf $OBJROOT
 			logi "Removed $OBJROOT"
 		fi
@@ -94,7 +94,7 @@ make_archive () {
 	params=("${params[@]}" "$@" clean archive)
 	
 	local logfile="$PRODUCT_BUILD_ROOT/archive.log"
-	logi "Run: xcodebuild ${params[@]}"
+	logi "$ARROW xcodebuild ${params[@]}"
 	logi "Log: $logfile"
 
 	rm -rf "${logfile}"
@@ -116,7 +116,7 @@ make_archive () {
 		fi
 	fi
 
-	logi "$ARROW Archived: $archive_path"
+	logi "$ARROW $archive_path"
 	ln -fs "$archive_path" "$LATEST_ARCHIVE"
 }
 
