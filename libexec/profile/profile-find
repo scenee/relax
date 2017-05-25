@@ -4,8 +4,12 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} profile find [--team <teamid>] [--latest] <provisioning-profile-name>
+	Usage: ${ME} profile find [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 
+	Options:
+	    -v			Verbose mode
+	    --team <team>	Print mobileprovision files for a team.
+	    --latest		Print the latest one if there are mobileprovision files with the same name.
 	EOM
 	fin
 }
