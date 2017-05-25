@@ -2,25 +2,25 @@
 
 # Relax
 
-Relax is a declarative release management tool for iOS Application.
+Relax is a declarative release management tool for iOS App distributions.
 
 You don't need to write the same build scripts any more when you deliver your great apps.
-Relax will save your time. You just write a declarative configuration file of Relax to make ipa files.
+Relax will save your time. You just write a declarative configuration file to make ipa files.
 
-It's hard to understand stuff of `xcodebuild`, for example, codesigning mechanism.
+It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism.
 Relax takes care of much of the hassle of them. so you can focus on development.
 
 Relax can
 
 - **Easy to manage** multi distributions(i.e. adhoc, enterprise & appstore) with each code signing
-- **Validate an ipa** to check if it has a correct codesign, entitlements and mobileprovision
-- **Resign an ipa** for a differenct ditribution(a bundle id, cetificate and provisioning profile)
+- **Validate an ipa** to check if it has a correct codesign, a mobileprovision and entitlements
+- **Set up a custom keychain** not to depend on a keychain settings in a build machine
+- **Resign an ipa** for a ditribution with a different bundle identifier, cetificate and provisioning profile
 
-Additionally in background, it works as below.
+In background, it works as below.
 
-- Modify and revert build properties in Info.plist and xcode build settings on each distribution
-- Switch codesign modes(Automatic or Manual) automatically as a Relfile configuration
-- Set up keychain settings to prevent any codesign build break(with `keychain` module)
+- Modify & Revert Info.plist properties and build settings in a xcodeproj file
+- Switch codesign modes(Automatic or Manual) implicity if you specify a provisioning profile in Relfile
 
 # Installation
 
@@ -51,6 +51,16 @@ As a result, You can set up iOS build environment on a new machine quickly
 including keychain and provisionig profiles. 
 
 For example, it's easy to manage a build server with a provisioning tool like Ansible.
+
+## Development 
+
+
+Golang Environment
+
+```bash
+export GOPATH=/path/to/repo
+export GOBIN=$GOPATH/libexec
+```
 
 # What's different from GYM?
 
@@ -142,7 +152,7 @@ $ relax commands --modules
 The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
 Actually this is an usefull wrapper of `security` command.
 
-### (Provisioning) Profile
+### Profile (Provisioning Profile)
 
 The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
 
@@ -157,60 +167,65 @@ An example of Relfile is as below.
 And also check [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
+version: 2
+
 workspace: SampleApp
 
-# Define a distribution
-adhoc: 
-  scheme: SampleApp
-
-  team_id: __MY_COMPANY_TEAM_ID__ # Fill in your team ID if needed
-
-  configuration: "$CONFIG" # Yes, You can use shell environment variables!
-  version: 0.1.0
-  bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
-
-  build_settings:
-    SWIFT_VERSION: 3.0
-    OTHER_SWIFT_FLAGS: 
-      - "-DMOCK"
-      - "-DDEBUG" 
-
-  # Override Info.plist settings for this distribution
-  info_plist: 
-    CFBundleName: "SmapleApp($CONFIG)"
-    UISupportedExternalAccessoryProtocols:
-      - com.example.test-accessory
-
-  export_options:
-    method:  ad-hoc
-
-appstore:
-  scheme: SampleApp
-
-  team_id: __MY_COMPANY_TEAM_ID__
-
-  version: 1.0
-  bundle_version: "$BUILD_NUMBER"
-
-  build_settings:
-    SWIFT_VERSION: 3.0
-
-  info_plist:
-    UISupportedExternalAccessoryProtocols:
-      - com.example.accessory
-
-  export_options:
-    method:  appstore
-
-framework:
-  scheme: Sample Framework
-  configuration: Release
-
 log_formatter: xcpretty
-crashlytics:
-  token:  __MY_TOKEN__
-  secret: __MY_SECRET__
-  group:  __MY_GROUP__
+uploader:
+    crashlytics:
+      token:  __MY_TOKEN__
+      secret: __MY_SECRET__
+      group:  __MY_GROUP__
+
+# Define a distribution
+distributions:
+    adhoc: 
+      scheme: SampleApp
+
+      team_id: __MY_COMPANY_TEAM_ID__ # Fill in your team ID if needed
+
+      configuration: "$CONFIG" # Yes, You can use shell environment variables!
+      version: 0.1.0
+      bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
+
+      build_settings:
+        SWIFT_VERSION: 3.0
+        OTHER_SWIFT_FLAGS:
+          - "-DMOCK"
+          - "-DDEBUG" 
+        OTHER_C_FLAGS:
+          - "-fsanitize=address"
+      # Override Info.plist settings for this distribution
+      info_plist: 
+        CFBundleName: "SmapleApp($CONFIG)"
+        UISupportedExternalAccessoryProtocols:
+          - com.example.test-accessory
+
+      export_options:
+        method:  ad-hoc
+
+    appstore:
+      scheme: SampleApp
+
+      team_id: __MY_COMPANY_TEAM_ID__
+
+      version: 1.0
+      bundle_version: "$BUILD_NUMBER"
+
+      build_settings:
+        SWIFT_VERSION: 3.0
+
+      info_plist:
+        UISupportedExternalAccessoryProtocols:
+          - com.example.accessory
+
+      export_options:
+        method:  appstore
+
+    framework:
+      scheme: Sample Framework
+      configuration: Release
 ```
 
 ## Use an Environment variable

@@ -7,3 +7,7 @@ bats.log
 /**/artifact/
 /**/xcuserdata/
 /**/resign
+/src/gopkg.in
+/src/github.com
+/pkg
+

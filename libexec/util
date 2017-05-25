@@ -13,6 +13,7 @@ export ARROW="${BLUE}==>${NC}${BOLD}"
 export ERR=${RED}Error:${NC}
 export WARN=${YELLOW}Warning:${NC}
 export NOTE=${BOLD}Note:${NC}
+export HERE="${PWD}"
 
 #################
 ### Functions ###
@@ -60,7 +61,7 @@ TRAP() {
 
 make_temp () {
 	if ! test -d "$REL_TEMP_ROOT"; then
-		mkdir -p $REL_TEMP_ROOT
+		mkdir -p "$REL_TEMP_ROOT"
 	fi
 	REL_TEMP_DIR=$(mktemp -d $REL_TEMP_ROOT/XXXXXX)
 	export REL_TEMP_DIR

@@ -47,77 +47,7 @@ read_path () {
 
 # find_mobileprovision [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 find_mobileprovision () {
-	[ $# -gt 0 ] || die "bad argument"
-
-	local team_id="" 
-	local name=""
-	local verbose=false
-	local latest=false
-	while [ $# -ne 0 ];
-	do
-		arg="$1"
-		shift
-		case $arg in
-		--team)
-			team_id="$1"
-			shift
-			;;
-		-v)
-			# '-v' option is distinguished from  REL_LOG_LEVEL_VERBOSE.
-			# Because the function is shared by some commands.
-			verbose=true
-			;;
-		--latest)
-			latest=true
-			;;
-		*)
-			name="$arg"
-			;;
-		esac
-	done
-
-	[ -n "$name" ] || die "bad argument"
-
-	local result=$REL_TEMP_DIR/results
-
-	find "$PROVISIONING_DST_DIR" -depth 1 -name "*.mobileprovision" | \
-	while IFS= read file; do
-		local mp=$REL_TEMP_DIR/temp_mobileprovision
-		dec_provisioning_profile "$file" -o "$mp"
-		local date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" "$mp")
-		local full_name=$(/usr/libexec/PlistBuddy -c "Print :Name" "$mp")
-		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp")
-		local _team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp")
-
-		if [[ ! $full_name =~ $name ]]; then
-			continue
-		fi
-
-		local ret
-		if [[ ${verbose} == true ]]; then
-			ret="${full_name}#${file} -- ${full_name} / ${team_name}(${_team_id})"
-		else
-			ret="${date}#${file}"
-		fi
-		if [[ -n $team_id ]]; then
-			if [[ $team_id == $_team_id ]]; then
-				echo "$ret"
-			fi
-		else
-			echo "$ret"
-		fi
-	done | sort -ur | awk -F# '{ print $2 }' > "$result"
-
-	if [[ $latest = true ]]; then
-		ret="$(
-			cat "$result" \
-			| head -n 1
-		)"
-		[[ -n "$ret" ]] || echo ""
-		echo "$ret"
-	else
-		cat "$result"
-	fi
+	lspp "$@"
 }
 
 # dec_provisioning_profile <provisioning-profile> [-o <out>]
@@ -334,7 +264,7 @@ __check_scheme () {
 
 # Update global/local 'build_params' variable
 __setup_build_params () {
-	if [[ ${REL_CONFIG_workspace-undefined} != "undefined" ]]; then
+	if [[ ${REL_CONFIG_workspace:-undefined} != "undefined" ]]; then
 		build_params=( -workspace "$REL_CONFIG_workspace.xcworkspace" )
 	else
 		build_params=( -project "$REL_CONFIG_xcodeproj.xcodeproj" )
@@ -583,31 +513,17 @@ setup_build () {
 		die "Not found Temporary directory"
 	fi
 
-	local release stdtemp build_settings_file params_file
+	local release stdtemp params_file
 
 	release="$1"
+	stdtemp=$REL_TEMP_DIR/stdtemp
 
 	if [[ ! " ${REL_DISTRIBUTIONS[@]} " =~ " ${release} " ]]; then
 		die "'$release' is undefined."
 	fi
 
 	# Load Relfile
-	config_load "$REL_CONFIG_PATH"
-	{
-		stdtemp=$REL_TEMP_DIR/stdtemp
-		build_settings_file=$REL_TEMP_DIR/build_settings_file
-		set +e
-		$LIBEXEC_DIR/config_parser.rb \
-			"$REL_CONFIG_PATH" "$release" >"${build_settings_file}" \
-			2>"${stdtemp}"
-		if [[ $? != 0 ]]; then
-			printf "$ERR "; cat "${stdtemp}"
-			die "Failed to parse $REL_CONFIG_PATH"
-		fi
-		set -e
-	}
-	source "${build_settings_file}"
-
+	config_load "$REL_CONFIG_PATH" "$release"
 	__map_vals "$release"
 	__check_scheme "$scheme"
 
@@ -641,14 +557,7 @@ setup_build () {
 
 	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$BAK_EXT"
 	logv "Info plist: $INFO_PLIST_PATH"
-
-	set +e
-	$LIBEXEC_DIR/update_info_plist.rb "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH" >/dev/null 2>"${stdtemp}"
-	if [[ $? != 0 ]]; then
-		printf "$ERR "; cat "${stdtemp}"
-		die "Failed to parse $REL_CONFIG_PATH"
-	fi
-	set -e
+	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$BAK_EXT" "$INFO_PLIST_PATH"
 
 	## Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
