@@ -24,8 +24,6 @@ symbolicate () {
 
 	symbolicatecrash_path=/Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources/symbolicatecrash
 	
-	logi "$ARROW Symbolicating '$crashlog'..."
-
 	local app_path dsym_path
 	if grep -q "\.ipa$" <<< "$material"; then
 		local payload=$REL_TEMP_DIR
@@ -38,13 +36,16 @@ symbolicate () {
 		die "Unexpected file: $material"
 	fi
 
+	logi "$ARROW Symbolicating '$crashlog'..."
+	logi "Log: symbolicate.log"
+
 	out=${crashlog%%\.crash}-symbolicated.crash
 	logv "Using $app_path"
 	if [[ -d "$dsym_path" ]]; then
 		logv "Using $dsym_path"
 	fi
-	if "$symbolicatecrash_path" "$crashlog" "$app_path" "$dsym_path" -o "$out"; then
-		logi "$out"
+	if "$symbolicatecrash_path" -v "$crashlog" "$app_path" "$dsym_path" -o "$out" 2>symbolicate.log; then
+		logi "$ARROW $out"
 	else
 		die
 	fi
