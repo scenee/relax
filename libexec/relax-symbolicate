@@ -10,6 +10,32 @@ usage () {
 	fin
 }
 
+
+check_binary_image () {
+	local app_name="${1##*/}"
+	local crashlog="$2"
+
+	local product_name=
+	if [[ "$app_name" =~ (.*)\.app  ]]; then
+		product_name="${BASH_REMATCH[1]}";
+	fi
+
+	local result=false
+	xcrun dwarfdump --uuid "$app_path/$product_name" \
+	| tr '[:upper:]' '[:lower:]' | tr -d '-' \
+	| awk '{ print $2 }' \
+	| while IFS= read -r uuid && [[ -n $uuid ]]
+	do
+		if grep -q $uuid "$crashlog"; then
+			result=true
+		fi
+	done
+
+	if [[ $result == false ]]; then
+		logi "$WARN Not found a binary image for the crash log: $app_path/$product_name"
+	fi
+}
+
 # symbolicate <crashlog> <material>
 symbolicate () {
 	local crashlog material out
@@ -39,6 +65,7 @@ symbolicate () {
 	logi "$ARROW Symbolicating '$crashlog'..."
 	logi "Log: symbolicate.log"
 
+	check_binary_image $app_path $crashlog
 	out=${crashlog%%\.crash}-symbolicated.crash
 	logv "Using $app_path"
 	if [[ -d "$dsym_path" ]]; then
