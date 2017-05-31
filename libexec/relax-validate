@@ -170,12 +170,14 @@ validate_app () {
 		fi
 	fi
 
+	local bundle_ids
+	local bundle_appex_ids
 	logi "$ARROW Checking duplicate bundle identifiers in ${app_path##*/}"
 	find "$app_path" -name "Info.plist" -mindepth 2 |\
 	while IFS= read info
 	do
-		local new_id bundle_ids bundle_path app_name
-		local bundle_info_plist_path="$REL_TEMP_DIR/Info.plist"
+		local new_id bundle_path app_name bundle_info_plist_path
+		bundle_info_plist_path="$REL_TEMP_DIR/Info.plist"
 		plutil -convert xml1 "$info" -o "$bundle_info_plist_path"
 		logd "$bundle_info_plist_path"
 		new_id="$(print_info_plist bundle_identifier "$bundle_info_plist_path")"
@@ -183,12 +185,21 @@ validate_app () {
 			bundle_path="${info##$app_path}"
 			app_name="${app_path##*/}"
 			logi "${app_name}${bundle_path}: $new_id"
-			if [[ $bundle_ids =~ $new_id ]]; then
-				success=false
-				logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
+
+			if [[ $bundle_path =~ .appex ]]; then
+				if [[ $bundle_appex_ids =~ $new_id ]]; then
+					success=false
+					logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
+				fi
+				bundle_appex_ids+="$new_id"
+			else
+				if [[ $bundle_ids =~ $new_id ]]; then
+					success=false
+					logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
+				fi
+				bundle_ids+="$new_id"
 			fi
 		fi
-		bundle_ids+="$new_id"
 	done
 
 	# Check match codesign Team Identifier and a Team ID for the entitlements and the provisioning profile
