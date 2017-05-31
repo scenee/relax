@@ -117,7 +117,6 @@ make_archive () {
 	fi
 
 	logi "$ARROW $archive_path"
-	ln -fs "$archive_path" "$LATEST_ARCHIVE"
 }
 
 XCSCHEME_PATH=
@@ -165,7 +164,5 @@ setup_build $distribution
 
 data_root=$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR
 mkdir -p "$data_root"
-
-LATEST_ARCHIVE="$data_root/LATEST_ARCHIVE"
 
 make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"

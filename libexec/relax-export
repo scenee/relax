@@ -163,19 +163,11 @@ export_archive () {
 	else
 		logi "$ARROW $ipa_path"
 	fi
-
-	# update a symbolic link of the latest archive
-	rm -f "$LATEST_IPA"
-	ln -fs "$ipa_path" "$LATEST_IPA"
-	rm -f "$LATEST_EXPORT_DIR"
-	ln -fs "$export_path" "$LATEST_EXPORT_DIR"
 }
 
 prepare_export() {
 	local data_root="$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR"
 	mkdir -p "$data_root"
-	LATEST_IPA="$data_root/LATEST_IPA"
-	LATEST_EXPORT_DIR="$data_root/LATEST_EXPORT_DIR"
 	EXPORT_OPTIONS_PLIST=$REL_TEMP_DIR/ExportOptions.plist
 }
 
