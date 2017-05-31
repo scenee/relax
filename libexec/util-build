@@ -25,23 +25,24 @@ read_path () {
 	local release=$1
 	local type=$2
 
-	local data_root=$REL_RELEASE_ROOT/$release/$REL_DATA_DIR
+	local data_root=$REL_RELEASE_ROOT/$release
 
-	local link_path=""
+	local path=""
 	case $type in
 	ipa)
-		link_path=$data_root/LATEST_IPA
+		path="$(find "$data_root" -depth 1 -name "*.ipa")"
 		;;
 	build)
-		link_path=$data_root/LATEST_EXPORT_DIR
+		path=$data_root
 		;;
 	archive)
-		link_path=$data_root/LATEST_ARCHIVE
+		path="$(find "$data_root" -name "*.xcarchive" -depth 1)"
 		;;
 	esac
 
-	test -L "$link_path" || return 1
-	readlink "$link_path"
+	if [[ -n "$path" ]]; then
+		echo "$path"
+	fi
 }
 
 
@@ -540,7 +541,6 @@ setup_build () {
 		die "This scheme($scheme) isn't for an Application, Framework or Library target"
 	fi
 
-
 	logi "$ARROW Set up '$release' configurations"
 	logi "Configuration: $CONFIGURATION"
 	configuration=$CONFIGURATION
@@ -549,7 +549,7 @@ setup_build () {
 
 	# StaticLibrary doesn't have a Info.plist
 	if [ -z $INFO_PLIST_PATH ]; then
-		PRODUCT_BUILD_ROOT="$REL_RELEASE_ROOT/$release/$scheme"
+		PRODUCT_BUILD_ROOT="$REL_RELEASE_ROOT/$release"
 		logi "Build Root: $PRODUCT_BUILD_ROOT"
 		mkdir -p "$PRODUCT_BUILD_ROOT"
 		return
@@ -674,10 +674,7 @@ setup_build () {
 		BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
 	fi
 	
-	if [[ $for_export == false ]] && ! echo $BUNDLE_VERSION  | grep -iqF $configuration;  then
-		BUNDLE_VERSION=$BUNDLE_VERSION-$configuration
-	fi
-	PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release/$scheme-$BUNDLE_VERSION")
+	PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release")
 	logi "Build Root: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
 }
