@@ -2,7 +2,7 @@
 # @(#) relax: constants
 
 export REL_CONFIG="Relfile"
-export REL_RELEASE_ROOT="Releases"
+export REL_RELEASE_ROOT="dists"
 export REL_DATA_DIR=".relax"
 export REL_TEMP_ROOT="$( [[ ${TMPDIR:-undefined} != undefined ]] && echo "$TMPDIR/$ME" || echo "/tmp/$ME" )"
 export REL_CACHE_DIR="$HOME/$REL_DATA_DIR/caches"
