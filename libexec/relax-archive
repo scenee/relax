@@ -16,7 +16,7 @@ usage () {
 
 # __find_xcscheme <scheme>
 __find_xcscheme ()  {
-	find $HERE -name "$1.xcscheme" \
+	find . -name "$1.xcscheme" \
 	| while IFS= read file
 	do
 		if echo "$file" | grep "xcodeproj"; then
@@ -49,9 +49,9 @@ make_archive () {
 	### Update 'Configuration' in a xcscheme ###
 	XCSCHEME_PATH="$(__find_xcscheme "$scheme")"
 	if [[ -n "$XCSCHEME_PATH" ]]; then
-		logi "Scheme file: $XCSCHEME_PATH"
+		logi "Scheme: $XCSCHEME_PATH"
 		set_archive_config "$XCSCHEME_PATH" "$configuration"
-		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##/*}"
+		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##*/}"
 	fi
 
 	if [[ $no_cache == true ]]; then
