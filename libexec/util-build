@@ -86,8 +86,8 @@ find_mobileprovision () {
 		dec_provisioning_profile "$file" -o "$mp"
 		local date=$(/usr/libexec/PlistBuddy -c "Print :CreationDate" "$mp")
 		local full_name=$(/usr/libexec/PlistBuddy -c "Print :Name" "$mp")
-		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp")
-		local _team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp")
+		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$mp" 2>/dev/null)
+		local _team_id=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$mp" 2>/dev/null)
 
 		if [[ ! $full_name =~ $name ]]; then
 			continue
@@ -441,17 +441,12 @@ load_xcode_build_settings () {
 	logd "${params[@]}"
 	local filename="$(echo "${params[@]}"| shasum | cut -d ' ' -f1)"
 	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/$filename"
-	local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
 	local xcode_settings_conf="${xcode_settings_file}.conf"
 
 	if [[ ! -f $xcode_settings_file ]]; then
 		set +e
-		xcodebuild -showBuildSettings "${params[@]}" 2>"$xcode_settings_error" >"$xcode_settings_file"
+		xcodebuild -showBuildSettings "${params[@]}" >"$xcode_settings_file"
 		set -e
-
-		if [[ -s "$xcode_settings_error" ]]; then
-			die "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
-		fi
 
 		# Get ride of 'DeveloperPortal: Using pre-existing current store at URL'
 		cat "$xcode_settings_file" | tail -n +2 | \
