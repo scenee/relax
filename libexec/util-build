@@ -372,17 +372,17 @@ load_xcode_build_settings () {
 	logd "${params[@]}"
 	local filename="$(echo "${params[@]}"| shasum | cut -d ' ' -f1)"
 	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/$filename"
-	local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
 	local xcode_settings_conf="${xcode_settings_file}.conf"
 
 	if [[ ! -f $xcode_settings_file ]]; then
+		local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
+
 		set +e
 		xcodebuild -showBuildSettings "${params[@]}" 2>"$xcode_settings_error" >"$xcode_settings_file"
 		set -e
 
-		if [[ -s "$xcode_settings_error" ]]; then
-			die "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
-		fi
+		[[ -s "$xcode_settings_error" ]] && \
+			loge "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
 
 		# Get ride of 'DeveloperPortal: Using pre-existing current store at URL'
 		cat "$xcode_settings_file" | tail -n +2 | \
