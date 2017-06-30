@@ -23,7 +23,7 @@ build_project () {
 	local _sdk=$2
 	local _configuration=$3
 
-	logi "$ARROW Build $TARGETNAME ($_configuration) for $_sdk SDK"
+	logi "$ARROW Build $TARGETNAME ($_configuration) with $_sdk SDK"
 
 	local params=()
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
