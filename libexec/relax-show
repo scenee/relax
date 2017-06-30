@@ -4,14 +4,14 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} show <distribution> <item>
+	usage: ${ME} show <distribution> <arg>
 
-	Print the latest artifacts
+	Print the artifacts for a distribution
 
-	Items:
-	    build:	Print the latest build directory
-	    archive:	Open the latest archive file
-	    ipa:	Print the latest IPA 
+	Arg:
+	    build:	Print the artifact directory
+	    archive:	Print the xcarchive file
+	    ipa:	Print the IPA file
 	EOM
 	fin
 }
@@ -40,8 +40,7 @@ case $arg in
 	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " $distribution "  ]]  || die "Not found '$distribution' distribution"
 
 	[[ $# == 1 ]] || usage
-	if ! read_path "$distribution" "$1"; then
-		die "Not found the latest $1"
-	fi
+
+	read_path "$distribution" "$1"
 	;;
 esac
