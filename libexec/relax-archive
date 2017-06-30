@@ -62,7 +62,7 @@ make_archive () {
 		fi
 	fi
 
-	logi "$ARROW Archiving $scheme ($configuration) for $sdk SDK"
+	logi "$ARROW Archiving $scheme ($configuration) with $sdk SDK"
 
 	### Finish update Info plist ###
 	if [[ -n $INFO_PLIST_PATH ]]; then
