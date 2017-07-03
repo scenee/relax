@@ -6,6 +6,8 @@ setup () {
 	source libexec/const
 	source libexec/util
 	make_temp
+	stdout_path="${BATS_TMPDIR}/bats.stdout"
+	stderr_path="${BATS_TMPDIR}/bats.stderr"
 }
 
 teardown () {
@@ -31,6 +33,17 @@ teardown () {
 	run fin "hello"
 	assert_success
 	[[ "$output" =~ "hello" ]]
+}
+
+@test "loge" {
+
+	loge "hello" 2>${stderr_path}
+
+	grep ".*Error:.*hello"  ${stderr_path}
+
+	loge "hello" 1>${stdout_path}
+
+	! grep ".*Error:.*hello"  ${stdout_path}
 }
 
 #@test "die(stdin)" {
