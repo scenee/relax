@@ -52,6 +52,8 @@ generate_relfile () {
 	## Get scheme list
 	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
 
+	cat $REL_TEMP_DIR/xcode-build-list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
+
 	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
 		> $REL_TEMP_DIR/xcode-build-schemes
 	source $REL_TEMP_DIR/xcode-build-schemes
