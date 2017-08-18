@@ -4,11 +4,12 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <distribution> [--progress] [--framework <name>] [-c <configuration>]
+	usage: ${ME} build <distribution> [--progress] [[--framework] | [--framework-with-static <name>]] [-c <configuration>]
 	options:
-	    --progress	Show a progress indicator
-	    --framework	Make a framework bundle from a static library
-	    -c		Specify a configuration
+	    --progress			Show a progress indicator
+	    --framework			Make a framework bundle
+	    --framework-with-static	Make a framework bundle from a static library
+	    -c				Specify a configuration
 	EOM
 	fin
 }
@@ -75,6 +76,68 @@ build_project () {
 	fi
 }
 
+merge_frameworks() {
+	[ $# == 4 ] || die "Invalid argument"
+
+	local target=$1
+	local fw_iphoneos=$2
+	local fw_iphonesimulator=$3
+	local fw_dest=$4
+
+	[ ! -d "$fw_dest" ] || rm -rf $fw_dest
+
+	cp -a "$fw_iphoneos"  "$fw_dest"
+	lipo -create -output "${fw_dest}/${target}" "${fw_iphoneos}/${target}" "${fw_iphonesimulator}/${target}"
+}
+
+build_framework() {
+	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
+		logi "$ARROW Clean DerivedData of $TARGETNAME"
+		rm -rf $OBJROOT
+		logi "Removed $OBJROOT"
+	fi
+
+	# If we're already inside this script then die
+	if [ -n "$BUILD_CMD_SEMAPHORE" ]; then
+		die "Already building framework"
+	fi
+	export BUILD_CMD_SEMAPHORE=1
+
+
+	local current_sdk sdk_platform other_platform sdk_version
+	local build_project other_built_product
+	local framework_location
+
+	build_project "$scheme" "iphoneos" "$configuration"
+	built_product="$CODESIGNING_FOLDER_PATH"
+	build_project "$scheme" "iphonesimulator" "$configuration"
+	other_built_product="$CODESIGNING_FOLDER_PATH"
+
+	local name=${TARGETNAME}
+
+	# 4 - Make a framework
+	logi "$ARROW Generate $TARGETNAME Framework ($configuration)"
+
+	framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
+
+	merge_frameworks "$name" "$built_product" "$other_built_product" "$framework_location"
+
+	dest="${HERE}/${name}.framework"
+
+	# 6 - Copy the framework to the current workspace
+	ditto "${framework_location}" "$dest"
+
+	logi "$ARROW Framework: ./${name}.framework"
+
+	if [[ -d "$framework_location" ]];
+	then
+		ditto -c -k --sequesterRsrc --keepParent "$framework_location" "$dest".zip
+		logi "zip: ./${name}.framework.zip"
+	else
+		die "Cound not find any zipping framework: ${framework_location}"
+	fi
+}
+
 # make_framework <iphoneos-product-path> <iphonesimulator-product-path> <location>
 make_framework () {
 	if test $# != 3; then
@@ -107,11 +170,10 @@ make_framework () {
 	fi
 }
 
-
-# build_framework <framework_name>
-build_framework () {
+# build_framework_with_static <framework_name>
+build_framework_with_static () {
 	if test $# != 1; then
-		die "build_framework: bad argument"
+		die "build_framework_with_static: bad argument"
 	fi
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
@@ -195,6 +257,7 @@ build_framework () {
 BUILD_CMD_SEMAPHORE=
 
 is_framework=false
+is_framework_with_static=false
 framework_name=
 show_progress=false
 
@@ -224,8 +287,11 @@ while [ $# -ne 0 ];  do
 		show_progress=true
 		;;
 	--framework)
-		[[ $# != 0 ]] || usage
 		is_framework=true
+		;;
+	--framework-with-static)
+		[[ $# != 0 ]] || usage
+		is_framework_with_static=true
 		framework_name="$1"
 		shift
 		;;
@@ -244,9 +310,10 @@ setup_build $distribution
 rm -rf $PRODUCT_BUILD_ROOT
 mkdir -p $PRODUCT_BUILD_ROOT
 
-if $is_framework; then
+if $is_framework_with_static; then
+	build_framework_with_static "$framework_name"
+elif $is_framework; then
 	build_framework "$framework_name"
-
 else
 	build_project "${scheme}" "${sdk}" "${configuration}"
 	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"
