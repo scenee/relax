@@ -307,13 +307,15 @@ get_build_params_file () {
 	[[ ${build_params[@]} =~ "-configuration" ]] || [[ -z $configuration ]] ||\
 		build_params+=( -configuration "$configuration" )
 
+	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
+
 	if [[ -n $provisioning_profile ]]; then
 		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
 		local mobileprovision=$(find_mobileprovision --latest "$provisioning_profile")
 		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
 
 
-		# Should use development signing for archive. Refer to this session, 
+		# Should use development signing for archive. Refer to this session,
 		# https://developer.apple.com/videos/play/wwdc2016/401/.
 		# But it's not working when exporint ana adhoc IPA file.
 		# I confirmed It's working well in Xcode 7.3.1.
@@ -332,9 +334,6 @@ get_build_params_file () {
 	else
 		build_params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
 	fi
-
-	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
-
 
 	if test "${build_settings:-undefined}" != undefined; then
 		if test ${#build_settings[@]} -gt 0; then
@@ -368,7 +367,8 @@ load_xcode_build_settings () {
 		done < $1
 	fi
 
-	logd "${params[@]}"
+	unset 'params[${#params[@]}-1]' # Remove 'CODE_SIGN_IDENTITY' causing infinit loop on Xcode 9
+
 	local filename="$(echo "${params[@]}"| shasum | cut -d ' ' -f1)"
 	local xcode_settings_file="$REL_TEMP_DIR/xcode-settings/$filename"
 	local xcode_settings_conf="${xcode_settings_file}.conf"
@@ -376,6 +376,7 @@ load_xcode_build_settings () {
 	if [[ ! -f $xcode_settings_file ]]; then
 		local xcode_settings_error="$(mktemp $REL_TEMP_DIR/xcode-settings/XXXXXX)"
 
+		logd "xcodebuild -showBuildSettings ${params[@]}"
 		set +e
 		xcodebuild -showBuildSettings "${params[@]}" 2>"$xcode_settings_error" >"$xcode_settings_file"
 		set -e
@@ -402,6 +403,7 @@ load_xcode_build_settings () {
 		-e "PRODUCT_TYPE" \
 		| while read line
 		do 
+			logd "-- loading $line"
 			echo "export $line" >> "$xcode_settings_conf"
 		done
 	fi
@@ -410,14 +412,11 @@ load_xcode_build_settings () {
 		die "load_xcode_build_settings: Could not load the build settings."
 	fi
 
-	cat "$xcode_settings_conf" | logd
-
 	source "$xcode_settings_conf"
-	logd "$xcode_settings_conf"
 }
 
 print_xcode_version() {
-	xcodebuild -version
+	xcodebuild -version | head -n 1 | awk '{ print  $2 }'
 }
 
 
