@@ -4,11 +4,10 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <distribution> [--progress] [[--framework] | [--framework-with-static <name>]] [-c <configuration>]
+	usage: ${ME} build <distribution> [--progress] [--framework [<name>]] [--with-simulator] [-c <configuration>]
 	options:
 	    --progress			Show a progress indicator
-	    --framework			Make a framework bundle
-	    --framework-with-static	Make a framework bundle from a static library
+	    --framework			Make a framework from a static library
 	    --with-simulator		Include binaries for iphonesimulator
 	    -c				Specify a configuration
 	EOM
@@ -54,7 +53,7 @@ build_project () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
 		XCODEBUILD_PID=$!
-		if [[ $show_progress == true ]]; then
+		if [[ $Show_progress == true ]]; then
 			print_progress_time $XCODEBUILD_PID || return 1
 		else
 			print_progress_time $XCODEBUILD_PID --quiet || return 1
@@ -99,10 +98,10 @@ build_framework() {
 	fi
 
 	# If we're already inside this script then die
-	if [ -n "$BUILD_CMD_SEMAPHORE" ]; then
+	if [ -n "$Build_cmd_semaphore" ]; then
 		die "Already building framework"
 	fi
-	export BUILD_CMD_SEMAPHORE=1
+	export Build_cmd_semaphore=1
 
 
 	local current_sdk sdk_platform other_platform sdk_version
@@ -116,7 +115,7 @@ build_framework() {
 	build_project "$scheme" "iphoneos" "$configuration"
 	os_fw="$CODESIGNING_FOLDER_PATH"
 
-	if [[ $is_with_simulator == true ]]; then
+	if [[ $With_simulator == true ]]; then
 		build_project "$scheme" "iphonesimulator" "$configuration"
 		local sim_fw="$CODESIGNING_FOLDER_PATH"
 		merge_frameworks "$name" "$os_fw" "$sim_fw" "$framework_location"
@@ -154,7 +153,7 @@ make_framework () {
 	xcrun lipo -create \
 		"${1}" \
 		"${2}" \
-		-output "${3}/Versions/A/${framework_name}"
+		-output "${3}/Versions/A/${Framework_name}"
 
 	# Create the path to the real Headers die
 	mkdir -p "${framework_loc}/Versions/A/Headers"
@@ -162,8 +161,8 @@ make_framework () {
 	# Create the required symlinks
 	/bin/ln -sfh A "${framework_loc}/Versions/Current"
 	/bin/ln -sfh Versions/Current/Headers "${framework_loc}/Headers"
-	/bin/ln -sfh "Versions/Current/${framework_name}" \
-		"${framework_loc}/${framework_name}"
+	/bin/ln -sfh "Versions/Current/${Framework_name}" \
+		"${framework_loc}/${Framework_name}"
 
 	if [ -d "${TARGET_BUILD_DIR}/$PUBLIC_HEADERS_FOLDER_PATH/" ]; then
 		# Copy the public headers into the framework
@@ -172,7 +171,7 @@ make_framework () {
 	fi
 }
 
-# build_framework_with_static <framework_name>
+# build_framework_with_static <Framework_name>
 build_framework_with_static () {
 	if test $# != 1; then
 		die "build_framework_with_static: bad argument"
@@ -185,21 +184,21 @@ build_framework_with_static () {
 	fi
 
 	# If we're already inside this script then die
-	if [ -n "$BUILD_CMD_SEMAPHORE" ]; then
+	if [ -n "$Build_cmd_semaphore" ]; then
 		die "Already building framework"
 	fi
-	export BUILD_CMD_SEMAPHORE=1
+	export Build_cmd_semaphore=1
 	
 	# local static_lib="lib${PROJECT_NAME}.a"
 
 	local os_lib sim_lib
-	local framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
+	local framework_location="${PRODUCT_BUILD_ROOT}/${Framework_name}.framework"
 	
 
 	build_project "$scheme" iphoneos "$configuration"
 	os_lib="$CODESIGNING_FOLDER_PATH"
 
-	if [[ $is_with_simulator == true ]]; then
+	if [[ $With_simulator == true ]]; then
 		build_project "$scheme" iphonesimulator "$configuration"
 		sim_lib="$CODESIGNING_FOLDER_PATH"
 		make_framework "$os_lib" "$sim_lib" "$framework_location"
@@ -218,33 +217,33 @@ build_framework_with_static () {
 		logi "Added ${framework_location}/Modules/module.modulemap"
 	done < <(find "$HERE" -name module.modulemap | head -n 1)
 
-	dest="${HERE}/${framework_name}.framework"
+	dest="${HERE}/${Framework_name}.framework"
 
 	# 6 - Copy the framework to the current workspace
 	ditto "${framework_location}" "$dest"
 
-	logi "$ARROW ./${framework_name}.framework"
+	logi "$ARROW ./${Framework_name}.framework"
 
 	if [[ -d "$framework_location" ]];
 	then
 		ditto -c -k --sequesterRsrc --keepParent "$framework_location" "$dest".zip
-		logi "zip: ./${framework_name}.framework.zip"
+		logi "zip: ./${Framework_name}.framework.zip"
 	else
 		die "Cound not find any zipping framework: ${framework_location}"
 	fi
 }
 
-BUILD_CMD_SEMAPHORE=
-
-is_framework=false
-is_framework_with_static=false
-is_with_simulator=false
-framework_name=
-show_progress=false
+Build_cmd_semaphore=
+Is_framework=false
+With_simulator=false
+Framework_name=
+Show_progress=false
+Distribution=
 
 while [ $# -ne 0 ];  do
 	arg=$1
 	shift
+
 	case $arg in
 	-h|--help) usage ;;
 	-c)
@@ -265,39 +264,45 @@ while [ $# -ne 0 ];  do
 		fin
 		;;
 	--progress)
-		show_progress=true
+		Show_progress=true
 		;;
 	--framework)
-		is_framework=true
-		;;
-	--framework-with-static)
-		[[ $# != 0 ]] || usage
-		is_framework_with_static=true
-		framework_name="$1"
-		shift
+		Is_framework=true
 		;;
 	--with-simulator)
-		is_with_simulator=true
+		With_simulator=true
 		;;
 	*)
-		distribution=$arg
+		Distribution=$arg
+		;;
+	esac
+
+	case $arg in
+	--framework)
+		[[ $# != 0 ]] || continue
+		[[ ! "$1" =~ -.* ]] || usage
+		Framework_name="$1"
+		shift
 		;;
 	esac
 done
 
-[[ ${distribution:-undefined} != undefined ]] || usage
+[[ ${Distribution:-undefined} != undefined ]] || usage
 
 trap "teardown_build" EXIT INT TERM
-setup_build $distribution
-
+setup_build $Distribution
 
 rm -rf $PRODUCT_BUILD_ROOT
 mkdir -p $PRODUCT_BUILD_ROOT
 
-if $is_framework_with_static; then
-	build_framework_with_static "$framework_name"
-elif $is_framework; then
-	build_framework "$framework_name"
+if [[ -z $Framework_name ]]; then
+	Framework_name=$PRODUCT_NAME;
+fi
+
+if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]] && [[ $Is_framework = true ]]; then
+	build_framework_with_static "$Framework_name"
+elif [[ $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
+	build_framework "$Framework_name"
 else
 	build_project "${scheme}" "${sdk}" "${configuration}"
 	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"
