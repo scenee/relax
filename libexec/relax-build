@@ -9,6 +9,7 @@ usage() {
 	    --progress			Show a progress indicator
 	    --framework			Make a framework bundle
 	    --framework-with-static	Make a framework bundle from a static library
+	    --with-simulator		Include binaries for iphonesimulator
 	    -c				Specify a configuration
 	EOM
 	fin
@@ -106,21 +107,22 @@ build_framework() {
 
 	local current_sdk sdk_platform other_platform sdk_version
 	local build_project other_built_product
-	local framework_location
 
-	build_project "$scheme" "iphoneos" "$configuration"
-	built_product="$CODESIGNING_FOLDER_PATH"
-	build_project "$scheme" "iphonesimulator" "$configuration"
-	other_built_product="$CODESIGNING_FOLDER_PATH"
-
-	local name=${TARGETNAME}
-
-	# 4 - Make a framework
 	logi "$ARROW Generate $TARGETNAME Framework ($configuration)"
 
-	framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
+	local name=${TARGETNAME}
+	local framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
 
-	merge_frameworks "$name" "$built_product" "$other_built_product" "$framework_location"
+	build_project "$scheme" "iphoneos" "$configuration"
+	os_fw="$CODESIGNING_FOLDER_PATH"
+
+	if [[ $is_with_simulator == true ]]; then
+		build_project "$scheme" "iphonesimulator" "$configuration"
+		local sim_fw="$CODESIGNING_FOLDER_PATH"
+		merge_frameworks "$name" "$os_fw" "$sim_fw" "$framework_location"
+	else
+		cp -a "$os_fw" "$framework_location"
+	fi
 
 	dest="${HERE}/${name}.framework"
 
@@ -188,46 +190,24 @@ build_framework_with_static () {
 	fi
 	export BUILD_CMD_SEMAPHORE=1
 	
-	local static_lib="lib${PROJECT_NAME}.a"
-	local current_sdk sdk_platform other_platform sdk_version 
-	local build_project other_built_product
-	local framework_location
+	# local static_lib="lib${PROJECT_NAME}.a"
+
+	local os_lib sim_lib
+	local framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	
-	# 1 - Detect the platform (iphoneos/iphonesimulator) from the SDK name
-	if [[ "$sdk" =~ ([A-Za-z]+) ]]; then
-		sdk_platform=${BASH_REMATCH[1]}
-	else
-		die "Could not find platform name from SDK: $sdk"
+
+	build_project "$scheme" iphoneos "$configuration"
+	os_lib="$CODESIGNING_FOLDER_PATH"
+
+	if [[ $is_with_simulator == true ]]; then
+		build_project "$scheme" iphonesimulator "$configuration"
+		sim_lib="$CODESIGNING_FOLDER_PATH"
+		make_framework "$os_lib" "$sim_lib" "$framework_location"
 	fi
 
-	# 2 - Extract the version from the SDK
-	if [[ "$sdk" =~ ([0-9]+.*$) ]]; then
-		sdk_version=${BASH_REMATCH[1]}
-	fi
-
-	# 3 - Detect the other platform
-	if [ "$sdk_platform" == "iphoneos" ]; then
-		other_platform=iphonesimulator
-	else
-		other_platform=iphoneos
-	fi
-	
-	# 4 - Build prodcuts
-	current_sdk="${sdk_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$configuration"
-	built_product="$CODESIGNING_FOLDER_PATH"
-
-	current_sdk="${other_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$configuration"
-	other_built_product="$CODESIGNING_FOLDER_PATH"
-
-	# 4 - Make framework
 	logi "$ARROW Generating $TARGETNAME Framework ($configuration)"
 
-	framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
-	make_framework "$built_product" "$other_built_product" "$framework_location"
-
-	# 5 - Install module.modulemap if needed
+	# Install module.modulemap if needed
 	while IFS= read -r modulemap && [[ -n "$modulemap" ]]
 	do
 		logi "Found $modulemap"
@@ -258,6 +238,7 @@ BUILD_CMD_SEMAPHORE=
 
 is_framework=false
 is_framework_with_static=false
+is_with_simulator=false
 framework_name=
 show_progress=false
 
@@ -294,6 +275,9 @@ while [ $# -ne 0 ];  do
 		is_framework_with_static=true
 		framework_name="$1"
 		shift
+		;;
+	--with-simulator)
+		is_with_simulator=true
 		;;
 	*)
 		distribution=$arg
