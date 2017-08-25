@@ -11,3 +11,5 @@ bats.log
 /src/github.com
 /pkg
 
+PRIVATE
+/dist/
