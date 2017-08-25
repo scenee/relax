@@ -1,5 +1,10 @@
-os: osx
-osx_image: xcode8.2
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8.2
+    - os: osx
+      osx_image: xcode8.3
+
 script:
   - test/travis_ci.sh
 
