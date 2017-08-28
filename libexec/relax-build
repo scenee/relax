@@ -7,7 +7,7 @@ usage() {
 	usage: ${ME} build <distribution> [--progress] [--framework [<name>]] [--with-simulator] [-c <configuration>]
 	options:
 	    --progress			Show a progress indicator
-	    --framework			Make a framework from a static library
+	    --framework			Make a framework from a static library with a specified name
 	    --with-simulator		Include binaries for iphonesimulator
 	    -c				Specify a configuration
 	EOM
@@ -124,6 +124,7 @@ build_framework() {
 	fi
 
 	dest="${HERE}/${name}.framework"
+	rm -rf "$dest"
 
 	# 6 - Copy the framework to the current workspace
 	ditto "${framework_location}" "$dest"
@@ -150,10 +151,16 @@ make_framework () {
 	mkdir -p "${framework_loc}/Versions/A/"
 
 	# Join the 2 static libs into 1 and push into the .framework
-	xcrun lipo -create \
-		"${1}" \
-		"${2}" \
-		-output "${3}/Versions/A/${Framework_name}"
+	if [[ $With_simulator == true ]]; then
+		xcrun lipo -create \
+			"${1}" \
+			"${2}" \
+			-output "${3}/Versions/A/${Framework_name}"
+	else
+		xcrun lipo -create \
+			"${1}" \
+			-output "${3}/Versions/A/${Framework_name}"
+	fi
 
 	# Create the path to the real Headers die
 	mkdir -p "${framework_loc}/Versions/A/Headers"
@@ -201,23 +208,28 @@ build_framework_with_static () {
 	if [[ $With_simulator == true ]]; then
 		build_project "$scheme" iphonesimulator "$configuration"
 		sim_lib="$CODESIGNING_FOLDER_PATH"
-		make_framework "$os_lib" "$sim_lib" "$framework_location"
 	fi
+
+	make_framework "$os_lib" "$sim_lib" "$framework_location"
 
 	logi "$ARROW Generating $TARGETNAME Framework ($configuration)"
 
 	# Install module.modulemap if needed
 	while IFS= read -r modulemap && [[ -n "$modulemap" ]]
 	do
-		logi "Found $modulemap"
-		if ! test -d "${framework_location}/Modules"; then
-			mkdir "${framework_location}/Modules"
+		if cat $modulemap | grep -q "module  *$Framework_name  *{"; then
+			logi "Found $modulemap"
+			if ! test -d "${framework_location}/Modules"; then
+				mkdir "${framework_location}/Modules"
+			fi
+			cp -a "$modulemap" "${framework_location}/Modules/"
+			logi "Added ${framework_location}/Modules/module.modulemap"
+			break
 		fi
-		cp -a "$modulemap" "${framework_location}/Modules/"
-		logi "Added ${framework_location}/Modules/module.modulemap"
-	done < <(find "$HERE" -name module.modulemap | head -n 1)
+	done < <(find "$HERE" -name module.modulemap)
 
 	dest="${HERE}/${Framework_name}.framework"
+	rm -rf "$dest"
 
 	# 6 - Copy the framework to the current workspace
 	ditto "${framework_location}" "$dest"
@@ -280,7 +292,7 @@ while [ $# -ne 0 ];  do
 	case $arg in
 	--framework)
 		[[ $# != 0 ]] || continue
-		[[ ! "$1" =~ -.* ]] || usage
+		[[ ! "$1" =~ -.* ]] || continue
 		Framework_name="$1"
 		shift
 		;;
@@ -302,6 +314,7 @@ fi
 if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]] && [[ $Is_framework = true ]]; then
 	build_framework_with_static "$Framework_name"
 elif [[ $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
+	[[ $Is_framework != true ]] || die "'--framework' is applicable only for a static library product"
 	build_framework "$Framework_name"
 else
 	build_project "${scheme}" "${sdk}" "${configuration}"

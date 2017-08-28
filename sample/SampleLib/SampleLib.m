@@ -9,5 +9,7 @@
 #import "SampleLib.h"
 
 @implementation SampleLib
-
++ (void)sayHello {
+    NSLog(@"Hello world!");
+}
 @end
