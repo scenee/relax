@@ -115,8 +115,7 @@ print_progress_time () {
 		if [[ $quiet == false ]]; then
 			# For a interrupt timing issue
 			# Retore tty and tput
-			trap "stty echo; \
-				tput cnorm >/dev/null; \
+			trap "stty echo; tput cnorm; \
 				__kill_bg_xcodebuid_task $XCODEBUILD_PID;" INT TERM EXIT
 
 			star="$BOLD"'\xE2\x88\x97'"$NC"
