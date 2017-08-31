@@ -58,8 +58,9 @@ For example, it's easy to manage a build server with a provisioning tool like An
 Golang Environment
 
 ```bash
-export GOPATH=/path/to/repo
-export GOBIN=$GOPATH/libexec
+cd go
+export GOPATH=$PWD
+export GOBIN=$GOPATH/bin
 ```
 
 # What's different from GYM?
