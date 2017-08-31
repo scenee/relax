@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>compileBitcode</key>
+	<false/>
+	<key>method</key>
+	<string>development</string>
+	<key>signingCertificate</key>
+	<string>iPhone Developer</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.scenee.SampleApp</key>
+		<string>af42131a-89cf-4ed6-80fa-7d5d9c6603c4</string>
+	</dict>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>teamID</key>
+	<string>J3D7L9FHSS</string>
+</dict>
+</plist>

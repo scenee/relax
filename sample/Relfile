@@ -19,22 +19,21 @@ uploader:
 
 distributions:
   development:
-    scheme: Sample App # Required
     sdk: iphoneos
+    scheme: Sample App # Required
     configuration: Debug
-    provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
     team_id: J3D7L9FHSS
+
     bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
     bundle_version:  "%h-%c"
+
     build_settings:
       OTHER_SWIFT_FLAGS: 
         - "-DMOCK"
       OTHER_LINKER_FLAGS:
         - "$(inherited)"
         - "-ObjC"
-    export_options:
-      method: development # Required
-      compileBitcode: false
+
     info_plist:
       CFBundleName: Sample (Debug)
       CFBundleDevelopmentRegion: $COUNTRY
@@ -42,22 +41,32 @@ distributions:
         - com.example.SampleApp
         - com.example.SampleApp2
 
+    export_options:
+      method: development # Required
+      provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
+      compileBitcode: false
+
   development2:
     scheme: Sample App
-    bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
     configuration: Debug
+
     version: "$VERSION"
+
+    bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
     bundle_version: "%h-debug-internal"
-    provisioning_profile: "$PROVISION_PROFILE_DEV"
+
     export_options:
-      method: development
+      method: development # Required
+      provisioning_profile: "$PROVISION_PROFILE_DEV"
+      compileBitcode: false
 
   adhoc:
     scheme: Sample App
-    provisioning_profile: "$PROVISION_PROFILE_ADHOC"
+    team_id: J3D7L9FHSS
     export_options:
       method: ad-hoc 
       thinning : iPhone7,1
+      provisioning_profile: "$PROVISION_PROFILE_ADHOC"
       compileBitcode: false
 
   enterprise:
@@ -70,10 +79,10 @@ distributions:
 
   appstore:
     scheme: Sample App
-    provisioning_profile: "Relax AppStore"
     export_options:
       method: appstore
       upload_symbols: true
+      provisioning_profile: "Relax AppStore"
       #uploadSymbols: true
       #uploadBitcode: true
 
@@ -87,4 +96,4 @@ distributions:
   staticlib:
     scheme: SampleLib
 
-# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬
+# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :
