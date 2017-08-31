@@ -10,4 +10,6 @@
 
 @interface SampleLib : NSObject
 
++ (void)sayHello;
+
 @end

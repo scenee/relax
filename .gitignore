@@ -1,13 +1,14 @@
+PRIVATE
 /bats/
-bats.log
-/**/bats.log
-/**/.relax/
-/**/build/
-/**/Releases/
-/**/artifact/
-/**/xcuserdata/
-/**/resign
-/src/gopkg.in
-/src/github.com
-/pkg
 
+*.log
+/sample/**/*.mobileprovision
+/sample/**/*.p12
+/sample/dist
+/sample/**/build/
+/sample/**/artifact/
+/sample/*.ipa
+/sample/**/xcuserdata/
+/sample/*.framework
+/sample/*.framework.zip
+/test/resign

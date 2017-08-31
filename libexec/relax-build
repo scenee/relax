@@ -4,11 +4,12 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <distribution> [--progress] [--framework <name>] [-c <configuration>]
+	usage: ${ME} build <distribution> [--progress] [--framework [<name>]] [--with-simulator] [-c <configuration>]
 	options:
-	    --progress	Show a progress indicator
-	    --framework	Make a framework bundle from a static library
-	    -c		Specify a configuration
+	    --progress			Show a progress indicator
+	    --framework			Make a framework from a static library with a specified name
+	    --with-simulator		Include binaries for iphonesimulator
+	    -c				Specify a configuration
 	EOM
 	fin
 }
@@ -52,7 +53,7 @@ build_project () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) &
 		XCODEBUILD_PID=$!
-		if [[ $show_progress == true ]]; then
+		if [[ $Show_progress == true ]]; then
 			print_progress_time $XCODEBUILD_PID || return 1
 		else
 			print_progress_time $XCODEBUILD_PID --quiet || return 1
@@ -75,6 +76,70 @@ build_project () {
 	fi
 }
 
+merge_frameworks() {
+	[ $# == 4 ] || die "Invalid argument"
+
+	local target=$1
+	local fw_iphoneos=$2
+	local fw_iphonesimulator=$3
+	local fw_dest=$4
+
+	[ ! -d "$fw_dest" ] || rm -rf $fw_dest
+
+	cp -a "$fw_iphoneos"  "$fw_dest"
+	lipo -create -output "${fw_dest}/${target}" "${fw_iphoneos}/${target}" "${fw_iphonesimulator}/${target}"
+}
+
+build_framework() {
+	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
+		logi "$ARROW Clean DerivedData of $TARGETNAME"
+		rm -rf $OBJROOT
+		logi "Removed $OBJROOT"
+	fi
+
+	# If we're already inside this script then die
+	if [ -n "$Build_cmd_semaphore" ]; then
+		die "Already building framework"
+	fi
+	export Build_cmd_semaphore=1
+
+
+	local current_sdk sdk_platform other_platform sdk_version
+	local build_project other_built_product
+
+	logi "$ARROW Generate $TARGETNAME Framework ($configuration)"
+
+	local name=${TARGETNAME}
+	local framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
+
+	build_project "$scheme" "iphoneos" "$configuration"
+	os_fw="$CODESIGNING_FOLDER_PATH"
+
+	if [[ $With_simulator == true ]]; then
+		build_project "$scheme" "iphonesimulator" "$configuration"
+		local sim_fw="$CODESIGNING_FOLDER_PATH"
+		merge_frameworks "$name" "$os_fw" "$sim_fw" "$framework_location"
+	else
+		cp -a "$os_fw" "$framework_location"
+	fi
+
+	dest="${HERE}/${name}.framework"
+	rm -rf "$dest"
+
+	# 6 - Copy the framework to the current workspace
+	ditto "${framework_location}" "$dest"
+
+	logi "$ARROW Framework: ./${name}.framework"
+
+	if [[ -d "$framework_location" ]];
+	then
+		ditto -c -k --sequesterRsrc --keepParent "$framework_location" "$dest".zip
+		logi "zip: ./${name}.framework.zip"
+	else
+		die "Cound not find any zipping framework: ${framework_location}"
+	fi
+}
+
 # make_framework <iphoneos-product-path> <iphonesimulator-product-path> <location>
 make_framework () {
 	if test $# != 3; then
@@ -86,10 +151,16 @@ make_framework () {
 	mkdir -p "${framework_loc}/Versions/A/"
 
 	# Join the 2 static libs into 1 and push into the .framework
-	xcrun lipo -create \
-		"${1}" \
-		"${2}" \
-		-output "${3}/Versions/A/${framework_name}"
+	if [[ $With_simulator == true ]]; then
+		xcrun lipo -create \
+			"${1}" \
+			"${2}" \
+			-output "${3}/Versions/A/${Framework_name}"
+	else
+		xcrun lipo -create \
+			"${1}" \
+			-output "${3}/Versions/A/${Framework_name}"
+	fi
 
 	# Create the path to the real Headers die
 	mkdir -p "${framework_loc}/Versions/A/Headers"
@@ -97,8 +168,8 @@ make_framework () {
 	# Create the required symlinks
 	/bin/ln -sfh A "${framework_loc}/Versions/Current"
 	/bin/ln -sfh Versions/Current/Headers "${framework_loc}/Headers"
-	/bin/ln -sfh "Versions/Current/${framework_name}" \
-		"${framework_loc}/${framework_name}"
+	/bin/ln -sfh "Versions/Current/${Framework_name}" \
+		"${framework_loc}/${Framework_name}"
 
 	if [ -d "${TARGET_BUILD_DIR}/$PUBLIC_HEADERS_FOLDER_PATH/" ]; then
 		# Copy the public headers into the framework
@@ -107,11 +178,10 @@ make_framework () {
 	fi
 }
 
-
-# build_framework <framework_name>
-build_framework () {
+# build_framework_with_static <Framework_name>
+build_framework_with_static () {
 	if test $# != 1; then
-		die "build_framework: bad argument"
+		die "build_framework_with_static: bad argument"
 	fi
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
@@ -121,86 +191,71 @@ build_framework () {
 	fi
 
 	# If we're already inside this script then die
-	if [ -n "$BUILD_CMD_SEMAPHORE" ]; then
+	if [ -n "$Build_cmd_semaphore" ]; then
 		die "Already building framework"
 	fi
-	export BUILD_CMD_SEMAPHORE=1
+	export Build_cmd_semaphore=1
 	
-	local static_lib="lib${PROJECT_NAME}.a"
-	local current_sdk sdk_platform other_platform sdk_version 
-	local build_project other_built_product
-	local framework_location
+	# local static_lib="lib${PROJECT_NAME}.a"
+
+	local os_lib sim_lib
+	local framework_location="${PRODUCT_BUILD_ROOT}/${Framework_name}.framework"
 	
-	# 1 - Detect the platform (iphoneos/iphonesimulator) from the SDK name
-	if [[ "$sdk" =~ ([A-Za-z]+) ]]; then
-		sdk_platform=${BASH_REMATCH[1]}
-	else
-		die "Could not find platform name from SDK: $sdk"
+
+	build_project "$scheme" iphoneos "$configuration"
+	os_lib="$CODESIGNING_FOLDER_PATH"
+
+	if [[ $With_simulator == true ]]; then
+		build_project "$scheme" iphonesimulator "$configuration"
+		sim_lib="$CODESIGNING_FOLDER_PATH"
 	fi
 
-	# 2 - Extract the version from the SDK
-	if [[ "$sdk" =~ ([0-9]+.*$) ]]; then
-		sdk_version=${BASH_REMATCH[1]}
-	fi
+	make_framework "$os_lib" "$sim_lib" "$framework_location"
 
-	# 3 - Detect the other platform
-	if [ "$sdk_platform" == "iphoneos" ]; then
-		other_platform=iphonesimulator
-	else
-		other_platform=iphoneos
-	fi
-	
-	# 4 - Build prodcuts
-	current_sdk="${sdk_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$configuration"
-	built_product="$CODESIGNING_FOLDER_PATH"
-
-	current_sdk="${other_platform}${sdk_version}"
-	build_project "$scheme" "$current_sdk" "$configuration"
-	other_built_product="$CODESIGNING_FOLDER_PATH"
-
-	# 4 - Make framework
 	logi "$ARROW Generating $TARGETNAME Framework ($configuration)"
 
-	framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
-	make_framework "$built_product" "$other_built_product" "$framework_location"
-
-	# 5 - Install module.modulemap if needed
+	# Install module.modulemap if needed
 	while IFS= read -r modulemap && [[ -n "$modulemap" ]]
 	do
-		logi "Found $modulemap"
-		if ! test -d "${framework_location}/Modules"; then
-			mkdir "${framework_location}/Modules"
+		if cat $modulemap | grep -q "module  *$Framework_name  *{"; then
+			logi "Found $modulemap"
+			if ! test -d "${framework_location}/Modules"; then
+				mkdir "${framework_location}/Modules"
+			fi
+			cp -a "$modulemap" "${framework_location}/Modules/"
+			logi "Added ${framework_location}/Modules/module.modulemap"
+			break
 		fi
-		cp -a "$modulemap" "${framework_location}/Modules/"
-		logi "Added ${framework_location}/Modules/module.modulemap"
-	done < <(find "$HERE" -name module.modulemap | head -n 1)
+	done < <(find "$HERE" -name module.modulemap)
 
-	dest="${HERE}/${framework_name}.framework"
+	dest="${HERE}/${Framework_name}.framework"
+	rm -rf "$dest"
 
 	# 6 - Copy the framework to the current workspace
 	ditto "${framework_location}" "$dest"
 
-	logi "$ARROW ./${framework_name}.framework"
+	logi "$ARROW ./${Framework_name}.framework"
 
 	if [[ -d "$framework_location" ]];
 	then
 		ditto -c -k --sequesterRsrc --keepParent "$framework_location" "$dest".zip
-		logi "zip: ./${framework_name}.framework.zip"
+		logi "zip: ./${Framework_name}.framework.zip"
 	else
 		die "Cound not find any zipping framework: ${framework_location}"
 	fi
 }
 
-BUILD_CMD_SEMAPHORE=
-
-is_framework=false
-framework_name=
-show_progress=false
+Build_cmd_semaphore=
+Is_framework=false
+With_simulator=false
+Framework_name=
+Show_progress=false
+Distribution=
 
 while [ $# -ne 0 ];  do
 	arg=$1
 	shift
+
 	case $arg in
 	-h|--help) usage ;;
 	-c)
@@ -221,32 +276,46 @@ while [ $# -ne 0 ];  do
 		fin
 		;;
 	--progress)
-		show_progress=true
+		Show_progress=true
 		;;
 	--framework)
-		[[ $# != 0 ]] || usage
-		is_framework=true
-		framework_name="$1"
-		shift
+		Is_framework=true
+		;;
+	--with-simulator)
+		With_simulator=true
 		;;
 	*)
-		distribution=$arg
+		Distribution=$arg
+		;;
+	esac
+
+	case $arg in
+	--framework)
+		[[ $# != 0 ]] || continue
+		[[ ! "$1" =~ -.* ]] || continue
+		Framework_name="$1"
+		shift
 		;;
 	esac
 done
 
-[[ ${distribution:-undefined} != undefined ]] || usage
+[[ ${Distribution:-undefined} != undefined ]] || usage
 
 trap "teardown_build" EXIT INT TERM
-setup_build $distribution
-
+setup_build $Distribution
 
 rm -rf $PRODUCT_BUILD_ROOT
 mkdir -p $PRODUCT_BUILD_ROOT
 
-if $is_framework; then
-	build_framework "$framework_name"
+if [[ -z $Framework_name ]]; then
+	Framework_name=$PRODUCT_NAME;
+fi
 
+if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]] && [[ $Is_framework = true ]]; then
+	build_framework_with_static "$Framework_name"
+elif [[ $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
+	[[ $Is_framework != true ]] || die "'--framework' is applicable only for a static library product"
+	build_framework "$Framework_name"
 else
 	build_project "${scheme}" "${sdk}" "${configuration}"
 	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"

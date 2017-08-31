@@ -115,8 +115,7 @@ print_progress_time () {
 		if [[ $quiet == false ]]; then
 			# For a interrupt timing issue
 			# Retore tty and tput
-			trap "stty echo; \
-				tput cnorm >/dev/null; \
+			trap "stty echo; tput cnorm; \
 				__kill_bg_xcodebuid_task $XCODEBUILD_PID;" INT TERM EXIT
 
 			star="$BOLD"'\xE2\x88\x97'"$NC"
@@ -400,6 +399,7 @@ load_xcode_build_settings () {
 		-e "OBJROOT\|PUBLIC_HEADERS_FOLDER_PATH" \
 		-e "DWARF_DSYM_FILE_NAME\|DWARF_DSYM_FOLDER_PATH" \
 		-e "CURRENT_PROJECT_VERSION" \
+		-e "PRODUCT_TYPE" \
 		| while read line
 		do 
 			echo "export $line" >> "$xcode_settings_conf"

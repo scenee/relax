@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A2925871F53BFA300509B1F /* SampleLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A29258D1F53C3ED00509B1F /* Sample.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A29258C1F53C38B00509B1F /* Sample.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1A29258E1F53C3F100509B1F /* Sample.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A29258C1F53C38B00509B1F /* Sample.h */; };
 		1A29A7EC1DE5134C00E9E2DE /* SampleLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A29A7EB1DE5134C00E9E2DE /* SampleLib.m */; };
 		1A29A7ED1DE5134C00E9E2DE /* SampleLib.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */; };
 		1A3E89891DDFC39B00609422 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3E89881DDFC39B00609422 /* AppDelegate.swift */; };
@@ -24,6 +27,7 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
+				1A29258E1F53C3F100509B1F /* Sample.h in CopyFiles */,
 				1A29A7ED1DE5134C00E9E2DE /* SampleLib.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -31,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A29258C1F53C38B00509B1F /* Sample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sample.h; sourceTree = "<group>"; };
 		1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSampleLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleLib.h; sourceTree = "<group>"; };
 		1A29A7EB1DE5134C00E9E2DE /* SampleLib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleLib.m; sourceTree = "<group>"; };
@@ -74,6 +79,7 @@
 		1A29A7E91DE5134C00E9E2DE /* SampleLib */ = {
 			isa = PBXGroup;
 			children = (
+				1A29258C1F53C38B00509B1F /* Sample.h */,
 				1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */,
 				1A29A7EB1DE5134C00E9E2DE /* SampleLib.m */,
 			);
@@ -125,6 +131,15 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		1A2925861F53BF9800509B1F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A29258D1F53C3ED00509B1F /* Sample.h in Headers */,
+				1A2925871F53BFA300509B1F /* SampleLib.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1AF19FD91DE474E600C6318E /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -143,6 +158,7 @@
 				1A29A7E51DE5134B00E9E2DE /* Frameworks */,
 				1A29A7E41DE5134B00E9E2DE /* Sources */,
 				1A29A7E61DE5134B00E9E2DE /* CopyFiles */,
+				1A2925861F53BF9800509B1F /* Headers */,
 			);
 			buildRules = (
 			);
@@ -305,6 +321,7 @@
 		1A29A7EE1DE5134C00E9E2DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = J3D7L9FHSS;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -315,6 +332,7 @@
 		1A29A7EF1DE5134C00E9E2DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = J3D7L9FHSS;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
