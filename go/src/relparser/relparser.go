@@ -24,6 +24,7 @@ func get_source_line2(name string, key string, value interface{}) string {
 }
 
 type Relfile struct {
+	Version       string
 	Xcodeproj     string
 	Workspace     string
 	Uploader      map[string]interface{}
@@ -235,6 +236,10 @@ func main() {
 
 	if err = yaml.Unmarshal(data, &rel); err != nil {
 		logger.Fatalf("%v", err)
+	}
+
+	if rel.Version == "" || len(rel.Distributions) == 0 {
+		logger.Fatalf("Please update your Relfile format to 2.x. See https://github.com/SCENEE/relax#relfile")
 	}
 
 	if cmd == "" {
