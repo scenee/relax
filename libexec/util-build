@@ -381,7 +381,7 @@ load_xcode_build_settings () {
 		set -e
 
 		[[ -s "$xcode_settings_error" ]] && \
-			loge "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
+			logw "util-build.load_xcode_build_settings(): $(cat $xcode_settings_error)"
 
 		# Get ride of 'DeveloperPortal: Using pre-existing current store at URL'
 		cat "$xcode_settings_file" | tail -n +2 | \
