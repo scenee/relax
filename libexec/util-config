@@ -17,7 +17,7 @@ config_gen_plist () {
 	local base=$3
 	local out=$4
 	set +e
-	relparser -f "$relfile" -plist "$base" -o "$out" gen_plist "$dist" 2>"$stdtemp"
+	relparser -f "$relfile" -plist "$base" -o "$out" plist "$dist" 2>"$stdtemp"
 	if [[ $? != 0 ]]; then
 		printf "$ERR "; cat "${stdtemp}"
 		die "Failed to generate a info plist: $base -> $out"
@@ -60,7 +60,7 @@ _load_config() {
 	fi
 
 	set +e
-	relparser -f "$relfile" -o $out gen_source "$dist" 2>"$stdtemp"
+	relparser -f "$relfile" -o $out source "$dist" 2>"$stdtemp"
 	if [[ $? != 0 ]]; then
 		printf "$ERR "; cat "${stdtemp}"
 		die "Failed to parse $relfile"
