@@ -64,10 +64,10 @@ list_keychain () {
 
 # is_exist_keychain <keychain>
 is_exist_keychain () {
-	if ls $USER_KEYCHAINS/"$1"* 2>/dev/null | grep -q "$1"; then
+	if ls $USER_KEYCHAINS/"$1"* 2>/dev/null | grep -q "$1\(-db\)*$"; then
 		return 0;
 	fi
-	if ls $SYSTEM_KEYCHAINS/"$1"* 2>/dev/null | grep -q "$1"; then
+	if ls $SYSTEM_KEYCHAINS/"$1"* 2>/dev/null | grep -q "$1\(-db\)*$"; then
 		return 0;
 	fi
 	return 1;
