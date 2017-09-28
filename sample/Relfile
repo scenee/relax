@@ -19,81 +19,76 @@ uploader:
 
 distributions:
   development:
-    sdk: iphoneos
-    scheme: Sample App # Required
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "$PROVISION_PROFILE_DEV"
     configuration: Debug
-    team_id: J3D7L9FHSS
-
     bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
     bundle_version:  "%h-%c"
-
     build_settings:
       OTHER_SWIFT_FLAGS: 
         - "-DMOCK"
       OTHER_LINKER_FLAGS:
         - "$(inherited)"
         - "-ObjC"
-
     info_plist:
       CFBundleName: Sample (Debug)
       CFBundleDevelopmentRegion: $COUNTRY
       UISupportedExternalAccessoryProtocols:
         - com.example.SampleApp
         - com.example.SampleApp2
-
     export_options:
       method: development # Required
-      provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
       compileBitcode: false
 
   development2:
+    sdk: iphoneos
     scheme: Sample App
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "$PROVISION_PROFILE_DEV"
     configuration: Debug
-
     version: "$VERSION"
-
     bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
     bundle_version: "%h-debug-internal"
-
     export_options:
       method: development # Required
-      provisioning_profile: "$PROVISION_PROFILE_DEV"
       compileBitcode: false
 
   adhoc:
-    scheme: Sample App
-    team_id: J3D7L9FHSS
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "$PROVISION_PROFILE_ADHOC"
     export_options:
       method: ad-hoc 
       thinning : iPhone7,1
-      provisioning_profile: "$PROVISION_PROFILE_ADHOC"
       compileBitcode: false
 
   enterprise:
-    scheme: Sample App
+    scheme: Sample App  # Required
+    team_id: ABCDEFGHIJ  # Required
     bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
     bundle_version:  "%h-%C"
-    team_id: XXXXXXXXXX # Please replace your enterpise team id.
     export_options:
       method: enterprise
 
   appstore:
-    scheme: Sample App
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "Relax AppStore"
     export_options:
       method: appstore
       upload_symbols: true
-      provisioning_profile: "Relax AppStore"
       #uploadSymbols: true
       #uploadBitcode: true
 
   framework:
-    scheme: SampleFramework
+    scheme: SampleFramework  # Required
     build_settings:
       OTHER_C_FLAGS:
         - "-fembed-bitcode"
         - "-fsanitize=address"
 
   staticlib:
-    scheme: SampleLib
+    scheme: SampleLib  # Required
 
 # vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :
