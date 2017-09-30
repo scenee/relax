@@ -46,6 +46,17 @@ teardown () {
 	! grep ".*Error:.*hello"  ${stdout_path}
 }
 
+@test "logw" {
+
+	logw "hello" 2>${stderr_path}
+
+	grep ".*WARNING:.*hello"  ${stderr_path}
+
+	logw "hello" 1>${stdout_path}
+
+	! grep ".*WARNING:.*hello"  ${stdout_path}
+}
+
 #@test "die(stdin)" {
 #	run die_stdin
 #	assert_failure
