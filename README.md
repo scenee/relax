@@ -260,14 +260,18 @@ The characters and their meanings are as follows.
 
 ## Export Option Support
 
-| Option | Response status |
-|:---------|:-------|
-| method | OK |
-| uploadSymbols | OK |
-| compileBitcode | OK |
-| team_id | OK(Automatic assigned) |
-| thinning | OK |
-| embedOnDemandResourcesAssetPacksInBundle | Not yet |
-| manifest | Not yet |
-| onDemandResourcesAssetPacksBaseURL | Not yet |
-| iCloudContainerEnvironment | Not yet |
+| Option                                   | Response status                                           |
+| :--------------------------------------- | :-------------------------------------------------------- |
+| compileBitcode                           | OK                                                        |
+| embedOnDemandResourcesAssetPacksInBundle | Not yet                                                   |
+| iCloudContainerEnvironment               | Not yet                                                   |
+| manifest                                 | Not yet                                                   |
+| method                                   | OK                                                        |
+| onDemandResourcesAssetPacksBaseURL       | Not yet                                                   |
+| teamID                                   | Applied `team_id` prop in Relfile                         |
+| provisioningProfiles                     | Generated from `provisioning_profile` prop in Relfile     |
+| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' |
+| signingStyle                             | Auto-assigned 'automatic' or 'manual'                     |
+| thinning                                 | OK                                                        |
+| uploadBitcode                            | OK                                                        |
+| uploadSymbols                            | OK                                                        |
