@@ -4,8 +4,8 @@ build:
 		>/dev/null pushd go; \
 		go get github.com/DHowett/go-plist; \
 		go get gopkg.in/yaml.v2; \
-		go install relparser; \
-		go install lspp; \
+		go install -a relparser; \
+		go install -a lspp; \
 		popd > /dev/null;
 
 .PHONY: test
