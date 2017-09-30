@@ -57,7 +57,7 @@ distributions:
   adhoc:
     scheme: Sample App  # Required
     team_id: J3D7L9FHSS  # Required
-    provisioning_profile: "$PROVISION_PROFILE_ADHOC"
+    provisioning_profile: "${PROVISION_PROFILE_ADHOC}"
     export_options:
       method: ad-hoc 
       thinning : iPhone7,1

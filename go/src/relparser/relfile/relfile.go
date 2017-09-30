@@ -21,7 +21,7 @@ func LoadRelfile(path string) (*Relfile, error) {
 		rel    Relfile
 	)
 
-	c = exec.Command("envsubst")
+	c = exec.Command("perl", "-pe", `s/\$(\{)?([a-zA-Z_]\w*)(?(1)\})/$ENV{$2}/g`)
 
 	f, err = os.Open(path)
 	if err != nil {
