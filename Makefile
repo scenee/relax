@@ -1,14 +1,11 @@
 .PHONY: build
 build:
-	@cd go; \
-		export GOPATH=$$PWD; \
+	@export GOPATH=$$PWD/go; \
+		>/dev/null pushd go; \
 		go get github.com/DHowett/go-plist; \
 		go get gopkg.in/yaml.v2; \
-		pushd src/relparser >/dev/null; \
-		go install; \
-		popd > /dev/null; \
-		pushd src/lspp >/dev/null; \
-		go install; \
+		go install -a relparser; \
+		go install -a lspp; \
 		popd > /dev/null;
 
 .PHONY: test

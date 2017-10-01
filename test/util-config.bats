@@ -28,13 +28,3 @@ load test_helper
 
 	[ "${#lines[@]}" = 7 ]
 }
-
-
-@test "relparser gen_source" {
-	run $LIBEXEC_PATH/relparser -o $TMPDIR/source gen_source adhoc
-	assert_success
-	source $TMPDIR/source
-	[ "$REL_CONFIG_xcodeproj" = "SampleApp" ] \
-	&& [ "$REL_CONFIG_adhoc_scheme" = "Sample App" ] \
-	&& [ "$REL_CONFIG_adhoc_export_options_thinning" = "iPhone7,1" ]
-}

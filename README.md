@@ -174,59 +174,52 @@ workspace: SampleApp
 
 log_formatter: xcpretty
 uploader:
-    crashlytics:
-      token:  __MY_TOKEN__
-      secret: __MY_SECRET__
-      group:  __MY_GROUP__
+  crashlytics:
+    token:  __MY_TOKEN__
+    secret: __MY_SECRET__
+    group:  __MY_GROUP__
 
 # Define a distribution
 distributions:
-    adhoc: 
-      scheme: SampleApp
+  adhoc: 
+    scheme: SampleApp
+    team_id: ABCDEFGHIJ
+    provisioning_profile: "Relax Adhoc"
+    configuration: Debug
+    version: 0.1.0
+    bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
+    bundle_identifier: com.scenee.SampleApp.adhoc
+    build_settings:
+      OTHER_SWIFT_FLAGS:
+        - "-DMOCK"
+        - "-DDEBUG" 
+      OTHER_C_FLAGS:
+        - "-fsanitize=address"
+    # You can override Info.plist settings for a distribution
+    info_plist: 
+      CFBundleName: "SmapleApp(Debug)"
+      UISupportedExternalAccessoryProtocols:
+        - com.example.test-accessory
+    export_options:
+      method:  ad-hoc
+      compileBitcode: false
 
-      team_id: __MY_COMPANY_TEAM_ID__ # Fill in your team ID if needed
+  appstore:
+    scheme: SampleApp
+    team_id: ABCDEFGHIJ
+    provisioning_profile: "Relax AppStore"
+    version: 1.0
+    bundle_version: "$BUILD_NUMBER" # You can use shell environment variables!
+    bundle_identifier: com.scenee.SampleApp
+    info_plist:
+      UISupportedExternalAccessoryProtocols:
+        - com.example.accessory
+    export_options:
+      method:  appstore
 
-      configuration: "$CONFIG" # Yes, You can use shell environment variables!
-      version: 0.1.0
-      bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
-
-      build_settings:
-        SWIFT_VERSION: 3.0
-        OTHER_SWIFT_FLAGS:
-          - "-DMOCK"
-          - "-DDEBUG" 
-        OTHER_C_FLAGS:
-          - "-fsanitize=address"
-      # Override Info.plist settings for this distribution
-      info_plist: 
-        CFBundleName: "SmapleApp($CONFIG)"
-        UISupportedExternalAccessoryProtocols:
-          - com.example.test-accessory
-
-      export_options:
-        method:  ad-hoc
-
-    appstore:
-      scheme: SampleApp
-
-      team_id: __MY_COMPANY_TEAM_ID__
-
-      version: 1.0
-      bundle_version: "$BUILD_NUMBER"
-
-      build_settings:
-        SWIFT_VERSION: 3.0
-
-      info_plist:
-        UISupportedExternalAccessoryProtocols:
-          - com.example.accessory
-
-      export_options:
-        method:  appstore
-
-    framework:
-      scheme: Sample Framework
-      configuration: Release
+  framework:
+    scheme: Sample Framework
+    configuration: Release
 ```
 
 ## Use an Environment variable
@@ -267,14 +260,18 @@ The characters and their meanings are as follows.
 
 ## Export Option Support
 
-| Option | Response status |
-|:---------|:-------|
-| method | OK |
-| uploadSymbols | OK |
-| compileBitcode | OK |
-| team_id | OK(Automatic assigned) |
-| thinning | OK |
-| embedOnDemandResourcesAssetPacksInBundle | Not yet |
-| manifest | Not yet |
-| onDemandResourcesAssetPacksBaseURL | Not yet |
-| iCloudContainerEnvironment | Not yet |
+| Option                                   | Response status                                           |
+| :--------------------------------------- | :-------------------------------------------------------- |
+| compileBitcode                           | OK                                                        |
+| embedOnDemandResourcesAssetPacksInBundle | Not yet                                                   |
+| iCloudContainerEnvironment               | Not yet                                                   |
+| manifest                                 | Not yet                                                   |
+| method                                   | OK                                                        |
+| onDemandResourcesAssetPacksBaseURL       | Not yet                                                   |
+| teamID                                   | Applied `team_id` prop in Relfile                         |
+| provisioningProfiles                     | Generated from `provisioning_profile` prop in Relfile     |
+| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' |
+| signingStyle                             | Auto-assigned 'automatic' or 'manual'                     |
+| thinning                                 | OK                                                        |
+| uploadBitcode                            | OK                                                        |
+| uploadSymbols                            | OK                                                        |

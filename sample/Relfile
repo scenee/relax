@@ -19,12 +19,11 @@ uploader:
 
 distributions:
   development:
-    scheme: Sample App # Required
-    sdk: iphoneos
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "$PROVISION_PROFILE_DEV"
     configuration: Debug
-    provisioning_profile: "$PROVISION_PROFILE_DEV" # You don't need to use the Environment variable. This's just for test.
-    team_id: J3D7L9FHSS
-    bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
+    bundle_identifier: com.scenee.SampleApp
     bundle_version:  "%h-%c"
     build_settings:
       OTHER_SWIFT_FLAGS: 
@@ -32,44 +31,49 @@ distributions:
       OTHER_LINKER_FLAGS:
         - "$(inherited)"
         - "-ObjC"
-    export_options:
-      method: development # Required
-      compileBitcode: false
     info_plist:
       CFBundleName: Sample (Debug)
       CFBundleDevelopmentRegion: $COUNTRY
       UISupportedExternalAccessoryProtocols:
         - com.example.SampleApp
         - com.example.SampleApp2
+    export_options:
+      method: development # Required
+      compileBitcode: false
 
   development2:
+    sdk: iphoneos
     scheme: Sample App
-    bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "$PROVISION_PROFILE_DEV"
     configuration: Debug
     version: "$VERSION"
+    bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
     bundle_version: "%h-debug-internal"
-    provisioning_profile: "$PROVISION_PROFILE_DEV"
     export_options:
-      method: development
+      method: development # Required
+      compileBitcode: false
 
   adhoc:
-    scheme: Sample App
-    provisioning_profile: "$PROVISION_PROFILE_ADHOC"
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
+    provisioning_profile: "${PROVISION_PROFILE_ADHOC}"
     export_options:
       method: ad-hoc 
       thinning : iPhone7,1
       compileBitcode: false
 
   enterprise:
-    scheme: Sample App
-    bundle_identifier: com.scenee.SampleApp # Please replace your valid identifier.
+    scheme: Sample App  # Required
+    team_id: ABCDEFGHIJ  # Required
+    bundle_identifier: com.scenee.SampleApp
     bundle_version:  "%h-%C"
-    team_id: XXXXXXXXXX # Please replace your enterpise team id.
     export_options:
       method: enterprise
 
   appstore:
-    scheme: Sample App
+    scheme: Sample App  # Required
+    team_id: J3D7L9FHSS  # Required
     provisioning_profile: "Relax AppStore"
     export_options:
       method: appstore
@@ -78,13 +82,13 @@ distributions:
       #uploadBitcode: true
 
   framework:
-    scheme: SampleFramework
+    scheme: SampleFramework  # Required
     build_settings:
       OTHER_C_FLAGS:
         - "-fembed-bitcode"
         - "-fsanitize=address"
 
   staticlib:
-    scheme: SampleLib
+    scheme: SampleLib  # Required
 
-# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :¬
+# vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :
