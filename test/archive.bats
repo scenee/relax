@@ -37,7 +37,7 @@ load test_helper
 @test "relax archive adhoc" {
   run  relax archive adhoc
   assert_success
-  [[ "${lines[${#lines[@]}-4]}" =~ "iPhone Distribution: Shin Yamamoto" ]]
+  [[ "${lines[${#lines[@]}-4]}" =~ "iPhone Distribution" ]]
 }
 
 

@@ -309,28 +309,32 @@ get_build_params_file () {
 
 	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
-	if [[ -n $provisioning_profile ]]; then
+	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
 		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
+
+		if is_xcode_version ">=" 8; then
+			build_params+=( CODE_SIGN_STYLE="Manual" )
+		fi
+
 		local mobileprovision=$(find_mobileprovision --latest "$provisioning_profile")
 		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
 
-
 		# Should use development signing for archive. Refer to this session,
 		# https://developer.apple.com/videos/play/wwdc2016/401/.
-		# But it's not working when exporint ana adhoc IPA file.
+		# But it's not working when exporing an adhoc IPA file.
 		# I confirmed It's working well in Xcode 7.3.1.
-		local codesign_type;
+		local sign_identity;
 		if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
-			codesign_type="iPhone Distribution"
+			sign_identity="iPhone Distribution"
 		else
-			codesign_type="iPhone Developer"
+			sign_identity="iPhone Developer"
 		fi
 
-		local temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
-		dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
-		local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$temp_mobileprovision")
-
-		build_params+=( CODE_SIGN_IDENTITY="$codesign_type: $team_name" )
+		# local temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
+		# dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
+		# local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$temp_mobileprovision")
+		# build_params+=( CODE_SIGN_IDENTITY="$sign_identity: $team_name" )
+		build_params+=( CODE_SIGN_IDENTITY="$sign_identity" )
 	else
 		build_params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
 	fi
@@ -621,13 +625,11 @@ setup_build () {
 	logi "Bundle Identifier: $PRODUCT_BUNDLE_IDENTIFIER"
 
 	## Provisioning Profile
-	if [[ -n $provisioning_profile ]]; then
-		# Custom Sigining
-		# TODO: When the project isn't automatic signing
+	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
 		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
 			sed -i .$BAK_EXT \
 			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-			"$PROJECT_FILE_PATH"/project.pbxproj 
+			"$PROJECT_FILE_PATH"/project.pbxproj
 		else
 			s='[[:space:] ]*'
 			sed -i .$BAK_EXT \
