@@ -310,9 +310,10 @@ get_build_params_file () {
 	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
 	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
-		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
-
 		if is_xcode_version ">=" 8; then
+			build_params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
+		fi
+		if is_xcode_version ">=" 9; then
 			build_params+=( CODE_SIGN_STYLE="Manual" )
 		fi
 
@@ -626,18 +627,20 @@ setup_build () {
 
 	## Provisioning Profile
 	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
-		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-			sed -i .$BAK_EXT \
-			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-			"$PROJECT_FILE_PATH"/project.pbxproj
-		else
-			s='[[:space:] ]*'
-			sed -i .$BAK_EXT \
-			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
-			\1ProvisioningStyle = Manual;\
-			/" "$PROJECT_FILE_PATH"/project.pbxproj 
+		if is_xcode_version ">=" 8; then
+			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+				sed -i .$BAK_EXT \
+				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+				"$PROJECT_FILE_PATH"/project.pbxproj
+			else
+				s='[[:space:] ]*'
+				sed -i .$BAK_EXT \
+				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+				\1ProvisioningStyle = Manual;\
+				/" "$PROJECT_FILE_PATH"/project.pbxproj 
+			fi
+			logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
 		fi
-		logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
 	fi
 
 	if [[ ${version:-undefined} == undefined ]]; then
