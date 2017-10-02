@@ -419,6 +419,18 @@ print_xcode_version() {
 	xcodebuild -version | head -n 1 | awk '{ print  $2 }'
 }
 
+# check_xcode_version <operator> <version>
+# For example: is_xcode_version "<=" 8
+is_xcode_version() {
+	local op="$1"
+	local target="$2"
+	local xcode_version="$(print_xcode_version)"
+	if [[ $(echo "${xcode_version%%.*} $op $target" | bc) == 1 ]]; then
+		return 0;
+	else
+		return 1;
+	fi
+}
 
 get_info_plist_value () {
 	local path=$1
@@ -730,7 +742,8 @@ declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team __setup_build_params
 declare -x -f load_xcode_build_settings get_build_params_file
-declare -x -f get_info_plist_value print_info_plist print_xcode_version
+declare -x -f get_info_plist_value print_info_plist
+declare -x -f print_xcode_version is_xcode_version
 declare -x -f setup_build teardown_build
 declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
