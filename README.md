@@ -2,20 +2,18 @@
 
 # Relax
 
-Relax is a declarative release management tool for iOS App distributions.
+Relax is a declarative release tool for iOS App distributions that encourages rapid distribution.
 
-You don't need to write the same build scripts any more when you deliver your great apps.
-Relax will save your time. You just write a declarative configuration file to make ipa files.
+You don't need to write the same build script any more when you deliver your apps. Relax will save your time. You just write a declarative configuration file(aka. Relfile) for the distributions.
 
-It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism.
-Relax takes care of much of the hassle of them. so you can focus on development.
+It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
 
 Relax can
 
-- **Easy to manage** multi distributions(i.e. adhoc, enterprise & appstore) with each code signing
+- **Easy to release** multi distributions(i.e. adhoc, enterprise & appstore) with each build settings like code signing, bundle id and bundle version, etc.
 - **Validate an ipa** to check if it has a correct codesign, a mobileprovision and entitlements
-- **Set up a custom keychain** not to depend on a keychain settings in a build machine
 - **Resign an ipa** for a ditribution with a different bundle identifier, cetificate and provisioning profile
+- **Set up a custom keychain** not to depend on a keychain settings in a build machine
 
 In background, it works as below.
 
@@ -52,110 +50,62 @@ including keychain and provisionig profiles.
 
 For example, it's easy to manage a build server with a provisioning tool like Ansible.
 
-## Development 
-
-
-Golang Environment
-
-```bash
-cd go
-export GOPATH=$PWD
-export GOBIN=$GOPATH/bin
-```
-
-# What's different from GYM?
-
-- Multi disbribution management
-- Focus on use cases on a macOS build machine
-- Less dependancies 
-- Support ipa resign and validation
-- Support keychain managment
-
-# Known Issues
-
-- Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
-- Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
-- `stty: stdin isn't a terminal` can be printed on a CI build server, but Relax is working well.
-
 # Getting Started
 
-## Quick start
-
-### Set up Relfile
+## Set up Relfile
 
 ```bash
 $ cd /path/to/your/project
 $ relax init
 ```
 
-### Archive and Export
+## Archive and Export
 
 ```bash
 # Build a xcarchive file
-$ relax -v archive adhoc
 # `xcodebuild` stdout is always written to a log file.
 # If you would like to print logs in your console, please use with '-v' option.
+$ relax -v archive dev
 
 # Print a path to a built archive
-$ relax show adhoc archive
+$ relax show dev archive
 
 # Export an ipa file
-$ relax export adhoc
 # Relax can export it on a different team and certificate from one signed xcarchive.
+$ relax export dev
 
 # Print a path to a exported ipa file
-$ relax show adhoc ipa
+$ relax show dev ipa
 ```
 
-### Validate the ipa
+## Validate the ipa
 
 ```bash
 # Validate the ipa file
-$ relax validate "$(relax show adhoc ipa)"
+$ relax validate "$(relax show dev ipa)"
 ```
 
-### Upload it
+## Upload ipa
 
 ```bash
 # Upload the ipa file (Need to add a token and secret in Relfile)
-$ relax upload crashlytics "$(relax show adhoc ipa)"
+$ relax upload crashlytics "$(relax show dev ipa)"
 
 ```
 
-### Resign an ipa for an enterprise distribution
+## Resign an ipa for an enterprise distribution
 
 ```bash
 
-$ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show adhoc ipa)"
+$ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show dev ipa)"
 $ relax validate SampleApp-resigned.ipa
 ```
 
-### Symbolicate a crash log
+## Symbolicate a crash log
 
 ```bash
 $ relax symbolicate sampleapp.crash SampleApp.xcarchive
 ```
-
-## Commands
-
-```bash
-$ relax commands
-```
-
-## Modules
-
-```bash
-$ relax commands --modules
-```
-
-### Keychain
-
-The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
-Actually this is an usefull wrapper of `security` command.
-
-### Profile (Provisioning Profile)
-
-The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
 
 # Relfile
 
@@ -179,24 +129,23 @@ uploader:
     secret: __MY_SECRET__
     group:  __MY_GROUP__
 
-# Define a distribution
-distributions:
-  adhoc: 
+
+distributions:  # Define a distribution
+  dev:
     scheme: SampleApp
     team_id: ABCDEFGHIJ
     provisioning_profile: "Relax Adhoc"
     configuration: Debug
     version: 0.1.0
-    bundle_version: "%b-%h-$c" # See 'Bundle Version Format section'
-    bundle_identifier: com.scenee.SampleApp.adhoc
+    bundle_version: "%b-%h-$c"  # See 'Bundle Version Format section'
+    bundle_identifier: com.scenee.SampleApp.dev
     build_settings:
       OTHER_SWIFT_FLAGS:
         - "-DMOCK"
         - "-DDEBUG" 
       OTHER_C_FLAGS:
         - "-fsanitize=address"
-    # You can override Info.plist settings for a distribution
-    info_plist: 
+    info_plist:
       CFBundleName: "SmapleApp(Debug)"
       UISupportedExternalAccessoryProtocols:
         - com.example.test-accessory
@@ -204,12 +153,12 @@ distributions:
       method:  ad-hoc
       compileBitcode: false
 
-  appstore:
+  prod:
     scheme: SampleApp
     team_id: ABCDEFGHIJ
     provisioning_profile: "Relax AppStore"
     version: 1.0
-    bundle_version: "$BUILD_NUMBER" # You can use shell environment variables!
+    bundle_version: "$BUILD_NUMBER"  # You can use shell environment variables!
     bundle_identifier: com.scenee.SampleApp
     info_plist:
       UISupportedExternalAccessoryProtocols:
@@ -275,3 +224,29 @@ The characters and their meanings are as follows.
 | thinning                                 | OK                                                        |
 | uploadBitcode                            | OK                                                        |
 | uploadSymbols                            | OK                                                        |
+
+# CI Utilities
+
+## relax keychain
+
+The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
+Actually this is an usefull wrapper of `security` command.
+
+## relax profile
+
+The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
+
+
+# What's different from GYM?
+
+- Multi disbribution management
+- Focus on use cases on a macOS build machine
+- Less dependancies 
+- Support ipa resign and validation
+- Support keychain managment
+
+# Known Issues
+
+- Homebrew(0.9.x) failed to update Relax. Please use Homebrew(1.1.2+) with `brewe update`.
+- Relax hasn't yet support Carthage. If you use it, Relax might not be working well. I'm glad for you to make a pull request to support it!
+- `stty: stdin isn't a terminal` can be printed on a CI build server, but Relax is working well.
