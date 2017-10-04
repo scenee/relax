@@ -92,6 +92,7 @@ export_archive () {
 			-plist "$archive_path/Info.plist"  \
 			export_options $distribution
 		cat $EXPORT_OPTIONS_PLIST
+		printf "\n"
 	fi
 
 	if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$team_id"; then
