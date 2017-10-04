@@ -8,6 +8,8 @@ usage () {
 	fin
 }
 
+RELFILE_VERSION=2
+
 generate_relfile () {
 	logi "$ARROW Creating Relfile"
 
@@ -18,7 +20,7 @@ generate_relfile () {
 	
 	EOF
 
-	echo 'version: "2"' >> $REL_TEMP_DIR/Relfile
+	echo 'version: '${RELFILE_VERSION}'' >> $REL_TEMP_DIR/Relfile
 	# Check xcworkproj existance
 	if ls | grep xcworkspace > /dev/null; then
 		workspace=$(ls | grep xcworkspace)

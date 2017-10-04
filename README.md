@@ -118,7 +118,7 @@ An example of Relfile is as below.
 And also check [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 ```yaml
-version: 2
+version: '2'
 
 workspace: SampleApp
 
