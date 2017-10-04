@@ -258,7 +258,7 @@ __check_scheme () {
 	if xcodebuild "${build_params[@]}" -list | sed -n '/Schemes/,$ p' | grep "$1" > /dev/null; then
 		:
 	else
-		die "Not found '$1' scheme in your project. You might need to make it shared by checking 'Shared' box"
+		die "Not found '$1' scheme. Please have your scheme 'Shared' and add 'xcshareddata' folder in your SCM."
 	fi
 }
 
