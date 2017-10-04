@@ -66,6 +66,7 @@ generate_relfile () {
 	    scheme: ${scheme}
 	    export_options:
 	      method: ad-hoc
+	      compileBitcode: false
 
 	  appstore:
 	    scheme: ${scheme}
