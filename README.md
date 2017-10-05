@@ -65,31 +65,31 @@ $ relax init
 # Build a xcarchive file
 # `xcodebuild` stdout is always written to a log file.
 # If you would like to print logs in your console, please use with '-v' option.
-$ relax -v archive dev
+$ relax -v archive adhoc
 
 # Print a path to a built archive
-$ relax show dev archive
+$ relax show adhoc archive
 
 # Export an ipa file
 # Relax can export it on a different team and certificate from one signed xcarchive.
-$ relax export dev
+$ relax export adhoc
 
 # Print a path to a exported ipa file
-$ relax show dev ipa
+$ relax show adhoc ipa
 ```
 
 ## Validate the ipa
 
 ```bash
 # Validate the ipa file
-$ relax validate "$(relax show dev ipa)"
+$ relax validate "$(relax show adhoc ipa)"
 ```
 
 ## Upload ipa
 
 ```bash
 # Upload the ipa file (Need to add a token and secret in Relfile)
-$ relax upload crashlytics "$(relax show dev ipa)"
+$ relax upload crashlytics "$(relax show adhoc ipa)"
 
 ```
 
@@ -131,29 +131,33 @@ uploader:
 
 
 distributions:  # Define a distribution
-  dev:
+  adhoc:
     scheme: SampleApp
     team_id: ABCDEFGHIJ
     provisioning_profile: "Relax Adhoc"
     configuration: Debug
     version: 0.1.0
     bundle_version: "%b-%h-$c"  # See 'Bundle Version Format section'
-    bundle_identifier: com.scenee.SampleApp.dev
+    bundle_identifier: com.scenee.SampleApp.adhoc
+    info_plist:
+      CFBundleName: "SmapleApp(Debug)"
+      UISupportedExternalAccessoryProtocols:
+        - com.example.test-accessory
     build_settings:
       OTHER_SWIFT_FLAGS:
         - "-DMOCK"
         - "-DDEBUG" 
       OTHER_C_FLAGS:
         - "-fsanitize=address"
-    info_plist:
-      CFBundleName: "SmapleApp(Debug)"
-      UISupportedExternalAccessoryProtocols:
-        - com.example.test-accessory
+    build_options:
+      enableAddressSanitizer: true
+      enableThreadSanitizer: true
+      enableUndefinedBehaviorSanitizer: true
     export_options:
       method:  ad-hoc
       compileBitcode: false
 
-  prod:
+  appstore:
     scheme: SampleApp
     team_id: ABCDEFGHIJ
     provisioning_profile: "Relax AppStore"

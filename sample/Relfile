@@ -40,6 +40,7 @@ distributions:
     build_options:
       enableAddressSanitizer: true
       enableThreadSanitizer: true
+      enableUndefinedBehaviorSanitizer: true
       # toolchain: <toolchain_name>
       # xcconfig: <xcconfig_path>
     export_options:
