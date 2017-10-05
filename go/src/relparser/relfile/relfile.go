@@ -133,3 +133,8 @@ func (r Relfile) writeSource(out *os.File) {
 		logger.Fatal(err)
 	}
 }
+
+func (r Relfile) PrintBuildOptions(dist string) {
+	d := r.Distributions[dist]
+	d.Build_options.PrintBuildOptions()
+}

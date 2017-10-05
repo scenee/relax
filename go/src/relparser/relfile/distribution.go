@@ -15,13 +15,14 @@ type Distribution struct {
 	Sdk                  string
 	Scheme               string
 	Team_id              string
+	Provisioning_profile string
 	Configuration        string
-	Bundle_identifier    string
-	Bundle_version       string
 	Version              string
+	Bundle_version       string
+	Bundle_identifier    string
 	Build_settings       map[string]interface{}
 	Info_plist           map[string]interface{}
-	Provisioning_profile string
+	Build_options        BuildOptions
 	Export_options       ExportOptions
 }
 
