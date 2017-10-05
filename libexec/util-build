@@ -258,7 +258,7 @@ __check_scheme () {
 	if xcodebuild "${build_params[@]}" -list | sed -n '/Schemes/,$ p' | grep "$1" > /dev/null; then
 		:
 	else
-		die "Not found '$1' scheme in your project. You might need to make it shared by checking 'Shared' box"
+		die "Not found '$1' scheme. Please have your scheme 'Shared' and add 'xcshareddata' folder in your SCM."
 	fi
 }
 
@@ -625,24 +625,6 @@ setup_build () {
 
 	logi "Bundle Identifier: $PRODUCT_BUNDLE_IDENTIFIER"
 
-	## Provisioning Profile
-	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
-		if is_xcode_version ">=" 8; then
-			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-				sed -i .$BAK_EXT \
-				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-				"$PROJECT_FILE_PATH"/project.pbxproj
-			else
-				s='[[:space:] ]*'
-				sed -i .$BAK_EXT \
-				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
-				\1ProvisioningStyle = Manual;\
-				/" "$PROJECT_FILE_PATH"/project.pbxproj 
-			fi
-			logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
-		fi
-	fi
-
 	if [[ ${version:-undefined} == undefined ]]; then
 		BUNDLE_SHORT_VERSION="$(get_info_plist_value ":CFBundleShortVersionString" "$INFO_PLIST_PATH")"
 	else
@@ -693,6 +675,24 @@ setup_build () {
 	PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release")
 	logi "Build Root: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
+
+	## Provisioning Profile
+	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
+		if is_xcode_version ">=" 8; then
+			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+				sed -i .$BAK_EXT \
+				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+				"$PROJECT_FILE_PATH"/project.pbxproj
+			else
+				s='[[:space:] ]*'
+				sed -i .$BAK_EXT \
+				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+				\1ProvisioningStyle = Manual;\
+				/" "$PROJECT_FILE_PATH"/project.pbxproj 
+			fi
+			logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
+		fi
+	fi
 }
 
 

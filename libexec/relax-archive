@@ -49,8 +49,8 @@ make_archive () {
 	### Update 'Configuration' in a xcscheme ###
 	XCSCHEME_PATH="$(__find_xcscheme "$scheme")"
 	if [[ -n "$XCSCHEME_PATH" ]]; then
-		logi "Scheme: $XCSCHEME_PATH"
 		set_archive_config "$XCSCHEME_PATH" "$configuration"
+		logi "Scheme: $XCSCHEME_PATH"
 		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##*/}"
 	fi
 
