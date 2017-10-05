@@ -25,3 +25,15 @@ load test_helper
 	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :compileBitcode" $TMPDIR/options.plist)" == "false" ] \
 	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :uploadBitcode" $TMPDIR/options.plist)" == "true" ] 
 }
+
+@test "relparser build_options" {
+	run $LIBEXEC_PATH/relparser build_options development
+	assert_success
+
+	[[ "${lines[0]}"  == "-enableAddressSanitizer" ]] \
+	&& [[ "${lines[1]}" == "YES" ]] \
+	&& [[ "${lines[2]}" == "-enableThreadSanitizer" ]] \
+	&& [[ "${lines[3]}" == "YES" ]] \
+	&& [[ "${lines[4]}" == "-enableUndefinedBehaviorSanitizer" ]] \
+	&& [[ "${lines[5]}" == "YES" ]]
+}
