@@ -70,6 +70,9 @@ make_archive () {
 	fi
 
 	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -archivePath "$archive_path")
+
+	relparser -f "$REL_CONFIG_PATH" build_options "$distribution" >> "$params_file"
+
 	while read p; do params+=( "$p" ); done < $params_file
 
 	# See https://developer.apple.com/library/content/technotes/tn2215/_index.html

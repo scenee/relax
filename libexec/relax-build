@@ -28,6 +28,9 @@ build_project () {
 
 	local params=()
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
+
+	relparser -f "$REL_CONFIG_PATH" build_options "$Distribution" >> $params_file
+
 	while read p; do params+=( "$p" ); done < $params_file
 
 	local build_suffix=$(echo "${_configuration}-${_sdk}")
