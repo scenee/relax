@@ -29,9 +29,8 @@ build_project () {
 	local params=()
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
 
-	relparser -f "$REL_CONFIG_PATH" build_options "$Distribution" >> $params_file
-
 	while read p; do params+=( "$p" ); done < $params_file
+	while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$Distribution")
 
 	local build_suffix=$(echo "${_configuration}-${_sdk}")
 	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
@@ -66,7 +65,7 @@ build_project () {
 	load_xcode_build_settings "$params_file"
 
 	local product_path=$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME
-	logi "Built Product: $product_path"
+	logv "Built Product: $product_path"
 
 	ls "$BUILT_PRODUCTS_DIR" | logd
 
