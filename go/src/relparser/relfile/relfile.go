@@ -48,12 +48,12 @@ func LoadRelfile(path string) (*Relfile, error) {
 //
 
 type Relfile struct {
-	Version       string
-	Xcodeproj     string
-	Workspace     string
-	Uploader      map[string]interface{}
-	Log_formatter string
-	Distributions map[string]Distribution
+	Version       string                  `yaml:"version"`
+	Xcodeproj     string                  `yaml:"xcodeproj"`
+	Workspace     string                  `yaml:"workspace"`
+	Uploader      map[string]interface{}  `yaml:"uploader"`
+	LogFormatter  string                  `yaml:"log_formatter"`
+	Distributions map[string]Distribution `yaml:"distributions"`
 }
 
 func (r Relfile) List() {
@@ -118,7 +118,7 @@ func (r Relfile) writeSource(out *os.File) {
 
 	source += genSourceline("xcodeproj", r.Xcodeproj)
 	source += genSourceline("workspace", r.Workspace)
-	source += genSourceline("log_formatter", r.Log_formatter)
+	source += genSourceline("log_formatter", r.LogFormatter)
 
 	for k, v := range r.Uploader {
 		up := v.(map[interface{}]interface{})
@@ -132,4 +132,9 @@ func (r Relfile) writeSource(out *os.File) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+}
+
+func (r Relfile) PrintBuildOptions(dist string) {
+	d := r.Distributions[dist]
+	d.BuildOptions.PrintBuildOptions()
 }

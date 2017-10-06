@@ -25,18 +25,24 @@ distributions:
     configuration: Debug
     bundle_identifier: com.scenee.SampleApp
     bundle_version:  "%h-%c"
-    build_settings:
-      OTHER_SWIFT_FLAGS: 
-        - "-DMOCK"
-      OTHER_LINKER_FLAGS:
-        - "$(inherited)"
-        - "-ObjC"
     info_plist:
       CFBundleName: Sample (Debug)
       CFBundleDevelopmentRegion: $COUNTRY
       UISupportedExternalAccessoryProtocols:
         - com.example.SampleApp
         - com.example.SampleApp2
+    build_settings:
+      OTHER_SWIFT_FLAGS: 
+        - "-DMOCK"
+      OTHER_LINKER_FLAGS:
+        - "$(inherited)"
+        - "-ObjC"
+    build_options:
+      enableAddressSanitizer: true
+      enableThreadSanitizer: true
+      enableUndefinedBehaviorSanitizer: true
+      # toolchain: <toolchain_name>
+      # xcconfig: <xcconfig_path>
     export_options:
       method: development # Required
       compileBitcode: false

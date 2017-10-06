@@ -21,6 +21,7 @@ var logger *log.Logger
 func usage() {
 	fmt.Println("usage: relparser [-f <Relfile>] list")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] source <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] build_options <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] plist <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] -plist <Info.plist> export_options <distribution>")
 	os.Exit(0)
@@ -80,6 +81,9 @@ func main() {
 
 	case "plist":
 		rel.GenPlist(dist, infoPlist, out)
+
+	case "build_options":
+		rel.PrintBuildOptions(dist)
 
 	case "export_options":
 		if infoPlist == "" {
