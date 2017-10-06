@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
 
 load test_helper
+source libexec/util-build
 
 @test "relparser source" {
 	run $LIBEXEC_PATH/relparser -o $TMPDIR/source source adhoc
@@ -30,10 +31,17 @@ load test_helper
 	run $LIBEXEC_PATH/relparser build_options development
 	assert_success
 
-	[[ "${lines[0]}"  == "-enableAddressSanitizer" ]] \
-	&& [[ "${lines[1]}" == "YES" ]] \
-	&& [[ "${lines[2]}" == "-enableThreadSanitizer" ]] \
-	&& [[ "${lines[3]}" == "YES" ]] \
-	&& [[ "${lines[4]}" == "-enableUndefinedBehaviorSanitizer" ]] \
-	&& [[ "${lines[5]}" == "YES" ]]
+	if is_xcode_version ">=" 9; then
+		[[ "${lines[0]}"  == "-enableAddressSanitizer" ]] \
+		&& [[ "${lines[1]}" == "YES" ]] \
+		&& [[ "${lines[2]}" == "-enableThreadSanitizer" ]] \
+		&& [[ "${lines[3]}" == "YES" ]] \
+		&& [[ "${lines[4]}" == "-enableUndefinedBehaviorSanitizer" ]] \
+		&& [[ "${lines[5]}" == "YES" ]]
+	else
+		[[ "${lines[0]}"  == "-enableAddressSanitizer" ]] \
+		&& [[ "${lines[1]}" == "YES" ]] \
+		&& [[ "${lines[2]}" == "-enableThreadSanitizer" ]] \
+		&& [[ "${lines[3]}" == "YES" ]]
+	fi
 }
