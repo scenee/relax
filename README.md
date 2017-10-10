@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/SCENEE/relax.svg?branch=support-travis-ci)](https://travis-ci.org/SCENEE/relax)
 
+
 # Relax
 
 Relax is a declarative release tool for iOS App distributions that encourages rapid distribution.
@@ -19,6 +20,7 @@ In background, it works as below.
 
 - Modify & Revert Info.plist properties and build settings in a xcodeproj file
 - Switch codesign modes(Automatic or Manual) implicity if you specify a provisioning profile in Relfile
+
 
 # Installation
 
@@ -107,6 +109,7 @@ $ relax validate SampleApp-resigned.ipa
 $ relax symbolicate sampleapp.crash SampleApp.xcarchive
 ```
 
+
 # Relfile
 
 Relfile is a Relax configuration file.
@@ -121,15 +124,11 @@ And also check [this Refile](https://github.com/SCENEE/relax/blob/master/sample/
 version: '2'
 
 workspace: SampleApp
-
 log_formatter: xcpretty
 uploader:
   crashlytics:
     token:  __MY_TOKEN__
     secret: __MY_SECRET__
-    group:  __MY_GROUP__
-
-
 distributions:  # Define a distribution
   adhoc:
     scheme: SampleApp
@@ -229,6 +228,17 @@ The characters and their meanings are as follows.
 | uploadBitcode                            | OK                                                        |
 | uploadSymbols                            | OK                                                        |
 
+## Uploader Support 
+
+### Crashlytics
+
+| Option                                   | Response status                                           |
+| :--------------------------------------- | :-------------------------------------------------------- |
+| token                                    | A API token                                               |
+| secret                                   | A build secret                                            |
+| group                                    | A group name                                              |
+
+
 # CI Utilities
 
 ## relax keychain
@@ -248,6 +258,7 @@ The `profile` module commands make it easy to find, use or remove provisioning p
 - Less dependancies 
 - Support ipa resign and validation
 - Support keychain managment
+
 
 # Known Issues
 
