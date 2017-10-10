@@ -51,8 +51,11 @@ upload_crashlytics () {
 	  $REL_CONFIG_uploader_crashlytics_token\
 	  $REL_CONFIG_uploader_crashlytics_secret\
 	  -ipaPath '$ipa_file' \
-	  -groupAliases '$REL_CONFIG_uploader_crashlytics_group' \
 	  -notesPath '$release_note_file'"
+
+	if [[ "${REL_CONFIG_uploader_crashlytics_group:-undefined}" != undefined  ]]; then
+		upload_command+=" -groupAliases '$REL_CONFIG_uploader_crashlytics_group'"
+	fi
 
 	logi "${upload_command}"
 
