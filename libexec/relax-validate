@@ -192,6 +192,8 @@ validate_app () {
 					logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
 				fi
 				bundle_appex_ids+="$new_id"
+			elif [[ $bundle_path =~ .bundle ]]; then
+				continue;
 			else
 				if [[ $bundle_ids =~ $new_id ]]; then
 					success=false
