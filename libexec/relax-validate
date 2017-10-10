@@ -3,7 +3,7 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} validate <ipa|app|archive>
+	usage: ${ME} validate [-d|-device <UDID>] <ipa|app|archive>
 
 	Print the codesign and mobileprovision information.
 	You can print the embedded provisioning profile with '-v' options.
@@ -11,6 +11,40 @@ usage () {
 
 	EOM
 	fin
+}
+
+# has_device <provisioning_profile>
+has_device () {
+	if ! is_enterpise_profile $mobileprovision; then
+		/usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" $mobileprovision \
+			2>&1 | grep -q "$Device_id";
+		return $?
+	else
+		logw "$app_name has an Enterprise provisioning profile."
+	fi
+}
+
+# is_adhoc_profile <provisioning_profile>
+is_adhoc_profile () {
+	local mobileprovision=$1
+	if /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" $mobileprovision \
+		2>&1 | grep -q "Does Not Exist"; then
+		return 1;
+	else
+		return 0;
+	fi
+}
+
+
+# is_enterprise_profile <provisioning_profile>
+is_enterpise_profile () {
+	local mobileprovision=$1
+	if /usr/libexec/PlistBuddy -c "Print :ProvisionsAllDevices" $mobileprovision \
+		2>&1 | grep -q "Does Not Exist"; then
+		return 1;
+	else
+		return 0;
+	fi
 }
 
 validate_app () {
@@ -133,11 +167,10 @@ validate_app () {
 	Creation Date: $mp_cdate
 	Expiration Date: $mp_edate
 	EOM
+
 	# Warning for an AppStore mobileprovision
-	if /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" $mobileprovision \
-		2>&1 | grep -q "Does Not Exist"; then
-		if /usr/libexec/PlistBuddy -c "Print :ProvisionsAllDevices" $mobileprovision \
-			2>&1 | grep -q "Does Not Exist"; then
+	if ! is_adhoc_profile $mobileprovision; then
+		if ! is_enterpise_profile $mobileprovision; then
 			cat <<-EOM | logi
 			$WARN ${BOLD}$app_name can contain an AppStore provisioning profile.
 				 ${BOLD}Please check the embedded provisioning profile with 'relax -v validate'.
@@ -145,7 +178,17 @@ validate_app () {
 			success=false
 			(( warning+=1 ))
 		fi
+	else
+		if [[ -n $Device_id ]]; then
+			if has_device $Device_id; then
+				logi "$ARROW $Device_id can install $app_name."
+			else
+				success=false
+				loge "$Device_id CAN'T install $app_name."
+			fi
+		fi
 	fi
+
 	cat $mobileprovision | awk '{ print $0 }' | logv  # Pass `awk' to append a newline before EOF.
 
 	# Check if archived-expanded-entitlements.xcent matches the signed entitlements
@@ -192,6 +235,8 @@ validate_app () {
 					logi "$ERR A duplicate bundle identifier($new_id) is found in $info"
 				fi
 				bundle_appex_ids+="$new_id"
+			elif [[ $bundle_path =~ .bundle ]]; then
+				continue;
 			else
 				if [[ $bundle_ids =~ $new_id ]]; then
 					success=false
@@ -258,8 +303,23 @@ validate_product () {
 
 [[ $# != 0 ]] || usage
 
-case $1 in
--h|--help) usage ;;
-esac
+Device_id=""
 
-validate_product "$@"
+while [ $# -ne 0 ];
+do
+	arg=$1
+	shift
+	case $arg in
+	-h|--help)
+		usage
+		;;
+	-d|--device)
+		[[ $# != 0 ]] || usage
+		Device_id=$1
+		shift
+		;;
+	*)
+		validate_product "$arg"
+		;;
+	esac
+done
