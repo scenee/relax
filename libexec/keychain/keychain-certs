@@ -1,0 +1,30 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-certs` command
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} keychain certs
+
+	List all valid certificates.
+
+	EOM
+	fin
+}
+
+ls_certs () {
+	/usr/bin/security find-identity -v -p codesigning \
+	| sed '$d' \
+	| sort -u
+}
+
+while [[ $# != 0 ]]; do
+	arg=$1
+	shift
+	case $arg in
+	-h)
+		usage
+		;;
+	esac
+done
+
+ls_certs
