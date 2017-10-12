@@ -317,7 +317,7 @@ get_build_params_file () {
 			build_params+=( CODE_SIGN_STYLE="Manual" )
 		fi
 
-		local mobileprovision=$(find_mobileprovision --latest "$provisioning_profile")
+		local mobileprovision=$(find_mobileprovision --latest "^$provisioning_profile$")
 		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
 
 		# Should use development signing for archive. Refer to this session,
