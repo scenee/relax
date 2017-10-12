@@ -45,8 +45,11 @@ pkcs12_fetch_identities () {
 
 	for i in $(seq 0 $(( count - 1 )))
 	do
-		openssl x509 -in "$REL_TEMP_DIR/cert0$i" -noout -fingerprint \
-		|  awk -F= '{ gsub(":", "", $2); print $2; }'
+		printf $(openssl x509 -in "$REL_TEMP_DIR/cert0$i" -noout -fingerprint \
+			|  awk -F= '{ gsub(":", "", $2); print $2; }')
+		printf " "
+		openssl x509 -in "$REL_TEMP_DIR/cert0$i" -noout -subject \
+		| sed -ne 's:.*CN=\(.*\)\/OU=.*:\1:p'
 	done
 }
 

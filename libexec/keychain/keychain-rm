@@ -12,7 +12,7 @@ usage () {
 
 # rm_identity <p12> -P <password> -k <keychain> -p <keychain-pass>
 rm_identity () {
-	if [[ $# != 7 ]]; then
+	if [[ $# != 5 ]]; then
 		usage
 	fi
 
@@ -53,17 +53,27 @@ rm_identity () {
 		keychain="$SYSTEM_KEYCHAINS/$keychain"
 		is_sudo=true
 	else
-		trap "relax keychain reset" EXIT INT TERM
-		relax keychain use "$keychain" -p $keychain_pass
+		trap ">/dev/null relax keychain reset" EXIT INT TERM
+		>/dev/null relax keychain use "$keychain" -p $keychain_pass
 	fi
 
-	logi "$ARROW Remove $cert_hash identity"
+	set +e
+	local cert_info="$(/usr/bin/security find-identity -v -p codesigning $keychain | grep "$cert_hash" | sed -e 's/^  *.*) //g')"
+	local error="$(mktemp $REL_TEMP_DIR/XXXXXX)"
 
 	cmd="$SECURITY delete-certificate -Z $cert_hash $keychain"
-	if [[ $is_sudo = true ]]; then
-		sudo bash -c "$cmd"
+	(
+		if [[ $is_sudo = true ]]; then
+			sudo bash -c "$cmd"
+		else
+			eval "$cmd"
+		fi 
+	) 2>$error
+
+	if [[ $? == 0 ]]; then
+		logi "Removed $cert_info"
 	else
-		eval "$cmd"
+		die "$(cat $error)"
 	fi
 }
 
