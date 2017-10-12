@@ -18,7 +18,7 @@ rm_provisioning_profile () {
 			fin "'$1' mobileprovision doesn't exist"
 		fi
 		rm -f "$mobileprovision"
-		logi "Removed '$1':$mobileprovision"
+		logi "Removed '$1': $mobileprovision"
 	done
 
 }
