@@ -4,19 +4,19 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} keychain rm <p12> -P <password> -k <keychain> -p <keychain-pass>
+	usage: ${ME} keychain rm <cert-hash> -k <keychain> -p <keychain-pass>
 
 	EOM
 	fin
 }
 
-# rm_identities <p12> -P <password> -k <keychain> -p <keychain-pass>
-rm_identities () {
+# rm_identity <p12> -P <password> -k <keychain> -p <keychain-pass>
+rm_identity () {
 	if [[ $# != 7 ]]; then
 		usage
 	fi
 
-	local keychain keychain_pass password p12
+	local keychain keychain_pass cert_hash
 	is_sudo=false
 
 	while [ $# -ne 0 ];
@@ -32,18 +32,13 @@ rm_identities () {
 			keychain_pass=$1
 			shift
 			;;
-		-P)
-			password=$1
-			shift
-			;;
 		*)
-			p12="$arg"
+			cert_hash="$arg"
 			;;
 		esac
 	done
 
-	[[ -n $p12 ]] || usage;
-	[[ -n $password ]] || usage;
+	[[ -n $cert_hash ]] || usage;
 	[[ -n $keychain ]] || usage;
 	[[ -n $keychain_pass ]] || usage;
 
@@ -62,22 +57,14 @@ rm_identities () {
 		relax keychain use "$keychain" -p $keychain_pass
 	fi
 
-	logi "$ARROW Remove these identiies imported from $p12"
-	
-	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+	logi "$ARROW Remove $cert_hash identity"
 
-	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
-
-	while IFS= read -r identity && [[ -n $identity ]]
-	do
-		echo "$identity"
-		cmd="$SECURITY delete-certificate -Z $identity $keychain"
-		if [[ $is_sudo = true ]]; then
-			sudo bash -c "$cmd"
-		else
-			eval "$cmd"
-		fi
-	done <$cert_fingerprints
+	cmd="$SECURITY delete-certificate -Z $cert_hash $keychain"
+	if [[ $is_sudo = true ]]; then
+		sudo bash -c "$cmd"
+	else
+		eval "$cmd"
+	fi
 }
 
 [[ $# != 0 ]] || usage
@@ -97,4 +84,4 @@ case $1 in
 	;;
 esac
 
-rm_identities "$@"
+rm_identity "$@"
