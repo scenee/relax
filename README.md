@@ -146,8 +146,9 @@ distributions:  # Define a distribution
       OTHER_SWIFT_FLAGS:
         - "-DMOCK"
         - "-DDEBUG" 
-      OTHER_C_FLAGS:
-        - "-fsanitize=address"
+      OTHER_LINKER_FLAGS:
+        - "$(inherited)"
+        - "-ObjC"
     export_options:
       method:  ad-hoc
       compileBitcode: false
