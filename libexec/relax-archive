@@ -72,7 +72,9 @@ make_archive () {
 	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -archivePath "$archive_path")
 
 	while read p; do params+=( "$p" ); done < $params_file
-	while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$distribution")
+
+	## Disable 'build_options' because `-enable{Address,Thread}Sanitizer` options don't work on 'xcodebuild archive'
+	# while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$distribution")
 
 	# See https://developer.apple.com/library/content/technotes/tn2215/_index.html
 	params+=(INSTALL_PATH="\$(LOCAL_APPS_DIR)")

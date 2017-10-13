@@ -30,7 +30,9 @@ build_project () {
 	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
 
 	while read p; do params+=( "$p" ); done < $params_file
-	while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$Distribution")
+
+	## Disable 'build_options' because `-enable{Address,Thread}Sanitizer` options don't work on 'xcodebuild archive'
+	# while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$Distribution")
 
 	local build_suffix=$(echo "${_configuration}-${_sdk}")
 	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
