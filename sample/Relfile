@@ -37,12 +37,6 @@ distributions:
       OTHER_LINKER_FLAGS:
         - "$(inherited)"
         - "-ObjC"
-    build_options:
-      enableAddressSanitizer: true
-      enableThreadSanitizer: true
-      enableUndefinedBehaviorSanitizer: true
-      # toolchain: <toolchain_name>
-      # xcconfig: <xcconfig_path>
     export_options:
       method: development # Required
       compileBitcode: false

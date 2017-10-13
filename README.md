@@ -148,10 +148,6 @@ distributions:  # Define a distribution
         - "-DDEBUG" 
       OTHER_C_FLAGS:
         - "-fsanitize=address"
-    build_options:
-      enableAddressSanitizer: true
-      enableThreadSanitizer: true
-      enableUndefinedBehaviorSanitizer: true
     export_options:
       method:  ad-hoc
       compileBitcode: false
