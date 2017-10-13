@@ -12,6 +12,7 @@ usage () {
 	    ls		List keychains
 	    create	Create a keychain
 	    delete	Delete a keychain
+	    certs	List certificates
 	    add		Add certificates and private keys from a pkcs12 file
 	    rm		Remove certificates and private keys of a pkcs12 file
 	    use		Set up a keychain to use it

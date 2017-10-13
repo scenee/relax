@@ -1,0 +1,67 @@
+#!/usr/bin/env bash -eu
+# @(#) relax `keychain-info` command
+# completions
+
+usage () {
+	cat <<-EOM
+	usage: ${ME} keychain info <p12> -P <password>
+
+	EOM
+	fin
+}
+
+# rm_identities <p12> -P <password> -k <keychain> -p <keychain-pass>
+get_identities () {
+	if [[ $# != 3 ]]; then
+		usage
+	fi
+
+	local password p12
+	is_sudo=false
+
+	while [ $# -ne 0 ];
+	do
+		arg="$1"
+		shift
+		case $arg in
+		-P)
+			password=$1
+			shift
+			;;
+		*)
+			p12="$arg"
+			;;
+		esac
+	done
+
+	[[ -n $p12 ]] || usage;
+	[[ -n $password ]] || usage;
+
+	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+
+	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
+
+	while IFS= read -r identity && [[ -n $identity ]]
+	do
+		echo "$identity"
+	done <$cert_fingerprints
+}
+
+[[ $# != 0 ]] || usage
+
+case $1 in
+-h|--help) usage ;;
+--completions) 
+	while [[ $# != 0 ]]; 
+	do
+		case $1 in
+			-) fin "-k -P -p" ;;
+			-k) list_keychain | grep -v "\(System\|login\|metadata\)" | xargs
+		esac
+		shift
+	done
+	fin
+	;;
+esac
+
+get_identities "$@"

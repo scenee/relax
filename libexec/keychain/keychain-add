@@ -36,7 +36,7 @@ __validate_certs ()
 	logi "p12: $p12"
 	
 	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
-	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
+	pkcs12_fetch_identities "$p12" -P "$password" | awk '{ print $1 }' >> $cert_fingerprints
 
 	#cat $cert_fingerprints
 

@@ -4,19 +4,19 @@
 
 usage () {
 	cat <<-EOM
-	usage: ${ME} keychain rm <p12> -P <password> -k <keychain> -p <keychain-pass>
+	usage: ${ME} keychain rm <cert-hash> -k <keychain> -p <keychain-pass>
 
 	EOM
 	fin
 }
 
-# rm_identities <p12> -P <password> -k <keychain> -p <keychain-pass>
-rm_identities () {
-	if [[ $# != 7 ]]; then
+# rm_identity <p12> -P <password> -k <keychain> -p <keychain-pass>
+rm_identity () {
+	if [[ $# != 5 ]]; then
 		usage
 	fi
 
-	local keychain keychain_pass password p12
+	local keychain keychain_pass cert_hash
 	is_sudo=false
 
 	while [ $# -ne 0 ];
@@ -32,18 +32,13 @@ rm_identities () {
 			keychain_pass=$1
 			shift
 			;;
-		-P)
-			password=$1
-			shift
-			;;
 		*)
-			p12="$arg"
+			cert_hash="$arg"
 			;;
 		esac
 	done
 
-	[[ -n $p12 ]] || usage;
-	[[ -n $password ]] || usage;
+	[[ -n $cert_hash ]] || usage;
 	[[ -n $keychain ]] || usage;
 	[[ -n $keychain_pass ]] || usage;
 
@@ -58,26 +53,28 @@ rm_identities () {
 		keychain="$SYSTEM_KEYCHAINS/$keychain"
 		is_sudo=true
 	else
-		trap "relax keychain reset" EXIT INT TERM
-		relax keychain use "$keychain" -p $keychain_pass
+		trap ">/dev/null relax keychain reset" EXIT INT TERM
+		>/dev/null relax keychain use "$keychain" -p $keychain_pass
 	fi
 
-	logi "$ARROW Remove these identiies imported from $p12"
-	
-	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
+	set +e
+	local cert_info="$(/usr/bin/security find-identity -v -p codesigning $keychain | grep "$cert_hash" | sed -e 's/^  *.*) //g')"
+	local error="$(mktemp $REL_TEMP_DIR/XXXXXX)"
 
-	pkcs12_fetch_identities "$p12" -P "$password" >> $cert_fingerprints
-
-	while IFS= read -r identity && [[ -n $identity ]]
-	do
-		echo "$identity"
-		cmd="$SECURITY delete-certificate -Z $identity $keychain"
+	cmd="$SECURITY delete-certificate -Z $cert_hash $keychain"
+	(
 		if [[ $is_sudo = true ]]; then
 			sudo bash -c "$cmd"
 		else
 			eval "$cmd"
-		fi
-	done <$cert_fingerprints
+		fi 
+	) 2>$error
+
+	if [[ $? == 0 ]]; then
+		logi "Removed $cert_info"
+	else
+		die "$(cat $error)"
+	fi
 }
 
 [[ $# != 0 ]] || usage
@@ -97,4 +94,4 @@ case $1 in
 	;;
 esac
 
-rm_identities "$@"
+rm_identity "$@"
