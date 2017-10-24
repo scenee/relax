@@ -128,16 +128,20 @@ case $command in
 		fi
 	else
 		[[ $command != "help" ]] || exec "$command_path" "$@"
+		check_toolchain
 
-		REL_CONFIG_PATH="$(config_find)"
-
-		if [[ -n $REL_CONFIG_PATH  ]]; then
-			REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
-		fi
+		case $command in
+		build|archive|export|upload|package|show|completions)
+			REL_CONFIG_PATH="$(config_find)"
+			if [[ -n $REL_CONFIG_PATH  ]]; then
+				REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
+			fi
+			;;
+		*)
+			;;
+		esac
 
 		[[ ! "$@" =~ "--completions" ]] || exec "$command_path" "$@"
-
-		check_toolchain
 
 		case $command in
 		commands|completions|show|ls-certs)
