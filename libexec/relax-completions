@@ -1,5 +1,33 @@
 #!/usr/bin/env bash
 # Usage: relax completions <command> [arg1 arg2...]
 
+# print_completions <command>
+print_completions () {
+	# echo "print_completions $@"
+
+	local _command _command_path
+	_command="$1"
+	shift
+
+	# echo "print_completions $@"
+
+	[[ -n "$_command" ]] || fin
+
+	case "$_command" in
+		--completions)
+			exec relax-commands
+			;;
+		*)
+			_command_path="$(command -v "relax-$_command")"
+
+			[[ -f "$_command_path" ]] || fin
+
+			if grep -q "^# completions" "$_command_path"; then
+				exec "$_command_path" --completions "$@"
+			fi
+			;;
+	esac
+}
+
 print_completions "$@"
 

@@ -40,11 +40,6 @@ load test_helper
   [[ -z ${output} ]]
 }
 
-@test "relax completions releases" {
-  run relax completions releases
-  [[ ${output} =~ "development" ]]
-}
-
 @test "relax completions archive" {
   run relax completions archive
   [[ ${output} =~ "development" ]]
