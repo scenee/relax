@@ -315,8 +315,14 @@ if [[ -z $Framework_name ]]; then
 	Framework_name=$PRODUCT_NAME;
 fi
 
-if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]] && [[ $Is_framework = true ]]; then
-	build_framework_with_static "$Framework_name"
+if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]]; then
+	if [[ $Is_framework = true ]]; then
+		build_framework_with_static "$Framework_name"
+	else
+		build_project  "${scheme}" "${sdk}" "${configuration}"
+		cp -a $BUILT_PRODUCTS_DIR/include $PRODUCT_BUILD_ROOT/
+		logi "Product: \n\t$PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME\n\t$PRODUCT_BUILD_ROOT/include"
+	fi
 elif [[ $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
 	[[ $Is_framework != true ]] || die "'--framework' is applicable only for a static library product"
 	build_framework "$Framework_name"
