@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A2925871F53BFA300509B1F /* SampleLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		1A29258D1F53C3ED00509B1F /* Sample.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A29258C1F53C38B00509B1F /* Sample.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1A29258E1F53C3F100509B1F /* Sample.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A29258C1F53C38B00509B1F /* Sample.h */; };
 		1A29A7EC1DE5134C00E9E2DE /* SampleLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A29A7EB1DE5134C00E9E2DE /* SampleLib.m */; };
 		1A29A7ED1DE5134C00E9E2DE /* SampleLib.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A29A7EA1DE5134C00E9E2DE /* SampleLib.h */; };
@@ -17,6 +15,7 @@
 		1A3E898E1DDFC39B00609422 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E898C1DDFC39B00609422 /* Main.storyboard */; };
 		1A3E89901DDFC39B00609422 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E898F1DDFC39B00609422 /* Assets.xcassets */; };
 		1A3E89931DDFC39B00609422 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E89911DDFC39B00609422 /* LaunchScreen.storyboard */; };
+		1AE09A521FBAB1C00072B646 /* libSampleLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */; };
 		1AF19FE01DE474E700C6318E /* SampleFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AF19FDE1DE474E700C6318E /* SampleFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
@@ -46,6 +45,7 @@
 		1A3E898F1DDFC39B00609422 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A3E89921DDFC39B00609422 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1A3E89941DDFC39B00609422 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1AE09A771FBABC180072B646 /* ObjCBridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjCBridgingHeader.h; sourceTree = "<group>"; };
 		1AF19FDC1DE474E600C6318E /* SampleFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SampleFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AF19FDE1DE474E700C6318E /* SampleFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleFramework.h; sourceTree = "<group>"; };
 		1AF19FDF1DE474E700C6318E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -63,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1AE09A521FBAB1C00072B646 /* libSampleLib.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +94,7 @@
 				1AF19FDD1DE474E700C6318E /* SampleFramework */,
 				1A29A7E91DE5134C00E9E2DE /* SampleLib */,
 				1A3E89861DDFC39B00609422 /* Products */,
+				1AE09A501FBAB1270072B646 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -115,8 +117,16 @@
 				1A3E898F1DDFC39B00609422 /* Assets.xcassets */,
 				1A3E89911DDFC39B00609422 /* LaunchScreen.storyboard */,
 				1A3E89941DDFC39B00609422 /* Info.plist */,
+				1AE09A771FBABC180072B646 /* ObjCBridgingHeader.h */,
 			);
 			path = SampleApp;
+			sourceTree = "<group>";
+		};
+		1AE09A501FBAB1270072B646 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		1AF19FDD1DE474E700C6318E /* SampleFramework */ = {
@@ -131,15 +141,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		1A2925861F53BF9800509B1F /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1A29258D1F53C3ED00509B1F /* Sample.h in Headers */,
-				1A2925871F53BFA300509B1F /* SampleLib.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1AF19FD91DE474E600C6318E /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -158,7 +159,6 @@
 				1A29A7E51DE5134B00E9E2DE /* Frameworks */,
 				1A29A7E41DE5134B00E9E2DE /* Sources */,
 				1A29A7E61DE5134B00E9E2DE /* CopyFiles */,
-				1A2925861F53BF9800509B1F /* Headers */,
 			);
 			buildRules = (
 			);
@@ -443,6 +443,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.SampleApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/SampleApp/ObjCBridgingHeader.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -457,6 +458,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.SampleApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/SampleApp/ObjCBridgingHeader.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
