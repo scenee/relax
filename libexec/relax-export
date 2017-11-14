@@ -79,17 +79,17 @@ export_archive () {
 	logi "$ARROW Exporting $1"
 
 	local export_path="${PRODUCT_BUILD_ROOT}"
-
-
 	local archive_path="$REL_TEMP_DIR/xcarchive"
 	cp -a "$1" "$archive_path"
 
 	local app_path="$(find "$archive_path" -name *.app)";
 
 	if [[ $use_packageapp == false ]]; then
+		local raw_info_plist="$REL_TEMP_DIR/Info.plist";
+		plutil -convert xml1 -o "$raw_info_plist" "$app_path/Info.plist"
 		relparser -f "$REL_CONFIG_PATH" \
 			-o "$EXPORT_OPTIONS_PLIST" \
-			-plist "$archive_path/Info.plist"  \
+			-plist "$raw_info_plist"  \
 			export_options $distribution
 		cat $EXPORT_OPTIONS_PLIST
 		printf "\n"
