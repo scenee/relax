@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Usage: relax help <command|module>
 
 [[ -n "$1" ]] || exec relax -h

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -eu
+#!/bin/bash -eu
 # Usage: relax [--version] [--config <Relfile>] <command>
 
 export REL_VERSION="0.5.4"

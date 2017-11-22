@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -eu
+#!/bin/bash -eu
 # Summary: List all available commands
 
 
