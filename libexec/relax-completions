@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Usage: relax completions <command> [arg1 arg2...]
 
 # print_completions <command>

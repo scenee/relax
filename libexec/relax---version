@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Summary: Display the version of relax
 #
 # Displays the version number of this relax release, including the
