@@ -6,16 +6,16 @@ load test_helper
   export COUNTRY=ja
   run relax archive development
   assert_success
-  [[ ! "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
+  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 }
 
 @test "relax archive development --progress" {
   export COUNTRY=ja
   run relax archive development --progress
   assert_success
-  [[ "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
+  [[ "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 }
 
 @test "relax archive development2" {
@@ -37,7 +37,7 @@ load test_helper
 @test "relax archive adhoc" {
   run  relax archive adhoc
   assert_success
-  [[ "${lines[${#lines[@]}-4]}" =~ "iPhone Distribution" ]]
+  [[ "$(grep '==> xcodebuild' <<< "$output")" =~ "iPhone Distribution" ]]
 }
 
 

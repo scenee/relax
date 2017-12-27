@@ -10,7 +10,7 @@ build:
 
 .PHONY: test
 test: bats
-	@PATH="$$PWD/bats/bin:$$PWD/bin:$$PATH" test/run.sh ${keychain}
+	@PATH="/bin:$$PWD/bats/bin:$$PWD/bin:$$PATH" test/run.sh ${keychain}
 
 version: 
 	@PATH="$$PWD/bin:$$PATH" relax --version
