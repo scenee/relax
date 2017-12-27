@@ -5,15 +5,15 @@ load test_helper
 @test "relax build framework" {
   run relax build framework
   assert_success
-  [[ ! "${lines[${#lines[@]}-3]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-3]}" =~ "Time:" ]]
+  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 }
 
 @test "relax build framework --progress" {
   run relax build framework --progress
   assert_success
-  [[ "${lines[${#lines[@]}-3]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-3]}" =~ "Time:" ]]
+  [[ "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 
   [[ -f ./SampleFramework.framework/SampleFramework ]]
   file ./SampleFramework.framework/SampleFramework | grep arm.*

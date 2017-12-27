@@ -5,15 +5,15 @@ load test_helper
 @test "relax export development" {
   run relax export development
   assert_success
-  [[ ! "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
+  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 }
 
 @test "relax export development --progress" {
   run relax export development --progress
   assert_success
-  [[ "${lines[${#lines[@]}-2]}" =~ "\[[ \*]*\]" ]]
-  [[ "${lines[${#lines[@]}-2]}" =~ "Time:" ]]
+  [[ "${output}" =~ "\[[ \*]*\]" ]]
+  [[ "${output}" =~ "Time:" ]]
 }
 
 @test "relax export adhoc <development-archive>" {
