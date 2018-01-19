@@ -90,8 +90,15 @@ merge_frameworks() {
 
 	[ ! -d "$fw_dest" ] || rm -rf $fw_dest
 
+	logi "$ARROW Creating a universal framework..."
+
 	cp -a "$fw_iphoneos"  "$fw_dest"
+
 	lipo -create -output "${fw_dest}/${target}" "${fw_iphoneos}/${target}" "${fw_iphonesimulator}/${target}"
+
+	if [ -d "${fw_iphonesimulator}/Modules/${target}.swiftmodule" ]; then
+		cp -nR "${fw_iphonesimulator}/Modules/${PROJECT_NAME}.swiftmodule/" "${fw_dest}/Modules/${target}.swiftmodule/"
+	fi
 }
 
 build_framework() {
