@@ -112,13 +112,11 @@ $ relax symbolicate sampleapp.crash SampleApp.xcarchive
 
 # Relfile
 
-Relfile is a Relax configuration file.
+Relfile is a configuration file for `relax`.
 
-The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them.
+The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them. See [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
-An example of Relfile is as below.
-
-And also check [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
+Here is an example.
 
 ```yaml
 version: '2'
