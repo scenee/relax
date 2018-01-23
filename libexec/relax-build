@@ -4,11 +4,14 @@
 
 usage() {
 	cat <<-EOM
-	usage: ${ME} build <distribution> [--progress] [--framework [<name>]] [--with-simulator] [-c <configuration>]
+	usage: ${ME} build <distribution> [--progress] [--framework [<name>]] [--no-simulator] [-c <configuration>]
+
+	Build a universal framework from your Xcode project.
+
 	options:
 	    --progress			Show a progress indicator
 	    --framework			Make a framework from a static library with a specified name
-	    --with-simulator		Include binaries for iphonesimulator
+	    --no-simulator		Extract executable binaries for iphonesimulator
 	    -c				Specify a configuration
 	EOM
 	fin
@@ -90,8 +93,15 @@ merge_frameworks() {
 
 	[ ! -d "$fw_dest" ] || rm -rf $fw_dest
 
+	logi "$ARROW Creating a universal framework..."
+
 	cp -a "$fw_iphoneos"  "$fw_dest"
+
 	lipo -create -output "${fw_dest}/${target}" "${fw_iphoneos}/${target}" "${fw_iphonesimulator}/${target}"
+
+	if [ -d "${fw_iphonesimulator}/Modules/${target}.swiftmodule" ]; then
+		cp -nR "${fw_iphonesimulator}/Modules/${PROJECT_NAME}.swiftmodule/" "${fw_dest}/Modules/${target}.swiftmodule/"
+	fi
 }
 
 build_framework() {
@@ -119,7 +129,7 @@ build_framework() {
 	build_project "$scheme" "iphoneos" "$configuration"
 	os_fw="$CODESIGNING_FOLDER_PATH"
 
-	if [[ $With_simulator == true ]]; then
+	if [[ $No_simulator == false ]]; then
 		build_project "$scheme" "iphonesimulator" "$configuration"
 		local sim_fw="$CODESIGNING_FOLDER_PATH"
 		merge_frameworks "$name" "$os_fw" "$sim_fw" "$framework_location"
@@ -155,7 +165,7 @@ make_framework () {
 	mkdir -p "${framework_loc}/Versions/A/"
 
 	# Join the 2 static libs into 1 and push into the .framework
-	if [[ $With_simulator == true ]]; then
+	if [[ $No_simulator == false ]]; then
 		xcrun lipo -create \
 			"${1}" \
 			"${2}" \
@@ -209,7 +219,7 @@ build_framework_with_static () {
 	build_project "$scheme" iphoneos "$configuration"
 	os_lib="$CODESIGNING_FOLDER_PATH"
 
-	if [[ $With_simulator == true ]]; then
+	if [[ $No_simulator == false ]]; then
 		build_project "$scheme" iphonesimulator "$configuration"
 		sim_lib="$CODESIGNING_FOLDER_PATH"
 	fi
@@ -251,7 +261,7 @@ build_framework_with_static () {
 
 Build_cmd_semaphore=
 Is_framework=false
-With_simulator=false
+No_simulator=false
 Framework_name=
 Show_progress=false
 Distribution=
@@ -285,8 +295,8 @@ while [ $# -ne 0 ];  do
 	--framework)
 		Is_framework=true
 		;;
-	--with-simulator)
-		With_simulator=true
+	--no-simulator)
+		No_simulator=true
 		;;
 	*)
 		Distribution=$arg

@@ -7,6 +7,8 @@ load test_helper
   assert_success
   [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
+  file ./SampleFramework.framework/SampleFramework | grep -q x86_64
+  file ./SampleFramework.framework/SampleFramework | grep -q arm.*
 }
 
 @test "relax build framework --progress" {
@@ -16,17 +18,17 @@ load test_helper
   [[ "${output}" =~ "Time:" ]]
 
   [[ -f ./SampleFramework.framework/SampleFramework ]]
-  file ./SampleFramework.framework/SampleFramework | grep arm.*
+  file ./SampleFramework.framework/SampleFramework | grep -q x86_64
+  file ./SampleFramework.framework/SampleFramework | grep -q arm.*
 }
 
-@test "relax build framework --with-simulator" {
-  run relax build framework --with-simulator
+@test "relax build framework --no-simulator" {
+  run relax build framework --no-simulator
   assert_success
 
   [[ -f ./SampleFramework.framework/SampleFramework ]]
-  file ./SampleFramework.framework/SampleFramework | grep i386
-  file ./SampleFramework.framework/SampleFramework | grep x86_64
-  file ./SampleFramework.framework/SampleFramework | grep arm.*
+  file ./SampleFramework.framework/SampleFramework | grep -q -v x86_64
+  file ./SampleFramework.framework/SampleFramework | grep -q arm.*
 }
 
 @test "relax build framework --framework" {
@@ -40,19 +42,19 @@ load test_helper
 
   [[ -d ./Sample.framework ]]
   [[ -f ./Sample.framework.zip ]]
-  file ./Sample.framework/Sample | grep arm.*
+  file ./Sample.framework/Sample | grep -q x86_64
+  file ./Sample.framework/Sample | grep -q arm.*
 }
 
-@test "relax build staticlib --framework Sample --with-simulator" {
-  run relax build staticlib --framework Sample --with-simulator
+@test "relax build staticlib --framework Sample --no-simulator" {
+  run relax build staticlib --framework Sample --no-simulator
   assert_success
 
   [[ -d ./Sample.framework ]]
   [[ -f ./Sample.framework.zip ]]
 
-  file ./Sample.framework/Sample | grep i386
-  file ./Sample.framework/Sample | grep x86_64
-  file ./Sample.framework/Sample | grep arm.*
+  file ./Sample.framework/Sample | grep -q -v x86_64
+  file ./Sample.framework/Sample | grep -q arm.*
 }
 
 @test "relax build: check workspace restoration" {
