@@ -15,6 +15,7 @@
 		1A3E898E1DDFC39B00609422 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E898C1DDFC39B00609422 /* Main.storyboard */; };
 		1A3E89901DDFC39B00609422 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E898F1DDFC39B00609422 /* Assets.xcassets */; };
 		1A3E89931DDFC39B00609422 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A3E89911DDFC39B00609422 /* LaunchScreen.storyboard */; };
+		1A96CB8B20183CE200F0345A /* SampleUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96CB8A20183CE200F0345A /* SampleUtil.swift */; };
 		1AE09A521FBAB1C00072B646 /* libSampleLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A29A7E81DE5134B00E9E2DE /* libSampleLib.a */; };
 		1AF19FE01DE474E700C6318E /* SampleFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AF19FDE1DE474E700C6318E /* SampleFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -45,6 +46,7 @@
 		1A3E898F1DDFC39B00609422 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A3E89921DDFC39B00609422 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1A3E89941DDFC39B00609422 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1A96CB8A20183CE200F0345A /* SampleUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleUtil.swift; sourceTree = "<group>"; };
 		1AE09A771FBABC180072B646 /* ObjCBridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjCBridgingHeader.h; sourceTree = "<group>"; };
 		1AF19FDC1DE474E600C6318E /* SampleFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SampleFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AF19FDE1DE474E700C6318E /* SampleFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleFramework.h; sourceTree = "<group>"; };
@@ -134,6 +136,7 @@
 			children = (
 				1AF19FDE1DE474E700C6318E /* SampleFramework.h */,
 				1AF19FDF1DE474E700C6318E /* Info.plist */,
+				1A96CB8A20183CE200F0345A /* SampleUtil.swift */,
 			);
 			path = SampleFramework;
 			sourceTree = "<group>";
@@ -227,6 +230,7 @@
 					1AF19FDB1DE474E600C6318E = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = J3D7L9FHSS;
+						LastSwiftMigration = 0920;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -293,6 +297,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A96CB8B20183CE200F0345A /* SampleUtil.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,6 +471,7 @@
 		1AF19FE11DE474E700C6318E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -479,6 +485,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.SampleFramework;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -488,6 +495,7 @@
 		1AF19FE21DE474E700C6318E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
