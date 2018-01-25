@@ -3,7 +3,7 @@
 #
 
 version: '2'
-xcodeproj: SampleApp # Required. Or `workspace: YourApp` for a workspace
+xcodeproj: SampleApp # 'xcodeproj' or `workspace`
 log_formatter: xcpretty
 uploader:
   crashlytics:
@@ -18,9 +18,46 @@ uploader:
     notify:  "$TF_NOTIFY"
 
 distributions:
+  adhoc:
+    scheme: Sample App
+    team_id: J3D7L9FHSS
+    provisioning_profile: "${PROVISION_PROFILE_ADHOC}"
+    export_options:
+      method: ad-hoc 
+      thinning : iPhone7,1
+      compileBitcode: false
+
+  enterprise:
+    scheme: Sample App
+    team_id: ABCDEFGHIJ
+    bundle_identifier: com.scenee.SampleApp
+    bundle_version:  "%h-%C"
+    export_options:
+      method: enterprise
+
+  appstore:
+    scheme: Sample App
+    team_id: J3D7L9FHSS
+    provisioning_profile: "Relax AppStore"
+    export_options:
+      method: appstore
+      upload_symbols: true
+      #uploadSymbols: true
+      #uploadBitcode: true
+
+  framework:
+    scheme: SampleFramework  # Required
+    build_settings:
+      OTHER_C_FLAGS:
+        - "-fembed-bitcode"
+        - "-fsanitize=address"
+
+  staticlib:
+    scheme: SampleLib
+
   development:
-    scheme: Sample App  # Required
-    team_id: J3D7L9FHSS  # Required
+    scheme: Sample App
+    team_id: J3D7L9FHSS
     provisioning_profile: "$PROVISION_PROFILE_DEV"
     configuration: Debug
     bundle_identifier: com.scenee.SampleApp
@@ -53,42 +90,5 @@ distributions:
     export_options:
       method: development # Required
       compileBitcode: false
-
-  adhoc:
-    scheme: Sample App  # Required
-    team_id: J3D7L9FHSS  # Required
-    provisioning_profile: "${PROVISION_PROFILE_ADHOC}"
-    export_options:
-      method: ad-hoc 
-      thinning : iPhone7,1
-      compileBitcode: false
-
-  enterprise:
-    scheme: Sample App  # Required
-    team_id: ABCDEFGHIJ  # Required
-    bundle_identifier: com.scenee.SampleApp
-    bundle_version:  "%h-%C"
-    export_options:
-      method: enterprise
-
-  appstore:
-    scheme: Sample App  # Required
-    team_id: J3D7L9FHSS  # Required
-    provisioning_profile: "Relax AppStore"
-    export_options:
-      method: appstore
-      upload_symbols: true
-      #uploadSymbols: true
-      #uploadBitcode: true
-
-  framework:
-    scheme: SampleFramework  # Required
-    build_settings:
-      OTHER_C_FLAGS:
-        - "-fembed-bitcode"
-        - "-fsanitize=address"
-
-  staticlib:
-    scheme: SampleLib  # Required
 
 # vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :
