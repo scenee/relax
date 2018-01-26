@@ -100,7 +100,7 @@ merge_frameworks() {
 	lipo -create -output "${fw_dest}/${target}" "${fw_iphoneos}/${target}" "${fw_iphonesimulator}/${target}"
 
 	if [ -d "${fw_iphonesimulator}/Modules/${target}.swiftmodule" ]; then
-		cp -nR "${fw_iphonesimulator}/Modules/${PROJECT_NAME}.swiftmodule/" "${fw_dest}/Modules/${target}.swiftmodule/"
+		cp -nR "${fw_iphonesimulator}/Modules/${target}.swiftmodule/" "${fw_dest}/Modules/${target}.swiftmodule/"
 	fi
 }
 

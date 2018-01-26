@@ -7,8 +7,10 @@ load test_helper
   assert_success
   [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
-  file ./SampleFramework.framework/SampleFramework | grep -q x86_64
   file ./SampleFramework.framework/SampleFramework | grep -q arm.*
+  file ./SampleFramework.framework/SampleFramework | grep -q x86_64
+  ls ./SampleFramework.framework/Modules/SampleFramework.swiftmodule | grep -q arm*
+  ls ./SampleFramework.framework/Modules/SampleFramework.swiftmodule | grep -q x86_64.*
 }
 
 @test "relax build framework --progress" {
@@ -16,10 +18,6 @@ load test_helper
   assert_success
   [[ "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
-
-  [[ -f ./SampleFramework.framework/SampleFramework ]]
-  file ./SampleFramework.framework/SampleFramework | grep -q x86_64
-  file ./SampleFramework.framework/SampleFramework | grep -q arm.*
 }
 
 @test "relax build framework --no-simulator" {
@@ -27,8 +25,10 @@ load test_helper
   assert_success
 
   [[ -f ./SampleFramework.framework/SampleFramework ]]
-  file ./SampleFramework.framework/SampleFramework | grep -q -v x86_64
   file ./SampleFramework.framework/SampleFramework | grep -q arm.*
+  file ./SampleFramework.framework/SampleFramework | grep -q -v x86_64
+  ls ./SampleFramework.framework/Modules/SampleFramework.swiftmodule | grep -q arm*
+  ls ./SampleFramework.framework/Modules/SampleFramework.swiftmodule | grep -q -v x86_64.*
 }
 
 @test "relax build framework --framework" {
@@ -42,8 +42,8 @@ load test_helper
 
   [[ -d ./Sample.framework ]]
   [[ -f ./Sample.framework.zip ]]
-  file ./Sample.framework/Sample | grep -q x86_64
   file ./Sample.framework/Sample | grep -q arm.*
+  file ./Sample.framework/Sample | grep -q x86_64
 }
 
 @test "relax build staticlib --framework Sample --no-simulator" {
@@ -53,8 +53,8 @@ load test_helper
   [[ -d ./Sample.framework ]]
   [[ -f ./Sample.framework.zip ]]
 
-  file ./Sample.framework/Sample | grep -q -v x86_64
   file ./Sample.framework/Sample | grep -q arm.*
+  file ./Sample.framework/Sample | grep -q -v x86_64
 }
 
 @test "relax build: check workspace restoration" {
