@@ -181,23 +181,22 @@ func (d Distribution) writeSource(name string, out *os.File) {
 	source += genSourceLine2(name, "bundle_version", d.BundleVersion)
 	source += genSourceLine2(name, "version", d.Version)
 
-	// "--- Build settings\n"
+	// fmt/Println("--- Build settings\n")
 	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
 
 	source += fmt.Sprintf("%v=()\n", build_settings)
 
-	for _, vars := range []map[string]interface{}{d.BuildSettings, d.InfoPlist} {
-		for k, v := range vars {
-			switch _v := v.(type) {
-			default:
-				source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, v)
-			case []interface{}:
-				var ss []string
-				for _, s := range _v {
-					ss = append(ss, fmt.Sprintf("%v", s))
-				}
-				source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, strings.Join(ss, "{}"))
+	// FIXME: Improve here
+	for k, v := range d.BuildSettings {
+		switch v := v.(type) {
+		case []interface{}:
+			var ss []string
+			for _, s := range v {
+				ss = append(ss, fmt.Sprintf("%v", s))
 			}
+			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, strings.Join(ss, "{}"))
+		default:
+			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, v)
 		}
 	}
 	source += fmt.Sprintf("export %v\n", build_settings)
