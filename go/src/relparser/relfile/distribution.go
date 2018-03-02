@@ -71,7 +71,35 @@ func getBundleID(path string) string {
 	}
 }
 
+func cleanupInterfaceArray(in []interface{}) []interface{} {
+	res := make([]interface{}, len(in))
+	for i, v := range in {
+		res[i] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for k, v := range in {
+		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupMapValue(v interface{}) interface{} {
+	switch v := v.(type) {
+	case []interface{}:
+		return cleanupInterfaceArray(v)
+	case map[interface{}]interface{}:
+		return cleanupInterfaceMap(v)
+	default:
+		return v
+	}
+}
+
 func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
+	//fmt.Println("--- WriteInfoPlist")
 	var (
 		err     error
 		decoder *plist.Decoder
@@ -98,7 +126,7 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 	/* Update Info.plist data */
 	for k, v := range d.InfoPlist {
 		//fmt.Printf("---\t%v: %v\n", k, v)
-		data[k] = v
+		data[k] = cleanupMapValue(v)
 	}
 
 	encoder := plist.NewEncoder(out)
@@ -153,23 +181,22 @@ func (d Distribution) writeSource(name string, out *os.File) {
 	source += genSourceLine2(name, "bundle_version", d.BundleVersion)
 	source += genSourceLine2(name, "version", d.Version)
 
-	// "--- Build settings\n"
+	// fmt/Println("--- Build settings\n")
 	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
 
 	source += fmt.Sprintf("%v=()\n", build_settings)
 
-	for _, vars := range []map[string]interface{}{d.BuildSettings, d.InfoPlist} {
-		for k, v := range vars {
-			switch _v := v.(type) {
-			default:
-				source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, v)
-			case []interface{}:
-				var ss []string
-				for _, s := range _v {
-					ss = append(ss, fmt.Sprintf("%v", s))
-				}
-				source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, strings.Join(ss, "{}"))
+	// FIXME: Improve here
+	for k, v := range d.BuildSettings {
+		switch v := v.(type) {
+		case []interface{}:
+			var ss []string
+			for _, s := range v {
+				ss = append(ss, fmt.Sprintf("%v", s))
 			}
+			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, strings.Join(ss, "{}"))
+		default:
+			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, v)
 		}
 	}
 	source += fmt.Sprintf("export %v\n", build_settings)

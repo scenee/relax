@@ -64,16 +64,21 @@ distributions:
     bundle_version:  "%h-%c"
     info_plist:
       CFBundleName: Sample (Debug)
-      CFBundleDevelopmentRegion: $COUNTRY
+      CFBundleDevelopmentRegion: "$COUNTRY"
       UISupportedExternalAccessoryProtocols:
         - com.example.SampleApp
         - com.example.SampleApp2
+      MYSETTINGS:
+        Endpoint: "example.com"
+        ClientID: qwerty
+        Preferences:
+          Foo: bar
+        Array:
+          - 1
+          - 2
     build_settings:
       OTHER_SWIFT_FLAGS: 
         - "-DMOCK"
-      OTHER_LINKER_FLAGS:
-        - "$(inherited)"
-        - "-ObjC"
     export_options:
       method: development # Required
       compileBitcode: false
