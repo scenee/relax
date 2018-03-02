@@ -71,7 +71,35 @@ func getBundleID(path string) string {
 	}
 }
 
+func cleanupInterfaceArray(in []interface{}) []interface{} {
+	res := make([]interface{}, len(in))
+	for i, v := range in {
+		res[i] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for k, v := range in {
+		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupMapValue(v interface{}) interface{} {
+	switch v := v.(type) {
+	case []interface{}:
+		return cleanupInterfaceArray(v)
+	case map[interface{}]interface{}:
+		return cleanupInterfaceMap(v)
+	default:
+		return v
+	}
+}
+
 func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
+	//fmt.Println("--- WriteInfoPlist")
 	var (
 		err     error
 		decoder *plist.Decoder
@@ -98,7 +126,7 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 	/* Update Info.plist data */
 	for k, v := range d.InfoPlist {
 		//fmt.Printf("---\t%v: %v\n", k, v)
-		data[k] = v
+		data[k] = cleanupMapValue(v)
 	}
 
 	encoder := plist.NewEncoder(out)
