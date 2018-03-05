@@ -275,11 +275,19 @@ __setup_build_params () {
 # PROJECT_FILE_PATH must be defined
 __replace_development_team () {
 	local team_id=$1
+	local pbxproj="$PROJECT_FILE_PATH/project.pbxproj"
 
-	sed -i.$BAK_EXT -e "
-	s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
-	s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
-	" "$PROJECT_FILE_PATH/project.pbxproj"
+	if ! grep -q "DEVELOPMENT_TEAM = .*;" "$pbxproj"; then
+		sed -i.bak '
+			/PRODUCT_NAME = .*/a \
+			DEVELOPMENT_TEAM = TGKEN7XA5C;\
+		' "$pbxproj"
+	else
+		sed -i.$BAK_EXT -e "
+		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
+		s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
+		" "$pbxproj"
+	fi
 
 	export DEVELOPMENT_TEAM=$team_id
 }
