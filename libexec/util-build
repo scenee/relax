@@ -275,11 +275,19 @@ __setup_build_params () {
 # PROJECT_FILE_PATH must be defined
 __replace_development_team () {
 	local team_id=$1
+	local pbxproj="$PROJECT_FILE_PATH/project.pbxproj"
 
-	sed -i.$BAK_EXT -e "
-	s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
-	s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
-	" "$PROJECT_FILE_PATH/project.pbxproj"
+	if ! grep -q "DEVELOPMENT_TEAM = .*;" "$pbxproj"; then
+		sed -i.bak '
+			/PRODUCT_NAME = .*/a \
+			DEVELOPMENT_TEAM = TGKEN7XA5C;\
+		' "$pbxproj"
+	else
+		sed -i.$BAK_EXT -e "
+		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
+		s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
+		" "$pbxproj"
+	fi
 
 	export DEVELOPMENT_TEAM=$team_id
 }
@@ -575,54 +583,53 @@ setup_build () {
 	logv "Info plist: $INFO_PLIST_PATH"
 	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$BAK_EXT" "$INFO_PLIST_PATH"
 
-	## Team ID
+	# Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
 		logi "Team ID: $DEVELOPMENT_TEAM"
 	fi
 
-	## Bundle Identifier
-	if [[ "${bundle_identifier:-undefined}" != undefined ]]; then
-		sed -i .$BAK_EXT \
-		-e "s/\(PRODUCT_BUNDLE_IDENTIFIER = \)\($PRODUCT_BUNDLE_IDENTIFIER\);/\1$bundle_identifier;/" \
-		"$PROJECT_FILE_PATH"/project.pbxproj
-		/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_identifier" "$INFO_PLIST_PATH"
-		PRODUCT_BUNDLE_IDENTIFIER=$bundle_identifier
-	elif [[ $for_export == true ]]; then
+	# Bundle Identifier
+	if [[ $for_export == true ]]; then
 		PRODUCT_BUNDLE_IDENTIFIER="$(get_info_plist_value ":ApplicationProperties:CFBundleIdentifier" "$archived_info_plist")"
 		if [[ -z "$PRODUCT_BUNDLE_IDENTIFIER" ]]; then
 			PRODUCT_BUNDLE_IDENTIFIER="$(get_info_plist_value ":CFBundleIdentifier" "$archived_info_plist")"
 		fi
-	fi
-	## Support a xcode project file not including PRODUCT_BUNDLE_IDENTIFIER 
-	if test ${PRODUCT_BUNDLE_IDENTIFIER:-undefined} = undefined; then
-		PRODUCT_BUNDLE_IDENTIFIER="$(print_info_plist bundle_identifier $INFO_PLIST_PATH)"
-		if [[ $PRODUCT_BUNDLE_IDENTIFIER =~ (.*)\${PRODUCT_NAME:rfc1034identifier}(.*) ]]; then
-			PRODUCT_BUNDLE_IDENTIFIER="$(eval echo ${BASH_REMATCH[1]}$PRODUCT_NAME)"
-			if [[ ! -z ${BASH_REMATCH[2]} ]]; then
-				PRODUCT_BUNDLE_IDENTIFIER+="${BASH_REMATCH[2]}"
+	else
+		# Support a Xcode project not having PRODUCT_BUNDLE_IDENTIFIER
+		if test ${PRODUCT_BUNDLE_IDENTIFIER:-undefined} = undefined; then
+			PRODUCT_BUNDLE_IDENTIFIER="$(print_info_plist bundle_identifier $INFO_PLIST_PATH)"
+			if [[ $PRODUCT_BUNDLE_IDENTIFIER =~ (.*)\$[\({]PRODUCT_NAME:rfc1034identifier[\)}](.*) ]]; then
+				PRODUCT_BUNDLE_IDENTIFIER="$(eval echo ${BASH_REMATCH[1]}$PRODUCT_NAME)"
+				if [[ ! -z ${BASH_REMATCH[2]} ]]; then
+					PRODUCT_BUNDLE_IDENTIFIER+="${BASH_REMATCH[2]}"
+				fi
 			fi
-		fi
-	else # PRODUCT_BUNDLE_IDENTIFIER sometimes can be differenct from Info.plist
-
-		if [[ $for_export == true ]]; then
-			:
 		else
 			local info_plist_bundle_identifier="$(print_info_plist bundle_identifier "$INFO_PLIST_PATH")";
 
-			# Should eval a CFBundleIdentifier value because it's can be $(PRODUCT_BUNDLE_IDENTIFIER)
+			# CFBundleIdentifier can be $(PRODUCT_BUNDLE_IDENTIFIER)
 			if [[ "$info_plist_bundle_identifier" = "\$(PRODUCT_BUNDLE_IDENTIFIER)" ]]; then
 				:
+			# PRODUCT_BUNDLE_IDENTIFIER sometimes can be different from Info.plist
 			else
 				if [[ ${PRODUCT_BUNDLE_IDENTIFIER} != "$info_plist_bundle_identifier" ]]; then
 					logi "$ERR PRODUCT_BUNDLE_IDENTIFIER($PRODUCT_BUNDLE_IDENTIFIER) setting is different from the value($info_plist_bundle_identifier) of CFBundleIdentifier in Info.plist."
 					die "$NOTE Please edit 'Product Bundle Identifier' in '$PRODUCT_NAME' > 'Build Settings' pane."
 				fi
-
-				PRODUCT_BUNDLE_IDENTIFIER=$info_plist_bundle_identifier
 			fi
 		fi
-	fi
 
+		# Override CFBundleIdentifier from Relfile
+		if [[ "${bundle_identifier:-undefined}" != undefined ]]; then
+			sed -i .$BAK_EXT \
+			-e "s/\(PRODUCT_BUNDLE_IDENTIFIER = \)\($PRODUCT_BUNDLE_IDENTIFIER\);/\1$bundle_identifier;/" \
+			"$PROJECT_FILE_PATH"/project.pbxproj
+
+			/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_identifier" "$INFO_PLIST_PATH"
+
+			PRODUCT_BUNDLE_IDENTIFIER=$bundle_identifier
+		fi
+	fi
 	logi "Bundle Identifier: $PRODUCT_BUNDLE_IDENTIFIER"
 
 	if [[ ${version:-undefined} == undefined ]]; then
