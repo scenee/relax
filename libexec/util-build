@@ -351,7 +351,7 @@ get_build_params_file () {
 	if test "${build_settings:-undefined}" != undefined; then
 		if test ${#build_settings[@]} -gt 0; then
 			for s in "${build_settings[@]}"; do
-				params+=( "${s//\{\}/ }" )
+				build_params+=( "${s//\{\}/ }" )
 			done
 		fi
 	fi
