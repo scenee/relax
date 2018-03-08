@@ -185,9 +185,10 @@ make_framework () {
 	/bin/ln -sfh "Versions/Current/${Framework_name}" \
 		"${framework_loc}/${Framework_name}"
 
-	if [ -d "${TARGET_BUILD_DIR}/$PUBLIC_HEADERS_FOLDER_PATH/" ]; then
+	local header_path="${TARGET_BUILD_DIR}/include/${TARGETNAME}"
+	if [ -d "${header_path}" ]; then
 		# Copy the public headers into the framework
-		/bin/cp -a "${TARGET_BUILD_DIR}/$PUBLIC_HEADERS_FOLDER_PATH/" \
+		/bin/cp -a "${header_path}/" \
 			"${framework_loc}/Versions/A/Headers"
 	fi
 }
