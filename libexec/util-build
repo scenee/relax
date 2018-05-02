@@ -719,6 +719,10 @@ update_archived_entitlements_xcent () {
 	local _app_path=$2
 	local _entitlements_xcent=$REL_TEMP_DIR/entitlements_xcent
 
+	if [[ ! -f "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" ]]; then
+		return
+	fi
+
 	#codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" > $REL_TEMP_DIR/codesign_info
 	#local cs_team_id=$(cat $REL_TEMP_DIR/codesign_info | sed -ne "s/TeamIdentifier=\(.*\)/\1/p")
 
