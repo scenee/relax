@@ -66,6 +66,7 @@ import (
 
   uploadSymbols : Bool
 */
+
 type ExportOptions struct {
 	Method            string `yaml:"method"                      plist:"method"`
 	Thinning          string `yaml:"thinning,omitempty"          plist:"thinning,omitempty"`
@@ -99,23 +100,26 @@ func (opts *ExportOptions) UnmarshalYAML(unmarshal func(interface{}) error) (err
 	return nil
 }
 
-func (opts *ExportOptions) SetProvisioningProfiles(bundleID string, provisioningProfile string) {
-	if bundleID == "" || provisioningProfile == "" {
+func (opts *ExportOptions) SetProvisioningProfiles(bundleID string, teamID string, provisioningProfile string) {
+	if bundleID == "" {
 		logger.Fatalf("bundleID is empty")
+	}
+	if provisioningProfile == "" {
+		logger.Fatalf("provisioningProfile is empty")
 	}
 
 	opts.SigningStyle = "manual"
+	opts.TeamID = teamID
 	opts.ProvisioningProfiles = map[string]string{bundleID: provisioningProfile}
+
+	infos := FindProvisioningProfile(provisioningProfile, teamID)
+	pp := infos[0].Pp
+
+	opts.Method = pp.ProvisioningType()
+	opts.SigningCertificate = pp.CertificateType()
 }
 
 func (opts *ExportOptions) Encode(encoder *plist.Encoder) {
-	switch opts.Method {
-	case "development":
-		opts.SigningCertificate = "iPhone Developer"
-	default:
-		opts.SigningCertificate = "iPhone Distribution"
-	}
-
 	err := encoder.Encode(opts)
 	if err != nil {
 		logger.Fatal(err)

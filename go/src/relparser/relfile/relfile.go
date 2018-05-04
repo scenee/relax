@@ -43,6 +43,20 @@ func LoadRelfile(path string) (*Relfile, error) {
 	return &rel, nil
 }
 
+func prepareFile(out string) (f *os.File) {
+	var err error
+	// Remove an existing file
+	if _, err = os.Stat(out); err == nil {
+		os.Remove(out)
+	}
+
+	if f, err = os.OpenFile(out, os.O_RDWR|os.O_CREATE, 0600); err != nil {
+		logger.Fatal(err)
+	}
+
+	return f
+}
+
 //
 // Relfile
 //
@@ -62,30 +76,10 @@ func (r Relfile) List() {
 	}
 }
 
-func (r Relfile) prepare_out(out string) (f *os.File) {
-	_, err := os.Stat(out)
-	if os.IsExist(err) {
-		os.Remove(out)
-	}
-
-	f, err = os.Create(out)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	f.Close()
-
-	f, err = os.OpenFile(out, os.O_WRONLY, 0666)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	return f
-}
-
 func (r Relfile) GenOptionsPlist(dist string, infoPlist, out string) {
 	d := r.Distributions[dist]
 
-	of := r.prepare_out(out)
+	of := prepareFile(out)
 	defer of.Close()
 
 	d.writeExportOptions(infoPlist, of)
@@ -94,20 +88,22 @@ func (r Relfile) GenOptionsPlist(dist string, infoPlist, out string) {
 func (r Relfile) GenPlist(dist string, in string, out string) {
 	d := r.Distributions[dist]
 
-	of := r.prepare_out(out)
+	of := prepareFile(out)
 	defer of.Close()
 
 	d.WriteInfoPlist(in, of)
 }
 
-func (r Relfile) GenSrouce(dist string, out string) {
+func (r Relfile) GenSource(dist string) *os.File {
 	d := r.Distributions[dist]
 
-	of := r.prepare_out(out)
+	of := prepareFile(os.TempDir() + "/relax/" + dist + "_source")
 	defer of.Close()
 
 	r.writeSource(of)
 	d.writeSource(dist, of)
+
+	return of
 }
 
 func (r Relfile) writeSource(out *os.File) {

@@ -4,13 +4,13 @@ load test_helper
 source libexec/util-build
 
 @test "relparser source" {
-	run $LIBEXEC_PATH/relparser -o $TMPDIR/source source adhoc
+	run $LIBEXEC_PATH/relparser source adhoc
 	assert_success
-	source $TMPDIR/source
+	source "${output}"
 	[ "$REL_CONFIG_xcodeproj" = "SampleApp" ] \
-	&& [ "$REL_CONFIG_adhoc_scheme" = "Sample App" ] \
-	&& [ "$REL_CONFIG_adhoc_team_id" = "J3D7L9FHSS" ] \
-	&& [ "$REL_CONFIG_adhoc_provisioning_profile" = "Relax AdHoc" ]
+		&& [ "$_SCHEME" = "Sample App" ] \
+		&& [ "$_TEAM_ID" = "J3D7L9FHSS" ] \
+		&& [ "$_PROVISIONING_PROFILE" = "Relax AdHoc" ]
 }
 
 @test "relparser export_options" {
@@ -20,7 +20,7 @@ source libexec/util-build
 	run plutil -lint $TMPDIR/options.plist
 	assert_success
 
-	cat $TMPDIR/options.plist > ../bats.log
+	# cat $TMPDIR/options.plist > ../bats.log
 
 	[ "$(/usr/libexec/PlistBuddy  -c "Print :teamID" $TMPDIR/options.plist)" == "J3D7L9FHSS" ] \
 	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :compileBitcode" $TMPDIR/options.plist)" == "false" ] \

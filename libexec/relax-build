@@ -23,21 +23,21 @@ build_project () {
 		die "build_project: bad argument \"$@\""
 	fi
 	
-	local _scheme=$1
-	local _sdk=$2
-	local _configuration=$3
+	local scheme=$1
+	local sdk=$2
+	local configuration=$3
 
-	logi "$ARROW Building $TARGETNAME ($_configuration) with $_sdk SDK"
+	logi "$ARROW Building $TARGETNAME ($configuration) with $sdk SDK"
 
 	local params=()
-	local params_file=$(get_build_params_file "$scheme" -sdk "$_sdk" -configuration "${_configuration}")
+	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -configuration "$configuration")
 
 	while read p; do params+=( "$p" ); done < $params_file
 
 	## Disable 'build_options' because `-enable{Address,Thread}Sanitizer` options don't work on 'xcodebuild archive'
 	# while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$Distribution")
 
-	local build_suffix=$(echo "${_configuration}-${_sdk}")
+	local build_suffix=$(echo "${configuration}-${sdk}")
 	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
 	local logfile="$PRODUCT_BUILD_ROOT/$build_suffix.log"
 
@@ -104,7 +104,11 @@ merge_frameworks() {
 	fi
 }
 
+# build_framework <scheme> <configuration>
 build_framework() {
+	local scheme=$1
+	local configuration=$2
+
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
 		logi "$ARROW Clean DerivedData of $TARGETNAME"
 		rm -rf $OBJROOT
@@ -193,11 +197,15 @@ make_framework () {
 	fi
 }
 
-# build_framework_with_static <Framework_name>
+# build_framework_with_static <scheme> <configuration> <Framework_name>
 build_framework_with_static () {
-	if test $# != 1; then
+	if test $# != 3; then
 		die "build_framework_with_static: bad argument"
 	fi
+
+	local scheme=$1
+	local configuration=$2
+	local framework_name=$3
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
 		logi "$ARROW Cleaning DerivedData of $TARGETNAME"
@@ -214,7 +222,7 @@ build_framework_with_static () {
 	# local static_lib="lib${PROJECT_NAME}.a"
 
 	local os_lib sim_lib
-	local framework_location="${PRODUCT_BUILD_ROOT}/${Framework_name}.framework"
+	local framework_location="${PRODUCT_BUILD_ROOT}/${framework_name}.framework"
 	
 
 	build_project "$scheme" iphoneos "$configuration"
@@ -232,7 +240,7 @@ build_framework_with_static () {
 	# Install module.modulemap if needed
 	while IFS= read -r modulemap && [[ -n "$modulemap" ]]
 	do
-		if cat $modulemap | grep -q "module  *$Framework_name  *{"; then
+		if cat $modulemap | grep -q "module  *$framework_name  *{"; then
 			logi "Found $modulemap"
 			if ! test -d "${framework_location}/Modules"; then
 				mkdir "${framework_location}/Modules"
@@ -266,6 +274,7 @@ No_simulator=false
 Framework_name=
 Show_progress=false
 Distribution=
+Configuration=
 
 while [ $# -ne 0 ];  do
 	arg=$1
@@ -276,7 +285,7 @@ while [ $# -ne 0 ];  do
 	-c)
 		[[ $# != 0 ]] || usage
 
-		configuration=$1
+		Configuration=$1
 		shift
 		;;
 	--completions)
@@ -319,6 +328,10 @@ done
 trap "teardown_build" EXIT INT TERM
 setup_build $Distribution
 
+if test -z "$Configuration"; then
+	Configuration="$_CONFIGURATION"
+fi
+
 rm -rf $PRODUCT_BUILD_ROOT
 mkdir -p $PRODUCT_BUILD_ROOT
 
@@ -328,16 +341,16 @@ fi
 
 if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" ]]; then
 	if [[ $Is_framework = true ]]; then
-		build_framework_with_static "$Framework_name"
+		build_framework_with_static "$_SCHEME" "$Configuration" "$Framework_name"
 	else
-		build_project  "${scheme}" "${sdk}" "${configuration}"
+		build_project  "$_SCHEME" "$_SDK" "$Configuration"
 		cp -a $BUILT_PRODUCTS_DIR/include $PRODUCT_BUILD_ROOT/
 		logi "Product: \n\t$PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME\n\t$PRODUCT_BUILD_ROOT/include"
 	fi
 elif [[ $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
 	[[ $Is_framework != true ]] || die "'--framework' is applicable only for a static library product"
-	build_framework "$Framework_name"
+	build_framework "$_SCHEME" "$Configuration"
 else
-	build_project "${scheme}" "${sdk}" "${configuration}"
+	build_project "$_SCHEME" "$_SDK" "$Configuration"
 	logi "Product: $PRODUCT_BUILD_ROOT/$FULL_PRODUCT_NAME"
 fi

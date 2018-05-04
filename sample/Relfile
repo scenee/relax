@@ -21,9 +21,8 @@ distributions:
   adhoc:
     scheme: Sample App
     team_id: J3D7L9FHSS
-    provisioning_profile: "${PROVISION_PROFILE_ADHOC}"
+    provisioning_profile: "Relax AdHoc"
     export_options:
-      method: ad-hoc 
       thinning : iPhone7,1
       compileBitcode: false
 
@@ -32,15 +31,12 @@ distributions:
     team_id: ABCDEFGHIJ
     bundle_identifier: com.scenee.SampleApp
     bundle_version:  "%h-%C"
-    export_options:
-      method: enterprise
 
   appstore:
     scheme: Sample App
     team_id: J3D7L9FHSS
     provisioning_profile: "Relax AppStore"
     export_options:
-      method: appstore
       upload_symbols: true
       #uploadSymbols: true
       #uploadBitcode: true
@@ -58,7 +54,7 @@ distributions:
   development:
     scheme: Sample App
     team_id: J3D7L9FHSS
-    provisioning_profile: "$PROVISION_PROFILE_DEV"
+    provisioning_profile: "Relax Development"
     configuration: Debug
     bundle_identifier: com.scenee.SampleApp
     bundle_version:  "%h-%c"
@@ -80,20 +76,18 @@ distributions:
       OTHER_SWIFT_FLAGS: 
         - "-DMOCK"
     export_options:
-      method: development # Required
       compileBitcode: false
 
   development2:
     sdk: iphoneos
     scheme: Sample App
     team_id: J3D7L9FHSS  # Required
-    provisioning_profile: "$PROVISION_PROFILE_DEV"
+    provisioning_profile: "Relax Development"
     configuration: Debug
     version: "$VERSION"
     bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
     bundle_version: "%h-debug-internal"
     export_options:
-      method: development # Required
       compileBitcode: false
 
 # vim: set sts=2 sw=2 ts=2 ft=yaml expandtab :

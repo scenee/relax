@@ -40,9 +40,6 @@ relax dec -p "$DECORD_KEY" sample/certificates/Relax_AdHoc.mobileprovision.enc
 relax profile add sample/certificates/Relax_Development.mobileprovision
 relax profile add sample/certificates/Relax_AdHoc.mobileprovision
 
-export PROVISION_PROFILE_DEV="Relax Development"
-export PROVISION_PROFILE_ADHOC="Relax AdHoc"
-
 ############
 # Run Test #
 ############

@@ -37,8 +37,8 @@ set_archive_config () {
 		die "$FUNCNAME(): not found $xcscheme_path"
 	fi
 
-	logi "$ARROW Set \""$configuration"\" to BuildConfiguration in xcscheme"
-	sed -i."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$configuration\"/" "$xcscheme_path"
+	logi "$ARROW Set \""$_CONFIGURATION"\" to BuildConfiguration in xcscheme"
+	sed -i."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$_CONFIGURATION\"/" "$xcscheme_path"
 }
 
 # make_archive <archive_path>
@@ -47,9 +47,9 @@ make_archive () {
 	shift
 
 	### Update 'Configuration' in a xcscheme ###
-	XCSCHEME_PATH="$(__find_xcscheme "$scheme")"
+	XCSCHEME_PATH="$(__find_xcscheme "$_SCHEME")"
 	if [[ -n "$XCSCHEME_PATH" ]]; then
-		set_archive_config "$XCSCHEME_PATH" "$configuration"
+		set_archive_config "$XCSCHEME_PATH" "$_CONFIGURATION"
 		logi "Scheme: $XCSCHEME_PATH"
 		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##*/}"
 	fi
@@ -62,14 +62,14 @@ make_archive () {
 		fi
 	fi
 
-	logi "$ARROW Archiving $scheme ($configuration) with $sdk SDK"
+	logi "$ARROW Archiving $_SCHEME ($_CONFIGURATION) with $_SDK SDK"
 
 	### Finish update Info plist ###
 	if [[ -n $INFO_PLIST_PATH ]]; then
 		cp "$INFO_PLIST_PATH" "$PRODUCT_BUILD_ROOT/$(basename "$INFO_PLIST_PATH")"
 	fi
 
-	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -archivePath "$archive_path")
+	local params_file=$(get_build_params_file "$_SCHEME" -sdk "$_SDK" -archivePath "$archive_path")
 
 	while read p; do params+=( "$p" ); done < $params_file
 
@@ -91,9 +91,9 @@ make_archive () {
 	##   XXXX does not support provisioning profiles, but provisioning profile 
 	##   NO_SIGNING/ has been manually specified. Set the provisioning profile
 	#    value to "Automatic" in the build settings editor.¬
-	# params=("${params[@]}"  DEVELOPMENT_TEAM="$team_id")
+	# params=("${params[@]}"  DEVELOPMENT_TEAM="$_TEAM_ID")
 
-	xcodebuild -showBuildSettings "${params[@]}" > "$PRODUCT_BUILD_ROOT/build-settings-${sdk}-${configuration}"
+	xcodebuild -showBuildSettings "${params[@]}" > "$PRODUCT_BUILD_ROOT/build-settings-${_SDK}-${_CONFIGURATION}"
 
 	params=("${params[@]}" "$@" clean archive)
 	

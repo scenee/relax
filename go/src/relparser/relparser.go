@@ -20,7 +20,7 @@ var logger *log.Logger
 
 func usage() {
 	fmt.Println("usage: relparser [-f <Relfile>] list")
-	fmt.Println("       relparser [-f <Relfile>] [-o <output>] source <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] source <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] build_options <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] plist <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] -plist <Info.plist> export_options <distribution>")
@@ -77,7 +77,8 @@ func main() {
 
 	switch cmd {
 	case "source":
-		rel.GenSrouce(dist, out)
+		out := rel.GenSource(dist)
+		fmt.Println(out.Name())
 
 	case "plist":
 		rel.GenPlist(dist, infoPlist, out)

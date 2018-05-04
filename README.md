@@ -62,30 +62,15 @@ $ cd /path/to/your/project
 $ relax init
 ```
 
-## Archive and Export
+## Create an IPA file
 
 ```bash
-# Build a xcarchive file
-# `xcodebuild` stdout is always written to a log file.
-# If you would like to print logs in your console, please use with '-v' option.
-$ relax -v archive adhoc
-
-# Print a path to a built archive
-$ relax show adhoc archive
-
-# Export an ipa file
-# Relax can export it on a different team and certificate from one signed xcarchive.
-$ relax export adhoc
-
-# Print a path to a exported ipa file
-$ relax show adhoc ipa
+$ relax dist dev
 ```
 
 # Relfile
 
-Relfile is a configuration file for `relax`.
-
-The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them. See [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
+Relfile is a configuration file for Relax. The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them. See [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 Here is an example.
 
@@ -93,7 +78,7 @@ Here is an example.
 version: '2'
 
 workspace: SampleApp
-distributions:  # Define a distribution
+distributions:
   dev:
     # Required
     scheme: SampleApp
@@ -122,7 +107,7 @@ distributions:  # Define a distribution
   prod:
     # Required
     scheme: SampleApp
-    team_id: ABCDEFGHIJ
+    team_id: KLMNOPQRST
     provisioning_profile: 'Relax Enterprise'
 
     # Optional
@@ -181,28 +166,39 @@ The characters and their meanings are as follows.
 
 ## Export Option Support
 
-| Option                                   | Response status                                           |
-| :--------------------------------------- | :-------------------------------------------------------- |
-| compileBitcode                           | OK                                                        |
-| embedOnDemandResourcesAssetPacksInBundle | Not yet                                                   |
-| iCloudContainerEnvironment               | Not yet                                                   |
-| manifest                                 | Not yet                                                   |
-| method                                   | OK                                                        |
-| onDemandResourcesAssetPacksBaseURL       | Not yet                                                   |
-| teamID                                   | Applied `team_id` prop in Relfile                         |
-| provisioningProfiles                     | Generated from `provisioning_profile` prop in Relfile     |
-| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' |
-| signingStyle                             | Auto-assigned 'automatic' or 'manual'                     |
-| thinning                                 | OK                                                        |
-| uploadBitcode                            | OK                                                        |
-| uploadSymbols                            | OK                                                        |
+| Option                                   | Response status                                                                                                 |
+| :--------------------------------------- | :------------------------------------------------------------------                                             |
+| compileBitcode                           | OK                                                                                                              |
+| embedOnDemandResourcesAssetPacksInBundle | Not supported                                                                                                   |
+| iCloudContainerEnvironment               | Not supported                                                                                                   |
+| manifest                                 | Not supported                                                                                                   |
+| method                                   | Auto-assigned 'ad-hoc', 'app-store', 'development' or 'enterprise' determined from `provisioning_profile` field |
+| onDemandResourcesAssetPacksBaseURL       | Not supported                                                                                                   |
+| teamID                                   | Auto-assigned a value of `team_id` field                                                                        |
+| provisioningProfiles                     | Auto-assigned a value of `provisioning_profile` field                                                           |
+| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' determined from `provisioning_profile` field          |
+| signingStyle                             | Auto-assigned 'automatic' or 'manual' determined from `provisioning_profile` field                              |
+| thinning                                 | OK                                                                                                              |
+| uploadBitcode                            | OK                                                                                                              |
+| uploadSymbols                            | OK                                                                                                              |
 
 # Advanced
+
+## Create a xcarchive file
+
+```bash
+$ relax archive dev
+```
+
+## Export a xcarchive file to an ipa file
+
+```bash
+$ relax export "/path/to/xcarchive"
+```
 
 ## Validate the ipa
 
 ```bash
-# Validate the ipa file
 $ relax validate "$(relax show adhoc ipa)"
 ```
 

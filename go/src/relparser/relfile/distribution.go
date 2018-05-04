@@ -12,23 +12,41 @@ import (
 //
 
 type Distribution struct {
-	Sdk                 string                 `yaml:"sdk",omitempty"`
-	Scheme              string                 `yaml:"scheme""`
-	TeamID              string                 `yaml:"team_id"`
-	ProvisioningProfile string                 `yaml:"provisioning_profile,omitempty"`
-	Configuration       string                 `yaml:"configuration,omitempty"`
-	Version             string                 `yaml:"version,omitempty"`
-	BundleID            string                 `yaml:"bundle_identifier,omitempty"`
-	BundleVersion       string                 `yaml:"bundle_version,omitempty"`
-	InfoPlist           map[string]interface{} `yaml:"info_plist,omitempty"`
-	BuildSettings       map[string]interface{} `yaml:"build_settings,omitempty"`
-	BuildOptions        BuildOptions           `yaml:"build_options,omitempty"`
-	ExportOptions       ExportOptions          `yaml:"export_options,omitempty"`
+	// Required
+	Scheme              string `yaml:"scheme""`
+	TeamID              string `yaml:"team_id"`
+	ProvisioningProfile string `yaml:"provisioning_profile"`
+
+	// Optional
+	Sdk           string                 `yaml:"sdk",omitempty"`
+	Configuration string                 `yaml:"configuration,omitempty"`
+	Version       string                 `yaml:"version,omitempty"`
+	BundleID      string                 `yaml:"bundle_identifier,omitempty"`
+	BundleVersion string                 `yaml:"bundle_version,omitempty"`
+	InfoPlist     map[string]interface{} `yaml:"info_plist,omitempty"`
+	BuildSettings map[string]interface{} `yaml:"build_settings,omitempty"`
+	BuildOptions  BuildOptions           `yaml:"build_options,omitempty"`
+	ExportOptions ExportOptions          `yaml:"export_options,omitempty"`
 }
 
 //
 // Utils
 //
+
+func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	type typeAlias Distribution
+	var t = &typeAlias{
+		Sdk: "iphoneos",
+	}
+
+	err = unmarshal(t)
+	if err != nil {
+		return err
+	}
+
+	*d = Distribution(*t)
+	return nil
+}
 
 const PREFIX string = "REL_CONFIG"
 
@@ -52,7 +70,7 @@ func getBundleID(path string) string {
 
 	f, err = os.Open(path)
 	if err != nil {
-		logger.Fatalf("open error:", err)
+		logger.Fatalf("open error: %v", err)
 	} else {
 		defer f.Close()
 		decoder = plist.NewDecoder(f)
@@ -60,7 +78,7 @@ func getBundleID(path string) string {
 
 	err = decoder.Decode(&data)
 	if err != nil {
-		logger.Fatalf("decode error:", err)
+		logger.Fatalf("decode error: %v", err)
 	}
 
 	props, ok := data["ApplicationProperties"].(map[string]interface{})
@@ -138,12 +156,15 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 }
 
 func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
-
 	var (
 		bundleID string
 		encoder  *plist.Encoder
 		opts     ExportOptions
 	)
+
+	if d.ProvisioningProfile == "" {
+		logger.Fatalf("`provisioning_profile` field is required in Relfile")
+	}
 
 	// get bundle identifier
 	if d.BundleID == "" {
@@ -157,29 +178,30 @@ func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
 
 	// fmt.Println("export options:", d.ExportOptions)
 	opts = d.ExportOptions
-	opts.TeamID = d.TeamID
-	if d.ProvisioningProfile != "" {
-		opts.SetProvisioningProfiles(bundleID, d.ProvisioningProfile)
-	}
+	opts.SetProvisioningProfiles(bundleID, d.TeamID, d.ProvisioningProfile)
 	opts.Encode(encoder)
 }
 
 func (d Distribution) writeSource(name string, out *os.File) {
-
 	var (
 		err            error
 		source         string
 		build_settings string
 	)
 
-	source += genSourceLine2(name, "scheme", d.Scheme)
-	source += genSourceLine2(name, "sdk", d.Sdk)
-	source += genSourceLine2(name, "configuration", d.Configuration)
-	source += genSourceLine2(name, "provisioning_profile", d.ProvisioningProfile)
-	source += genSourceLine2(name, "team_id", d.TeamID)
-	source += genSourceLine2(name, "bundle_identifier", d.BundleID)
-	source += genSourceLine2(name, "bundle_version", d.BundleVersion)
-	source += genSourceLine2(name, "version", d.Version)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_SCHEME", d.Scheme)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_SDK", d.Sdk)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_CONFIGURATION", d.Configuration)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", d.ProvisioningProfile)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", d.TeamID)
+
+	infos := FindProvisioningProfile(d.ProvisioningProfile, d.TeamID)
+	pp := infos[0].Pp
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
+
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_ID", d.BundleID)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_VERSION", d.BundleVersion)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_VERSION", d.Version)
 
 	// fmt/Println("--- Build settings\n")
 	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")

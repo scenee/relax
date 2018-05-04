@@ -173,8 +173,8 @@ __kill_bg_xcodebuid_task () {
 }
 
 
-# __is_distribution_profile <mobileprovision_file>
-__is_distribution_profile () {
+# _is_distribution_profile <mobileprovision_file>
+_is_distribution_profile () {
 	local mobileprovision="$1"
 
 	[[ -f "$mobileprovision" ]] || return
@@ -199,53 +199,15 @@ __is_distribution_profile () {
 }
 
 
-# TODO It can be replacted with a ruby script.
+# TODO This can be replaced in Golang.
 # __map_vals <release>
 __map_vals () {
 	local release=$1
+	test -n "$release" || die "'$release' distribution is not defined in Relfile"
 	set +u
-	test -z $scheme && \
-		scheme=$(eval echo '$'REL_CONFIG_${release}_scheme)
-	test -z $configuration && \
-		configuration=$(eval echo '$'REL_CONFIG_${release}_configuration)
-	test -z $sdk && \
-		sdk=$(eval echo '$'REL_CONFIG_${release}_sdk)
-	test -z $team_id && \
-		team_id=$(eval echo '$'REL_CONFIG_${release}_team_id)
-	test -z $provisioning_profile && \
-		provisioning_profile=$(eval echo '$'REL_CONFIG_${release}_provisioning_profile)
-	test -z $build_settings && \
-		build_settings=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
-	test -z $bundle_identifier && \
-		bundle_identifier=$(eval echo '$'REL_CONFIG_${release}_bundle_identifier)
-	test -z $version && \
-		version=$(eval echo '$'REL_CONFIG_${release}_version)
-	test -z $bundle_version && \
-		bundle_version=$(eval echo '$'REL_CONFIG_${release}_bundle_version)
-	test -z $team_id && \
-		team_id=$(eval echo '$'REL_CONFIG_${release}_team_id)
-	test -z $export_option_method  && \
-		export_option_method=$(eval echo '$'REL_CONFIG_${release}_export_options_method)
-	test -z $export_option_upload_symbols && \
-		export_option_upload_symbols=$(eval echo '$'REL_CONFIG_${release}_export_options_uploadSymbols)
-	test -z $export_option_compile_bitcode && \
-		export_option_compile_bitcode=$(eval echo '$'REL_CONFIG_${release}_export_options_compileBitcode)
-	test -z $export_option_upload_bitcode && \
-		export_option_upload_bitcode=$(eval echo '$'REL_CONFIG_${release}_export_options_uploadBitcode)
-	test -z $export_option_thinning && \
-		export_option_thinning=$(eval echo '$'REL_CONFIG_${release}_export_options_thinning)
+	test -z $_BUILD_SETTINGS && \
+		readonly _BUILD_SETTINGS=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
 	set -u
-
-	if test -z $sdk; then
-		sdk=iphoneos
-	fi
-
-	if [[ -z $release ]]; then
-		die "Undefined '$release' in Relfile"
-	fi
-	if [[ -z $scheme ]]; then
-		die "'scheme' of $release isn't defined in Relfile"
-	fi
 }
 
 
@@ -284,12 +246,12 @@ __replace_development_team () {
 		' "$pbxproj"
 	else
 		sed -i.$BAK_EXT -e "
-		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$team_id;:g;
-		s:\(DevelopmentTeam = \)\(.*\);:\1$team_id;:g;
+		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$_TEAM_ID;:g;
+		s:\(DevelopmentTeam = \)\(.*\);:\1$_TEAM_ID;:g;
 		" "$pbxproj"
 	fi
 
-	export DEVELOPMENT_TEAM=$team_id
+	export DEVELOPMENT_TEAM=$_TEAM_ID
 }
 
 # get_build_base_params <scheme> [buildsettings=value] ...
@@ -312,45 +274,24 @@ get_build_params_file () {
 		done
 	fi
 	
-	[[ ${build_params[@]} =~ "-configuration" ]] || [[ -z $configuration ]] ||\
-		build_params+=( -configuration "$configuration" )
+	[[ ${build_params[@]} =~ "-configuration" ]] || [[ -z $_CONFIGURATION ]] ||\
+		build_params+=( -configuration "$_CONFIGURATION" )
 
 	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
-	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
-		if is_xcode_version ">=" 8; then
-			build_params+=( PROVISIONING_PROFILE_SPECIFIER="$provisioning_profile" )
-		fi
-		if is_xcode_version ">=" 9; then
-			build_params+=( CODE_SIGN_STYLE="Manual" )
-		fi
-
-		local mobileprovision=$(find_mobileprovision --latest "^$provisioning_profile$")
-		[[ -n $mobileprovision ]] || die "Not found '$provisioning_profile' provisoning profile"
-
-		# Should use development signing for archive. Refer to this session,
-		# https://developer.apple.com/videos/play/wwdc2016/401/.
-		# But it's not working when exporing an adhoc IPA file.
-		# I confirmed It's working well in Xcode 7.3.1.
-		local sign_identity;
-		if [[ "$(__is_distribution_profile "$mobileprovision")" = true ]]; then
-			sign_identity="iPhone Distribution"
-		else
-			sign_identity="iPhone Developer"
-		fi
-
-		# local temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
-		# dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
-		# local team_name=$(/usr/libexec/PlistBuddy -c "Print :TeamName" "$temp_mobileprovision")
-		# build_params+=( CODE_SIGN_IDENTITY="$sign_identity: $team_name" )
-		build_params+=( CODE_SIGN_IDENTITY="$sign_identity" )
-	else
-		build_params+=( CODE_SIGN_IDENTITY="iPhone Developer" )
+	if is_xcode_version ">=" 8; then
+		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
 	fi
 
-	if test "${build_settings:-undefined}" != undefined; then
-		if test ${#build_settings[@]} -gt 0; then
-			for s in "${build_settings[@]}"; do
+	if is_xcode_version ">=" 9; then
+		build_params+=( CODE_SIGN_STYLE="Manual" )
+	fi
+
+	build_params+=( CODE_SIGN_IDENTITY="$_IDENTITY" )
+
+	if test "${_BUILD_SETTINGS:-undefined}" != undefined; then
+		if test ${#_BUILD_SETTINGS[@]} -gt 0; then
+			for s in "${_BUILD_SETTINGS[@]}"; do
 				build_params+=( "${s//\{\}/ }" )
 			done
 		fi
@@ -520,7 +461,6 @@ teardown_build () {
 
 # setup_build [--export <archive-path>] <release>
 setup_build () {
-
 	local for_export=false
 	local archive_path archived_info_plist version
 
@@ -550,19 +490,24 @@ setup_build () {
 	# Load Relfile
 	config_load "$REL_CONFIG_PATH" "$release"
 	__map_vals "$release"
-	__check_scheme "$scheme"
+	__check_scheme "$_SCHEME"
 
-	params_file=$(get_build_params_file "$scheme")
+	params_file=$(get_build_params_file "$_SCHEME")
 
 	load_xcode_build_settings $params_file
+
+	if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
+		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
+	fi
+
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
 
 	if [[ "${team_id:-undefined}" != undefined ]]; then
-		__replace_development_team $team_id
+		__replace_development_team $_TEAM_ID
 	fi
 
 	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
-		die "This scheme($scheme) isn't for an Application, Framework or Library target"
+		die "This scheme($_SCHEME) isn't for an Application, Framework or Library target"
 	fi
 
 	logi "$ARROW Set up '$release' configurations"
@@ -620,25 +565,26 @@ setup_build () {
 		fi
 
 		# Override CFBundleIdentifier from Relfile
-		if [[ "${bundle_identifier:-undefined}" != undefined ]]; then
+		if [[ "${_BUNDLE_ID:-undefined}" != undefined ]]; then
 			sed -i .$BAK_EXT \
-			-e "s/\(PRODUCT_BUNDLE_IDENTIFIER = \)\($PRODUCT_BUNDLE_IDENTIFIER\);/\1$bundle_identifier;/" \
+			-e "s/\(PRODUCT_BUNDLE_IDENTIFIER = \)\($PRODUCT_BUNDLE_IDENTIFIER\);/\1$_BUNDLE_ID;/" \
 			"$PROJECT_FILE_PATH"/project.pbxproj
 
-			/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_identifier" "$INFO_PLIST_PATH"
+			/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $_BUNDLE_ID" "$INFO_PLIST_PATH"
 
-			PRODUCT_BUNDLE_IDENTIFIER=$bundle_identifier
+			PRODUCT_BUNDLE_IDENTIFIER=$_BUNDLE_ID
 		fi
 	fi
 	logi "Bundle Identifier: $PRODUCT_BUNDLE_IDENTIFIER"
 
-	if [[ ${version:-undefined} == undefined ]]; then
+	if [[ ${_VERSION:-undefined} == undefined ]]; then
 		BUNDLE_SHORT_VERSION="$(get_info_plist_value ":CFBundleShortVersionString" "$INFO_PLIST_PATH")"
 	else
-		BUNDLE_SHORT_VERSION="$version"
+		BUNDLE_SHORT_VERSION="$_VERSION"
 	fi
 
-	if [[ $for_export == true && "${bundle_version:-undefined}" = undefined ]]; then
+	## Bundle Version
+	if [[ $for_export == true && "${_BUNDLE_VERSION:-undefined}" = undefined ]]; then
 		BUNDLE_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
 		if [[ -z "$BUNDLE_VERSION" ]]; then
 			BUNDLE_VERSION="$(get_info_plist_value ":CFBundleVersion" "$archived_info_plist")"
@@ -648,17 +594,17 @@ setup_build () {
 			BUNDLE_SHORT_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleShortVersionString" "$archived_info_plist")"
 		fi
 	else
-		## Bundle Version
 		local abbcommit=$(git log -1 --format='%h')
 		local branch=$(git symbolic-ref --short HEAD)
-		local config=$(echo $configuration | tr [:upper:] [:lower:])
+		local config=$(echo $_CONFIGURATION | tr [:upper:] [:lower:])
 
-		if test "${bundle_version:-undefined}" = undefined; then
+		if test "${_BUNDLE_VERSION:-undefined}" = undefined; then
 			BUNDLE_VERSION=$(print_info_plist bundle_version "$INFO_PLIST_PATH")
 		else
-			BUNDLE_VERSION=$bundle_version
+			BUNDLE_VERSION=$_BUNDLE_VERSION
 		fi
 
+		# Replace special characters
 		BUNDLE_VERSION=$(echo "$BUNDLE_VERSION" | awk '
 		{
 			gsub(/%c/, "'"$config"'");
@@ -683,22 +629,20 @@ setup_build () {
 	logi "Build Root: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
 
-	## Provisioning Profile
-	if [[ -n $provisioning_profile ]]; then  # Custom Sigining
-		if is_xcode_version ">=" 8; then
-			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-				sed -i .$BAK_EXT \
-				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-				"$PROJECT_FILE_PATH"/project.pbxproj
-			else
-				s='[[:space:] ]*'
-				sed -i .$BAK_EXT \
-				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
-				\1ProvisioningStyle = Manual;\
-				/" "$PROJECT_FILE_PATH"/project.pbxproj 
-			fi
-			logi "$ARROW Switch to Manual signing with '$provisioning_profile' provisioning profile"
+	## Switch to Manual Signing
+	if is_xcode_version ">=" 8; then
+		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+			sed -i .$BAK_EXT \
+			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+			"$PROJECT_FILE_PATH"/project.pbxproj
+		else
+			s='[[:space:] ]*'
+			sed -i .$BAK_EXT \
+			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+			\1ProvisioningStyle = Manual;\
+			/" "$PROJECT_FILE_PATH"/project.pbxproj 
 		fi
+		logi "$ARROW Switch to Manual signing with '$_PROVISIONING_PROFILE' provisioning profile"
 	fi
 }
 
@@ -754,6 +698,8 @@ update_archived_entitlements_xcent () {
 	cp "$_entitlements_xcent" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT"
 }
 
+declare -x -f _is_distribution_profile
+
 declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
 declare -x -f __check_scheme __map_vals __replace_development_team __setup_build_params
@@ -765,4 +711,3 @@ declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
 declare -x -f read_path
 declare -x -f dec_provisioning_profile
-declare -x -f __is_distribution_profile
