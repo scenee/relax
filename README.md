@@ -93,10 +93,6 @@ Here is an example.
 version: '2'
 
 workspace: SampleApp
-uploader:
-  crashlytics:
-    token:  __MY_TOKEN__
-    secret: __MY_SECRET__
 distributions:  # Define a distribution
   dev:
     # Required
@@ -201,17 +197,6 @@ The characters and their meanings are as follows.
 | uploadBitcode                            | OK                                                        |
 | uploadSymbols                            | OK                                                        |
 
-## Uploader Support 
-
-### Crashlytics
-
-| Option                                   | Response status                                           |
-| :--------------------------------------- | :-------------------------------------------------------- |
-| token                                    | A API token                                               |
-| secret                                   | A build secret                                            |
-| group                                    | A group name                                              |
-
-
 # Advanced
 
 ## Validate the ipa
@@ -233,13 +218,6 @@ $ relax validate SampleApp-resigned.ipa
 
 ```bash
 $ relax symbolicate sampleapp.crash SampleApp.xcarchive
-```
-
-## Upload ipa
-
-```bash
-# Upload the ipa file (Need to add a token and secret in Relfile)
-$ relax upload crashlytics "$(relax show adhoc ipa)"
 ```
 
 ## `keychain` commands
