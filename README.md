@@ -3,7 +3,7 @@
 
 # Relax
 
-Relax is a declarative release tool for iOS App distributions that encourages rapid distribution.
+Relax is a **declarative** and **CI oriented** release tool for iOS App distributions that encourages rapid distribution **under your control**.
 
 You don't need to write the same build script any more when you deliver your apps. Relax will save your time. You just write a declarative configuration file(aka. Relfile) for the distributions.
 
@@ -11,16 +11,19 @@ It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. 
 
 Relax can
 
-- **Easy to release** multi distributions(i.e. adhoc, enterprise & appstore) with each build settings like code signing, bundle id and bundle version, etc.
-- **Validate an ipa** to check if it has a correct codesign, a mobileprovision and entitlements
-- **Resign an ipa** for a distribution with a different bundle identifier, cetificate and provisioning profile
-- **Set up a custom keychain** not to depend on a keychain settings in a build machine
-
-In background, it works as below.
-
-- Modify & Revert Info.plist properties and build settings in a xcodeproj file
-- Switch codesign modes(Automatic or Manual) implicitly if you specify a provisioning profile in Relfile
-
+- **Declarative**
+    - Ralax uses the declarative file(Relfile) to configure your each build. It makes you easy to read and understand your build.
+- **CI oriented**
+    - Relax is easy to integrate CI tools(Jenkins, Bamboo, etc) and services(TravisCI, CircleCI, etc).
+- **Under control(Reproducible)**: 
+    - Manual Signing in free: Relax runs a build only on manual signing mode, but don't worry, it automatically switches a codesigning mode from Automatic to Manual only in build time. Therefore you can use Automatic Signing in your development.
+    - Custom Keychain store: Relax makes and switch a temp keychain. You won't affected from a keychain settings in a build machine and reproduce your build on your machine.
+    - Validation: Check a IPA file if it has a correct codesigning and entitlements.
+    - Resign: Resign a IPA file for a distribution with a different bundle identifier, cetificate and provisioning profile
+- **Safe**
+    - You don't need to share your AppleID and **password**.
+- **Easy to customize**: Relax is easy to customize Info.plist and Build Settings of your Xcode project only in build time.
+    - Multi distributions(i.e. adhoc, enterprise & appstore): You can setup each configuration like code signing, Info.plist, Build Settings, etc.
 
 # Installation
 
@@ -78,35 +81,6 @@ $ relax export adhoc
 $ relax show adhoc ipa
 ```
 
-## Validate the ipa
-
-```bash
-# Validate the ipa file
-$ relax validate "$(relax show adhoc ipa)"
-```
-
-## Resign an ipa for an enterprise distribution
-
-```bash
-
-$ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show dev ipa)"
-$ relax validate SampleApp-resigned.ipa
-```
-
-## Symbolicate a crash log
-
-```bash
-$ relax symbolicate sampleapp.crash SampleApp.xcarchive
-```
-
-## Upload ipa
-
-```bash
-# Upload the ipa file (Need to add a token and secret in Relfile)
-$ relax upload crashlytics "$(relax show adhoc ipa)"
-
-```
-
 # Relfile
 
 Relfile is a configuration file for `relax`.
@@ -119,47 +93,58 @@ Here is an example.
 version: '2'
 
 workspace: SampleApp
-log_formatter: xcpretty
 uploader:
   crashlytics:
     token:  __MY_TOKEN__
     secret: __MY_SECRET__
 distributions:  # Define a distribution
   dev:
+    # Required
     scheme: SampleApp
     team_id: ABCDEFGHIJ
-    provisioning_profile: "Relax Adhoc"
+    provisioning_profile: 'Relax Adhoc'
+
+    # Optional
     configuration: Debug
-    version: 0.1.0
-    bundle_version: "%b-%h-$c"  # See 'Bundle Version Format section'
+
+    version: '1.0.1'
+
     bundle_identifier: com.scenee.SampleApp.dev
+    bundle_version: '%b-%h-$c'  # See 'Bundle Version Format section'
+
     info_plist:
-      CFBundleName: "SmapleApp(Debug)"
+      CFBundleName: 'SmapleApp(Debug)'
       UISupportedExternalAccessoryProtocols:
         - com.example.test-accessory
     build_settings:
       OTHER_SWIFT_FLAGS:
-        - "-DMOCK"
+        - '-DMOCK'
+
     export_options:
-      method:  ad-hoc
       compileBitcode: false
 
   prod:
+    # Required
     scheme: SampleApp
     team_id: ABCDEFGHIJ
-    provisioning_profile: "Relax Enterprise"
-    version: 1.0
-    bundle_version: "$BUILD_NUMBER"  # You can use shell environment variables!
+    provisioning_profile: 'Relax Enterprise'
+
+    # Optional
     bundle_identifier: com.scenee.SampleApp
+    bundle_version: '$BUILD_NUMBER'  # You can use shell environment variables!
+
     info_plist:
       UISupportedExternalAccessoryProtocols:
         - com.example.accessory
-    export_options:
-      method:  enterprise
 
   framework:
+    # Required
     scheme: Sample Framework
+
+    # Optional
     configuration: Release
+
+log_formatter: xcpretty # Optional
 ```
 
 ## Use an Environment variable
@@ -227,9 +212,37 @@ The characters and their meanings are as follows.
 | group                                    | A group name                                              |
 
 
-# CI Utilities
+# Advanced
 
-## relax keychain
+## Validate the ipa
+
+```bash
+# Validate the ipa file
+$ relax validate "$(relax show adhoc ipa)"
+```
+
+## Resign an ipa for an enterprise distribution
+
+```bash
+
+$ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show dev ipa)"
+$ relax validate SampleApp-resigned.ipa
+```
+
+## Symbolicate a crash log
+
+```bash
+$ relax symbolicate sampleapp.crash SampleApp.xcarchive
+```
+
+## Upload ipa
+
+```bash
+# Upload the ipa file (Need to add a token and secret in Relfile)
+$ relax upload crashlytics "$(relax show adhoc ipa)"
+```
+
+## `keychain` commands
 
 The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
 Actually this is an useful wrapper of `security` command.
@@ -239,7 +252,7 @@ Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/
 $ relax help keychain
 ```
 
-## relax profile
+## `profile` commands
 
 The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
 
@@ -247,20 +260,6 @@ Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/
 ```
 $ relax help profile
 ```
-
-# What's different from fastlane?
-
-- Easy to maintain
-    - Written by go and bash. You don't have to setup and maintain a ruby environment, just install it by Homebrew or curl.
-- Small
-    - Just a wrapper of command line developer tools in Xcode.app
-    - Not access to Apple Developer Portal
-        - Because I believe it's should be manually especially when you work in other iOS devs, so that it aim to achieve full automation build.
-    - Easy back to pure build with `xcodebuild` and other tools according to Relfile settings.
-- Readable
-    - Relfile is easy to understand what your build needs
-
-However personally I like fastlane. relax will be usefull in a professional service company for iOS apps.
 
 # Known Issues
 
