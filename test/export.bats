@@ -6,13 +6,13 @@ load test_helper
   run relax export development
   assert_success
   [[ ! "${output}" =~ "\[[ \*]*\]" ]]
-  [[ "${output}" =~ "Time:" ]]
+  [[ ! "${output}" =~ "Time:" ]]
 }
 
 @test "relax export development --progress" {
   run relax export development --progress
   assert_success
-  [[ "${output}" =~ "\[[ \*]*\]" ]]
+  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
 }
 

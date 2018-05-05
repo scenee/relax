@@ -7,6 +7,7 @@
 
 export REL_TEMP_DIR=
 export REL_LOG_LEVEL=
+export REL_LOG_LEVEL_QUIET=QUIET
 export REL_LOG_LEVEL_DEBUG=DEBUG
 export REL_LOG_LEVEL_VERBOSE=VERBOSE
 export ARROW="${BLUE}==>${NC}${BOLD}"
@@ -146,7 +147,9 @@ logw() {
 }
 
 logi () {
-	__log "$@"
+	if [[ ! ${REL_LOG_LEVEL:-undefined} =~ .*"$REL_LOG_LEVEL_QUIET".* ]]; then
+		__log "$@"
+	fi
 }
 
 logd () {

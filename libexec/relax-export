@@ -37,14 +37,16 @@ export_archive () {
 			-o "$EXPORT_OPTIONS_PLIST" \
 			-plist "$raw_info_plist"  \
 			export_options $distribution
-		cat $EXPORT_OPTIONS_PLIST
-		printf "\n"
+		logi "$(cat $EXPORT_OPTIONS_PLIST)"
+		logi ""
 	fi
 
-	if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$_TEAM_ID"; then
-		:
-	else
-		update_archived_entitlements_xcent "$_TEAM_ID" "$app_path"
+	if [[ -f "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" ]]; then
+		if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$_TEAM_ID"; then
+			:
+		else
+			update_archived_entitlements_xcent "$_TEAM_ID" "$app_path"
+		fi
 	fi
 
 	if [ -z "$(find "$archive_path" -type f)" ]; then
@@ -110,7 +112,7 @@ export_archive () {
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
 	else
-		logi "$ARROW $ipa_path"
+		echo "$ipa_path"
 	fi
 }
 
@@ -151,10 +153,10 @@ do
 		use_packageapp=true
 		;;
 	*)
-		if [[ $arg =~ (.).xcarchive ]]; then
+		if [[ "$arg" =~ (.*).xcarchive ]]; then
 			target_archive_file="$arg"
-			if [[ ! -d $target_archive_file ]]; then
-				die "Not found $target_archive_file "
+			if [[ ! -d "$target_archive_file" ]]; then
+				die "Not found $target_archive_file"
 			fi
 		else
 			distribution=$arg

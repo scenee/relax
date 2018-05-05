@@ -5,8 +5,60 @@
 ### YAML ###
 ############
 
+# generate_relfile <scheme> <profile>
+generate_relfile () {
+	local scheme="$1"
+	local profile="$2"
+
+	[[ -n "$profile" ]] || profile='"<# Your Provisioning Profile #>"'
+
+	cat <<-EOF > $REL_TEMP_DIR/Relfile
+	#
+	# Relax configuration YAML
+	#
+	
+	EOF
+
+	echo 'version: '${RELFILE_VERSION}'' >> $REL_TEMP_DIR/Relfile
+	# Check xcworkproj existance
+	if ls | grep xcworkspace > /dev/null; then
+		workspace=$(ls | grep xcworkspace)
+		logi "Found workspace: ${workspace}"
+
+		if [[ $workspace =~ (.*).xcworkspace ]]; then
+			workspace_name=${BASH_REMATCH[1]}
+			echo "" >> $REL_TEMP_DIR/Relfile
+			echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
+			echo "" >> $REL_TEMP_DIR/Relfile
+		fi
+	else
+		if ls | grep xcodeproj > /dev/null; then
+			xcodeproj=$(ls | grep xcodeproj)
+
+			logi "Found project: ${xcodeproj}"
+
+			if [[ $xcodeproj =~ (.*).xcodeproj ]]; then
+				xcodeproj_name=${BASH_REMATCH[1]}
+				echo "" >> $REL_TEMP_DIR/Relfile
+				echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
+				echo "" >> $REL_TEMP_DIR/Relfile
+			fi
+		else
+			die "Not found .xcodeproj/.xcworkspace file"
+		fi
+	fi
+
+	cat <<-EOF >> $REL_TEMP_DIR/Relfile
+	distributions:
+	  adhoc:
+	    scheme: ${scheme}
+	    provisioning_profile: ${profile}
+	EOF
+}
+
+
 config_get_distributions () {
-	relparser -f "$1" list
+	[[ -f "$1" ]] && relparser -f "$1" list
 }
 
 # config_load <config-path> <release> <base> <out>
@@ -113,3 +165,4 @@ config_load () {
 
 declare -x -f _check_config _load_config
 declare -x -f config_load config_find config_get_distributions config_gen_plist
+declare -x -f generate_relfile

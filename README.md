@@ -57,9 +57,9 @@ including keychain and provisioning profiles.
 # Build an IPA in oneline
 
 ```bash
-$ relax dist -s SampleApp -p 'Relax AdHoc'
+$ relax dist -s 'Sample App' -p 'Relax AdHoc'
 $ # OR
-$ relax dist --scheme SampleApp --profile 'Relax AdHoc'
+$ relax dist --scheme 'Sample App' --profile 'Relax AdHoc'
 ```
 
 # Getting Started w/ Relfile
@@ -67,7 +67,7 @@ $ relax dist --scheme SampleApp --profile 'Relax AdHoc'
 ```bash
 $ cd /path/to/your/project
 $ relax init
-$ relax dist dev
+$ relax dist adhoc
 ```
 
 # Relfile
@@ -81,7 +81,7 @@ version: '2'
 
 workspace: SampleApp
 distributions:
-  dev:
+  adhoc:
     # Required
     scheme: SampleApp
     provisioning_profile: 'Relax Adhoc'
@@ -101,7 +101,7 @@ distributions:
     export_options:
       compileBitcode: false
 
-  prod:
+  ent:
     # Required
     scheme: SampleApp
     provisioning_profile: 'Relax Enterprise'

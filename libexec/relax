@@ -131,11 +131,9 @@ case $command in
 		check_toolchain
 
 		case $command in
-		build|archive|export|upload|package|show|completions)
+		build|archive|export|upload|package|show|completions|dist)
 			REL_CONFIG_PATH="$(config_find)"
-			if [[ -n $REL_CONFIG_PATH  ]]; then
-				REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
-			fi
+			REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
 			;;
 		*)
 			;;

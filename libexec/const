@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 # @(#) relax: constants
 
+export RELFILE_VERSION=2
 export REL_CONFIG="Relfile"
 export REL_RELEASE_ROOT="dist"
 export REL_DATA_DIR=".relax"

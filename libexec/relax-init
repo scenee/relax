@@ -8,84 +8,12 @@ usage () {
 	fin
 }
 
-RELFILE_VERSION=2
-
-generate_relfile () {
-	logi "$ARROW Creating Relfile"
-
-	cat <<-EOF > $REL_TEMP_DIR/Relfile
-	#
-	# Relax configuration YAML
-	#
-	
-	EOF
-
-	echo 'version: '${RELFILE_VERSION}'' >> $REL_TEMP_DIR/Relfile
-	# Check xcworkproj existance
-	if ls | grep xcworkspace > /dev/null; then
-		workspace=$(ls | grep xcworkspace)
-		logi "Found workspace: ${workspace}"
-
-		if [[ $workspace =~ (.*).xcworkspace ]]; then
-			workspace_name=${BASH_REMATCH[1]}
-			echo "" >> $REL_TEMP_DIR/Relfile
-			echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
-			echo "" >> $REL_TEMP_DIR/Relfile
-		fi
-	else
-		if ls | grep xcodeproj > /dev/null; then
-			xcodeproj=$(ls | grep xcodeproj)
-
-			logi "Found project: ${xcodeproj}"
-
-			if [[ $xcodeproj =~ (.*).xcodeproj ]]; then
-				xcodeproj_name=${BASH_REMATCH[1]}
-				echo "" >> $REL_TEMP_DIR/Relfile
-				echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
-				echo "" >> $REL_TEMP_DIR/Relfile
-			fi
-		else
-			die "Not found .xcodeproj/.xcworkspace file"
-		fi
-	fi
-
-	# Set up Scheme
-
-	## Get scheme list
-	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
-
-	cat $REL_TEMP_DIR/xcode-build-list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
-
-	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
-		> $REL_TEMP_DIR/xcode-build-schemes
-	source $REL_TEMP_DIR/xcode-build-schemes
-
-	## Generate Relfile configuration
-	scheme="${xcode_schemes[0]}"
-	cat <<-EOF >> $REL_TEMP_DIR/Relfile
-	distributions:
-	  adhoc:
-	    scheme: ${scheme}
-	    export_options:
-	      method: ad-hoc
-	      compileBitcode: false
-
-	  appstore:
-	    scheme: ${scheme}
-	    export_options:
-	      method: appstore
-
-	EOF
-
-	cp $REL_TEMP_DIR/Relfile ./Relfile
-
-	logi "Done"
-}
-
 print_completion_path () {
 	completion="$SOURCE_PATH/completions/relax.${SHELL##*/}"
 	echo "$completion"
 }
+
+Scheme=
 
 while [ $# -ne 0 ];
 do
@@ -103,7 +31,23 @@ do
 done
 
 if ! test -f $PWD/$REL_CONFIG; then
-	generate_relfile
+	# Set up Scheme
+	## Get scheme list
+	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
+
+	cat $REL_TEMP_DIR/xcode-build-list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
+
+	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
+		> $REL_TEMP_DIR/xcode-build-schemes
+	source $REL_TEMP_DIR/xcode-build-schemes
+
+	## Generate Relfile configuration
+	Scheme="${xcode_schemes[0]}"
+
+	logi "$ARROW Creating Relfile"
+	generate_relfile "$Scheme" ""
+	cp $REL_TEMP_DIR/Relfile ./Relfile
+	logi "Done"
 else
 	fin "Found an existing Relfile"
 fi

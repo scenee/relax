@@ -127,19 +127,18 @@ print_progress_time () {
 			tput civis
 			# Don't echo back any chars typed.
 			stty -echo
+			while ps -p $pid | grep -q $pid; do
+				now=$(date "+%s")
+				dt=$(date -r "$(( $now - $stime ))" "+%s")
+				if [[ $quiet == false ]]; then
+					printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
+				fi
+				sleep $delay
+			done
+
+			tput el # Clear to end of line
+			printf "Time: ${dt}s\n"
 		fi
-
-		while ps -p $pid | grep -q $pid; do
-			now=$(date "+%s")
-			dt=$(date -r "$(( $now - $stime ))" "+%s")
-			if [[ $quiet == false ]]; then
-				printf "\b${sp[i++%${#sp[*]}]} Time: ${dt}s\r"
-			fi
-			sleep $delay
-		done
-
-		tput el # Clear to end of line
-		printf "Time: ${dt}s\n"
 	)
 	wait $pid || return 1
 }

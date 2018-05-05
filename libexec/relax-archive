@@ -47,14 +47,14 @@ make_archive () {
 	shift
 
 	### Update 'Configuration' in a xcscheme ###
-	XCSCHEME_PATH="$(__find_xcscheme "$_SCHEME")"
-	if [[ -n "$XCSCHEME_PATH" ]]; then
-		set_archive_config "$XCSCHEME_PATH" "$_CONFIGURATION"
-		logi "Scheme: $XCSCHEME_PATH"
-		cp "$XCSCHEME_PATH" "$PRODUCT_BUILD_ROOT/${XCSCHEME_PATH##*/}"
+	local xcscheme_path="$(__find_xcscheme "$_SCHEME")"
+	if [[ -n "$xcscheme_path" ]]; then
+		set_archive_config "$xcscheme_path" "$_CONFIGURATION"
+		logi "Scheme: $xcscheme_path"
+		cp "$xcscheme_path" "$PRODUCT_BUILD_ROOT/${xcscheme_path##*/}"
 	fi
 
-	if [[ $no_cache == true ]]; then
+	if [[ $No_cache == true ]]; then
 		if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
 			logi "$ARROW Cleaning DerivedData of $TARGETNAME"
 			rm -rf $OBJROOT
@@ -113,21 +113,23 @@ make_archive () {
 	else
 		xcodebuild "${params[@]}" > >(tee -a "${logfile}" >/dev/null) 2> >(tee -a "${logfile}" >&2) & 
 		XCODEBUILD_PID=$!
-		if [[ $show_progress == true ]]; then
+		if [[ $Show_progress == true ]]; then
 			print_progress_time $XCODEBUILD_PID || return 1
 		else
 			print_progress_time $XCODEBUILD_PID --quiet || return 1
 		fi
 	fi
 
-	logi "$ARROW $archive_path"
+	echo "$archive_path"
 }
 
-XCSCHEME_PATH=
+Distribution=
+No_cache=false
+Show_progress=false
 
-distribution=
-no_cache=false
-show_progress=false
+Scheme=
+Profile=
+Quiet=false
 
 while [ $# -ne 0 ];
 do
@@ -145,7 +147,7 @@ do
 		fin
 		;;
 	--progress)
-		show_progress=true
+		Show_progress=true
 		;;
 	-c)
 		[[ $# != 0 ]] || usage
@@ -153,20 +155,23 @@ do
 		shift
 		;;
 	--no-cache)
-		no_cache=true
+		No_cache=true
+		;;
+	-q)
+		Quiet=true
 		;;
 	*)
-		distribution=$arg
+		Distribution=$arg
 		;;
 	esac
 done
 
-[[ ${distribution:-undefined} != undefined ]] || usage
+[[ ${Distribution:-undefined} != undefined ]] || usage
 
 trap 'teardown_build;' EXIT INT TERM
-setup_build $distribution
+setup_build $Distribution
 
-data_root=$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR
+data_root=$REL_RELEASE_ROOT/$Distribution/$REL_DATA_DIR
 mkdir -p "$data_root"
 
 make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"
