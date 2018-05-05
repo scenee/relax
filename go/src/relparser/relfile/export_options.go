@@ -100,21 +100,18 @@ func (opts *ExportOptions) UnmarshalYAML(unmarshal func(interface{}) error) (err
 	return nil
 }
 
-func (opts *ExportOptions) SetProvisioningProfiles(bundleID string, teamID string, provisioningProfile string) {
-	if bundleID == "" {
-		logger.Fatalf("bundleID is empty")
-	}
+func (opts *ExportOptions) SetProvisioningProfiles(provisioningProfile string, bundleID string) {
 	if provisioningProfile == "" {
 		logger.Fatalf("provisioningProfile is empty")
 	}
 
 	opts.SigningStyle = "manual"
-	opts.TeamID = teamID
-	opts.ProvisioningProfiles = map[string]string{bundleID: provisioningProfile}
 
-	infos := FindProvisioningProfile(provisioningProfile, teamID)
+	infos := FindProvisioningProfile(provisioningProfile, "")
 	pp := infos[0].Pp
 
+	opts.ProvisioningProfiles = map[string]string{bundleID: pp.Name}
+	opts.TeamID = pp.TeamID()
 	opts.Method = pp.ProvisioningType()
 	opts.SigningCertificate = pp.CertificateType()
 }

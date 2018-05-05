@@ -14,7 +14,6 @@ import (
 type Distribution struct {
 	// Required
 	Scheme              string `yaml:"scheme""`
-	TeamID              string `yaml:"team_id"`
 	ProvisioningProfile string `yaml:"provisioning_profile"`
 
 	// Optional
@@ -48,72 +47,21 @@ func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err err
 	return nil
 }
 
-const PREFIX string = "REL_CONFIG"
-
-func genSourceline(key, value string) string {
-	k := strings.Join([]string{PREFIX, key}, "_")
-	return fmt.Sprintf("export %v=\"%v\"\n", k, value)
-}
-
-func genSourceLine2(name string, key string, value interface{}) string {
-	k := strings.Join([]string{PREFIX, name, key}, "_")
-	return fmt.Sprintf("export %v=\"%v\"\n", k, value)
-}
-
-func getBundleID(path string) string {
-	var (
-		err     error
-		decoder *plist.Decoder
-		f       *os.File
-		data    map[string]interface{}
-	)
-
-	f, err = os.Open(path)
-	if err != nil {
-		logger.Fatalf("open error: %v", err)
+func (d *Distribution) IsMatchBundleID(infoPlist string) bool {
+	// get bundle identifier
+	var bundleID string
+	if d.BundleID == "" {
+		bundleID = getBundleID(infoPlist)
 	} else {
-		defer f.Close()
-		decoder = plist.NewDecoder(f)
+		bundleID = d.BundleID
 	}
 
-	err = decoder.Decode(&data)
-	if err != nil {
-		logger.Fatalf("decode error: %v", err)
-	}
+	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	pp := infos[0].Pp
 
-	props, ok := data["ApplicationProperties"].(map[string]interface{})
-	if ok {
-		return props["CFBundleIdentifier"].(string)
-	} else {
-		return data["CFBundleIdentifier"].(string)
-	}
-}
-
-func cleanupInterfaceArray(in []interface{}) []interface{} {
-	res := make([]interface{}, len(in))
-	for i, v := range in {
-		res[i] = cleanupMapValue(v)
-	}
-	return res
-}
-
-func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
-	for k, v := range in {
-		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
-	}
-	return res
-}
-
-func cleanupMapValue(v interface{}) interface{} {
-	switch v := v.(type) {
-	case []interface{}:
-		return cleanupInterfaceArray(v)
-	case map[interface{}]interface{}:
-		return cleanupInterfaceMap(v)
-	default:
-		return v
-	}
+	// TODO:
+	fmt.Printf("%v == %v", pp.AppID(), bundleID)
+	return true
 }
 
 func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
@@ -157,28 +105,24 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 
 func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
 	var (
-		bundleID string
-		encoder  *plist.Encoder
-		opts     ExportOptions
+		encoder *plist.Encoder
+		opts    ExportOptions
 	)
 
 	if d.ProvisioningProfile == "" {
 		logger.Fatalf("`provisioning_profile` field is required in Relfile")
 	}
 
-	// get bundle identifier
-	if d.BundleID == "" {
-		bundleID = getBundleID(infoPlist)
-	} else {
-		bundleID = d.BundleID
-	}
-
 	encoder = plist.NewEncoder(out)
 	encoder.Indent("\t")
 
 	// fmt.Println("export options:", d.ExportOptions)
+
+	// Info.plist is one in xcarchive file. So we have to use the BundleID, not in Relfile.
+	bundleID := getBundleID(infoPlist)
+
 	opts = d.ExportOptions
-	opts.SetProvisioningProfiles(bundleID, d.TeamID, d.ProvisioningProfile)
+	opts.SetProvisioningProfiles(d.ProvisioningProfile, bundleID)
 	opts.Encode(encoder)
 }
 
@@ -193,15 +137,15 @@ func (d Distribution) writeSource(name string, out *os.File) {
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_SDK", d.Sdk)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_CONFIGURATION", d.Configuration)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", d.ProvisioningProfile)
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", d.TeamID)
 
-	infos := FindProvisioningProfile(d.ProvisioningProfile, d.TeamID)
-	pp := infos[0].Pp
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
-
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_VERSION", d.Version)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_ID", d.BundleID)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_VERSION", d.BundleVersion)
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_VERSION", d.Version)
+
+	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	pp := infos[0].Pp
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
 
 	// fmt/Println("--- Build settings\n")
 	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")

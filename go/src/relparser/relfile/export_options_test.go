@@ -9,7 +9,11 @@ func TestEncodeExportOptionsPlist(t *testing.T) {
 	var opts *ExportOptions
 
 	opts = &ExportOptions{}
-	opts.SetProvisioningProfiles("com.scenee.Sample", "J3D7L9FHSS", "Relax AdHoc")
+	opts.SetProvisioningProfiles("Relax AdHoc", "com.scenee.SampleApp")
+
+	if opts.ProvisioningProfiles["com.scenee.SampleApp"] != "Relax AdHoc" {
+		t.Fatalf("Invalid 'provisioningProfiles'")
+	}
 
 	if opts.Method != ProvisioningTypeAdHoc {
 		t.Fatalf("Invalid 'method'")
@@ -22,7 +26,14 @@ func TestEncodeExportOptionsPlist(t *testing.T) {
 	t.Logf("SigningCertificate = %v", opts.SigningCertificate)
 
 	opts = &ExportOptions{}
-	opts.SetProvisioningProfiles("com.scenee.Sample", "J3D7L9FHSS", "Relax Development")
+	opts.SetProvisioningProfiles("Relax Development", "com.scenee.SampleApp")
+
+	if opts.ProvisioningProfiles["com.scenee.SampleApp"] != "Relax Development" {
+		t.Fatalf("Invalid 'provisioningProfiles'")
+	}
+	if opts.TeamID != "J3D7L9FHSS" {
+		t.Fatalf("Invalid 'teamID'")
+	}
 
 	if opts.Method != ProvisioningTypeDevelopment {
 		t.Fatalf("Invalid 'method'")

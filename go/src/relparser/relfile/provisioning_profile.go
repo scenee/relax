@@ -50,12 +50,12 @@ type Entitlements struct {
 	DeveloperTeamIdentifier string `plist:"com.apple.developer.team-identifier"`
 }
 
-func (p ProvisioningProfile) TeamIdentifier() (s string) {
-	if len(p.TeamIdentifiers) == 0 {
-		return ""
-	} else {
-		return p.TeamIdentifiers[0]
-	}
+func (p ProvisioningProfile) TeamID() (s string) {
+	return p.Entitlements.DeveloperTeamIdentifier
+}
+
+func (p ProvisioningProfile) AppID() (s string) {
+	return strings.TrimLeft(p.Entitlements.ApplicationIdentifier, p.TeamID()+".")
 }
 
 func (p ProvisioningProfile) CertificateType() string {
@@ -196,7 +196,7 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 			continue
 		}
 
-		if team != "" && team != info.Pp.TeamIdentifier() {
+		if team != "" && team != info.Pp.TeamID() {
 			continue
 		}
 

@@ -3,27 +3,28 @@
 
 # Relax
 
-Relax is a **declarative** and **CI oriented** release tool for iOS App distributions that encourages rapid distribution **under your control**.
+Relax is a lazy(yes, just for laziness) release tool for iOS App distributions for who you don't want to be bothering with codesign and Xcode stuffs!!
 
-You don't need to write the same build script any more when you deliver your apps. Relax will save your time. You just write a declarative configuration file(aka. Relfile) for the distributions.
+You just configure `scheme` and `provisioning_profile` for a distribution. You don't need to waste your time for codesigning problem especially on your CI workflow. Relax will save your time. 
 
 It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
 
-Relax can
+Relax is not faster than xcodebuild, but simple.
 
-- **Declarative**
-    - Ralax uses the declarative file(Relfile) to configure your each build. It makes you easy to read and understand your build.
-- **CI oriented**
-    - Relax is easy to integrate CI tools(Jenkins, Bamboo, etc) and services(TravisCI, CircleCI, etc).
-- **Under control(Reproducible)**: 
-    - Manual Signing in free: Relax runs a build only on manual signing mode, but don't worry, it automatically switches a codesigning mode from Automatic to Manual only in build time. Therefore you can use Automatic Signing in your development.
-    - Custom Keychain store: Relax makes and switch a temp keychain. You won't affected from a keychain settings in a build machine and reproduce your build on your machine.
-    - Validation: Check a IPA file if it has a correct codesigning and entitlements.
-    - Resign: Resign a IPA file for a distribution with a different bundle identifier, cetificate and provisioning profile
-- **Safe**
-    - You don't need to share your AppleID and **password**.
-- **Easy to customize**: Relax is easy to customize Info.plist and Build Settings of your Xcode project only in build time.
-    - Multi distributions(i.e. adhoc, enterprise & appstore): You can setup each configuration like code signing, Info.plist, Build Settings, etc.
+Relax is..
+
+- **Easy**
+    - You just configure `scheme`, `provisioning_profile`.
+    - Relax generates a suitable ExportOptions.plist from `provisioning_profile`.
+- **Reproducible** 
+    - Relax builds an app only on **'Manual' signing** to prevent codesigning problems and make a build reproducible.
+    - Relax switches the codesigning mode **from Automatic to Manual automatically**.
+    - You can create an **isolated keychain db** with Relax. You could reproduce a build in your local machine if you use it. See `keychain` command.
+- **Fine-tunable**
+    - Easy to configure and understand multi distributions(i.e. adhoc, enterprise & appstore) having a few differences on code signing, Info.plist, Build Settings in Relfile.
+    - You can tune your Info.plist and Xcode build settings for the differences on each distribution.
+    - No longer need to create many xcconfig files or build 'configuration's in your project.
+
 
 # Installation
 
@@ -53,18 +54,19 @@ You don't need to take care of a host environment(i.e. ruby version and gem sett
 As a result, You can set up iOS build environment on a new machine quickly
 including keychain and provisioning profiles. 
 
-# Getting Started
+# Build an IPA in oneline
 
-## Set up Relfile
+```bash
+$ relax dist -s SampleApp -p 'Relax AdHoc'
+$ # OR
+$ relax dist --scheme SampleApp --profile 'Relax AdHoc'
+```
+
+# Getting Started w/ Relfile
 
 ```bash
 $ cd /path/to/your/project
 $ relax init
-```
-
-## Create an IPA file
-
-```bash
 $ relax dist dev
 ```
 
@@ -82,17 +84,13 @@ distributions:
   dev:
     # Required
     scheme: SampleApp
-    team_id: ABCDEFGHIJ
     provisioning_profile: 'Relax Adhoc'
 
     # Optional
-    configuration: Debug
-
     version: '1.0.1'
-
+    configuration: Debug
     bundle_identifier: com.scenee.SampleApp.dev
     bundle_version: '%b-%h-$c'  # See 'Bundle Version Format section'
-
     info_plist:
       CFBundleName: 'SmapleApp(Debug)'
       UISupportedExternalAccessoryProtocols:
@@ -100,20 +98,17 @@ distributions:
     build_settings:
       OTHER_SWIFT_FLAGS:
         - '-DMOCK'
-
     export_options:
       compileBitcode: false
 
   prod:
     # Required
     scheme: SampleApp
-    team_id: KLMNOPQRST
     provisioning_profile: 'Relax Enterprise'
 
     # Optional
     bundle_identifier: com.scenee.SampleApp
     bundle_version: '$BUILD_NUMBER'  # You can use shell environment variables!
-
     info_plist:
       UISupportedExternalAccessoryProtocols:
         - com.example.accessory
@@ -166,21 +161,21 @@ The characters and their meanings are as follows.
 
 ## Export Option Support
 
-| Option                                   | Response status                                                                                                 |
-| :--------------------------------------- | :------------------------------------------------------------------                                             |
-| compileBitcode                           | OK                                                                                                              |
-| embedOnDemandResourcesAssetPacksInBundle | Not supported                                                                                                   |
-| iCloudContainerEnvironment               | Not supported                                                                                                   |
-| manifest                                 | Not supported                                                                                                   |
-| method                                   | Auto-assigned 'ad-hoc', 'app-store', 'development' or 'enterprise' determined from `provisioning_profile` field |
-| onDemandResourcesAssetPacksBaseURL       | Not supported                                                                                                   |
-| teamID                                   | Auto-assigned a value of `team_id` field                                                                        |
-| provisioningProfiles                     | Auto-assigned a value of `provisioning_profile` field                                                           |
-| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' determined from `provisioning_profile` field          |
-| signingStyle                             | Auto-assigned 'automatic' or 'manual' determined from `provisioning_profile` field                              |
-| thinning                                 | OK                                                                                                              |
-| uploadBitcode                            | OK                                                                                                              |
-| uploadSymbols                            | OK                                                                                                              |
+| Option                                   | Response status                                                                                 |
+| :--------------------------------------- | :------------------------------------------------------------------                             |
+| compileBitcode                           | OK                                                                                              |
+| embedOnDemandResourcesAssetPacksInBundle | Not supported                                                                                   |
+| iCloudContainerEnvironment               | Not supported                                                                                   |
+| manifest                                 | Not supported                                                                                   |
+| method                                   | Auto-assigned 'ad-hoc', 'app-store', 'development' or 'enterprise' from `provisioning_profile`. |
+| onDemandResourcesAssetPacksBaseURL       | Not supported                                                                                   |
+| teamID                                   | Auto-assigned from `provisioning_profile`.                                                      |
+| provisioningProfiles                     | Auto-assigned from `provisioning_profile`.                                                      |
+| signingCertificate                       | Auto-assigned 'iPhone Developer' or 'iPhone Distribution' from `provisioning_profile`.          |
+| signingStyle                             | Auto-assigned 'automatic' or 'manual' determined from `provisioning_profile`.                   |
+| thinning                                 | OK                                                                                              |
+| uploadBitcode                            | OK                                                                                              |
+| uploadSymbols                            | OK                                                                                              |
 
 # Advanced
 
@@ -190,22 +185,25 @@ The characters and their meanings are as follows.
 $ relax archive dev
 ```
 
-## Export a xcarchive file to an ipa file
+## Export a xcarchive file to an IPA file
 
 ```bash
 $ relax export "/path/to/xcarchive"
 ```
 
-## Validate the ipa
+## Validate an IPA
+
+Check a IPA file if it has a correct codesigning and entitlements.
 
 ```bash
 $ relax validate "$(relax show adhoc ipa)"
 ```
 
-## Resign an ipa for an enterprise distribution
+## Resign an IPA for an enterprise distribution
+
+Resign a IPA file for a distribution with a different bundle identifier, cetificate and provisioning profile
 
 ```bash
-
 $ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show dev ipa)"
 $ relax validate SampleApp-resigned.ipa
 ```

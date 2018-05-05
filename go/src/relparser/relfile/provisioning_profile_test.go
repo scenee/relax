@@ -19,8 +19,8 @@ func TestNewProvisioningProfile(t *testing.T) {
 	if pp.TeamName != "Shin Yamamoto" {
 		t.Errorf("TeamName failed")
 	}
-	if pp.TeamIdentifier() != "J3D7L9FHSS" {
-		t.Errorf("TeamIdentifier failed %v", pp.TeamIdentifiers)
+	if pp.TeamID() != "J3D7L9FHSS" {
+		t.Errorf("TeamID failed %v", pp.TeamIdentifiers)
 	}
 	if pp.Name != "Relax AdHoc" {
 		t.Errorf("Name failed")
@@ -34,8 +34,8 @@ func TestNewProvisioningProfile(t *testing.T) {
 	if pp.TeamName != "Shin Yamamoto" {
 		t.Errorf("TeamName failed")
 	}
-	if pp.TeamIdentifier() != "J3D7L9FHSS" {
-		t.Errorf("TeamIdentifier failed %v", pp.TeamIdentifiers)
+	if pp.TeamID() != "J3D7L9FHSS" {
+		t.Errorf("TeamID failed %v", pp.TeamIdentifiers)
 	}
 	if pp.Name != "Relax Development" {
 		t.Errorf("Name failed")

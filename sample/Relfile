@@ -20,22 +20,31 @@ uploader:
 distributions:
   adhoc:
     scheme: Sample App
-    team_id: J3D7L9FHSS
     provisioning_profile: "Relax AdHoc"
+
+    configuration: Debug
+    bundle_identifier: com.scenee.SampleApp.adhoc
+    bundle_version:  "%h-%c"
+    info_plist:
+      CFBundleName: Sample
+    build_settings:
+      OTHER_SWIFT_FLAGS: 
+        - "-DDEBUG"
     export_options:
       thinning : iPhone7,1
       compileBitcode: false
 
   enterprise:
     scheme: Sample App
-    team_id: ABCDEFGHIJ
-    bundle_identifier: com.scenee.SampleApp
+    provisioning_profile: "Relax Enterprise"
+
+    bundle_identifier: com.scenee.SampleApp.ent
     bundle_version:  "%h-%C"
 
   appstore:
     scheme: Sample App
-    team_id: J3D7L9FHSS
     provisioning_profile: "Relax AppStore"
+
     export_options:
       upload_symbols: true
       #uploadSymbols: true
@@ -53,7 +62,6 @@ distributions:
 
   development:
     scheme: Sample App
-    team_id: J3D7L9FHSS
     provisioning_profile: "Relax Development"
     configuration: Debug
     bundle_identifier: com.scenee.SampleApp
@@ -81,7 +89,6 @@ distributions:
   development2:
     sdk: iphoneos
     scheme: Sample App
-    team_id: J3D7L9FHSS  # Required
     provisioning_profile: "Relax Development"
     configuration: Debug
     version: "$VERSION"
