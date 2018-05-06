@@ -239,16 +239,17 @@ __replace_development_team () {
 	local pbxproj="$PROJECT_FILE_PATH/project.pbxproj"
 
 	if ! grep -q "DEVELOPMENT_TEAM = .*;" "$pbxproj"; then
-		sed -i.bak '
+		sed -i.temp'
 			/PRODUCT_NAME = .*/a \
 			DEVELOPMENT_TEAM = TGKEN7XA5C;\
 		' "$pbxproj"
 	else
-		sed -i.$BAK_EXT -e "
+		sed -i.temp -e "
 		s:\(DEVELOPMENT_TEAM = \)\(.*\);:\1$_TEAM_ID;:g;
 		s:\(DevelopmentTeam = \)\(.*\);:\1$_TEAM_ID;:g;
 		" "$pbxproj"
 	fi
+	rm "${pbxproj}.temp"
 
 	export DEVELOPMENT_TEAM=$_TEAM_ID
 }
@@ -443,19 +444,11 @@ print_info_plist () {
 teardown_build () {
 	__kill_bg_xcodebuid_task
 
-	if [[ ${INFO_PLIST_PATH:-undefined} != undefined ]]; then
-		if [[ -f $INFO_PLIST_PATH.$BAK_EXT ]]; then
-			cp "$INFO_PLIST_PATH".$BAK_EXT "$INFO_PLIST_PATH"
-		fi
-	fi
-	if [[ ${PROJECT_FILE_PATH:-undefined} != undefined ]]; then
-		if [[ -f "$PROJECT_FILE_PATH"/project.pbxproj.$BAK_EXT ]]; then
-			rm "$PROJECT_FILE_PATH"/*.$BAK_EXT
-		fi
-		if [[ -f "$PROJECT_FILE_PATH"/project.pbxproj.org ]]; then
-			mv "$PROJECT_FILE_PATH"/project.pbxproj.org "$PROJECT_FILE_PATH"/project.pbxproj
-		fi
-	fi
+	find $HERE -name "*.$BAK_EXT" |\
+	while IFS= read bak
+	do
+		cp "$bak" "${bak%.$BAK_EXT}"
+	done
 }
 
 # setup_build [--export <archive-path>] <release>
@@ -499,7 +492,7 @@ setup_build () {
 		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
 	fi
 
-	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.org
+	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.$BAK_EXT
 
 	if [[ "${team_id:-undefined}" != undefined ]]; then
 		__replace_development_team $_TEAM_ID
@@ -565,9 +558,10 @@ setup_build () {
 
 		# Override CFBundleIdentifier from Relfile
 		if [[ "${_BUNDLE_ID:-undefined}" != undefined ]]; then
-			sed -i .$BAK_EXT \
+			sed -i .temp \
 			-e "s/\(PRODUCT_BUNDLE_IDENTIFIER = \)\($PRODUCT_BUNDLE_IDENTIFIER\);/\1$_BUNDLE_ID;/" \
 			"$PROJECT_FILE_PATH"/project.pbxproj
+			rm "$PROJECT_FILE_PATH"/project.pbxproj.temp
 
 			/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $_BUNDLE_ID" "$INFO_PLIST_PATH"
 
@@ -631,16 +625,17 @@ setup_build () {
 	## Switch to Manual Signing
 	if is_xcode_version ">=" 8; then
 		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-			sed -i .$BAK_EXT \
+			sed -i .temp \
 			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
 			"$PROJECT_FILE_PATH"/project.pbxproj
 		else
 			s='[[:space:] ]*'
-			sed -i .$BAK_EXT \
+			sed -i .temp \
 			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
 			\1ProvisioningStyle = Manual;\
-			/" "$PROJECT_FILE_PATH"/project.pbxproj 
+			/" "$PROJECT_FILE_PATH"/project.pbxproj
 		fi
+		rm "$PROJECT_FILE_PATH"/project.pbxproj.temp
 		logi "$ARROW Switch to Manual signing with '$_PROVISIONING_PROFILE' provisioning profile"
 	fi
 }

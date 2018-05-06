@@ -49,9 +49,11 @@ func TestNewProvisioningProfile(t *testing.T) {
 func TestFindProvisioningProfile(t *testing.T) {
 	ClearCache()
 	infos := FindProvisioningProfile("Relax", "")
+
 	if len(infos) != 2 {
-		t.Errorf("Failed")
+		t.Errorf("Failed %v", infos)
 	}
+
 	for _, info := range infos {
 		fmt.Println(info.Name, info.Pp.Name)
 		if _, err := os.Stat(info.Name); err != nil {

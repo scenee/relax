@@ -55,7 +55,7 @@ help)
 		die "No such $module command \`$command'"
 	fi
 	
-	TRAP "clean_temp; teardown;"
+	TRAP "clean_temp;"
 	make_temp
 
 	"$command_path" "$@"

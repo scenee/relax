@@ -1,0 +1,28 @@
+#!/bin/bash -eu
+# Summary: Apply a Relfile customization into your project
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} apply <distribution>
+	
+	Apply your Info.plist and Build settings for a distribution in Relfile into your project.
+
+	EOM
+	fin
+}
+
+Distribution=
+
+while [[ $# != 0 ]]; do
+	arg=$1
+	shift
+	case $arg in
+	*)
+		Distribution="$arg"
+		;;
+	esac
+done
+
+[[ -n "$Distribution" ]] || usage
+
+setup_build $Distribution
