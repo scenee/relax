@@ -363,7 +363,7 @@ load_xcode_build_settings () {
 	fi
 
 	if ! test -f "$xcode_settings_conf"; then
-		die "load_xcode_build_settings: Could not load the build settings."
+		die "Please check '$_SCHEME' scheme. '$_SCHEME' must be a 'Shared' scheme or add 'xcshareddata' folder in your repo."
 	fi
 
 	source "$xcode_settings_conf"
@@ -470,7 +470,7 @@ setup_build () {
 		die "Not found Temporary directory"
 	fi
 
-	local release stdtemp params_file
+	local release stdtemp
 
 	release="$1"
 	stdtemp=$REL_TEMP_DIR/stdtemp
@@ -480,13 +480,12 @@ setup_build () {
 	fi
 
 	# Load Relfile
+	logi "$ARROW Set up '$release' distribution"
+
 	config_load "$REL_CONFIG_PATH" "$release"
 	__map_vals "$release"
-	__check_scheme "$_SCHEME"
 
-	params_file=$(get_build_params_file "$_SCHEME")
-
-	load_xcode_build_settings $params_file
+	load_xcode_build_settings "$(get_build_params_file "$_SCHEME")"
 
 	if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
 		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
@@ -502,7 +501,6 @@ setup_build () {
 		die "This scheme($_SCHEME) isn't for an Application, Framework or Library target"
 	fi
 
-	logi "$ARROW Set up '$release' configurations"
 	logi "Configuration: $CONFIGURATION"
 	configuration=$CONFIGURATION
 
