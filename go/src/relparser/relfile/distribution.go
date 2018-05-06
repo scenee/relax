@@ -92,7 +92,18 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 	/* Update Info.plist data */
 	for k, v := range d.InfoPlist {
 		//fmt.Printf("---\t%v: %v\n", k, v)
-		data[k] = cleanupMapValue(v)
+		new := cleanupMapValue(v)
+		if old, ok := data[k]; ok {
+			switch old := old.(type) {
+			case map[string]interface{}:
+				if new, ok := new.(map[string]interface{}); ok {
+					new := updatedMap(old, new)
+					data[k] = new
+					continue
+				}
+			}
+		}
+		data[k] = new
 	}
 
 	encoder := plist.NewEncoder(out)

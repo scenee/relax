@@ -36,6 +36,25 @@ func getBundleID(infoPlist string) string {
 	}
 }
 
+func updatedMap(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for k, v := range old {
+		res[k] = v
+	}
+	for k, v := range new {
+		if _v, ok := old[k]; ok {
+			switch _v := _v.(type) {
+			case map[string]interface{}:
+				if v, ok := v.(map[string]interface{}); ok {
+					v = updatedMap(_v, v)
+				}
+			}
+		}
+		res[k] = v
+	}
+	return res
+}
+
 func cleanupInterfaceArray(in []interface{}) []interface{} {
 	res := make([]interface{}, len(in))
 	for i, v := range in {
