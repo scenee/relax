@@ -1,0 +1,85 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "RELAX" "1" "May 2018" "" ""
+.
+.SH "NAME"
+\fBrelax\fR \- A lazy release tool for iOS developers
+.
+.SH "SYNOPSIS"
+\fBrelax\fR [\fIoptions\fR\.\.\.] \fIcommands\fR \.\.\.
+.
+.SH "DESCRIPTION"
+Relax is a lazy) release tool for iOS developers who don\'t want to be bothering with codesign and Xcode stuff\. You don\'t just configure \fBscheme\fR and \fBprovisioning_profile\fR to build archive and IPA files, but also tune the build settings and Info\.plist for each distribution\.
+.
+.P
+Relax allows you to:
+.
+.IP "\(bu" 4
+Ease to build & distribute your app for a provisioning profile\.
+.
+.IP "\(bu" 4
+Make your build reproducible in any build machines\.
+.
+.IP "\(bu" 4
+Manage various configurations for each distribution\.
+.
+.IP "" 0
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-\-version\fR
+Print the relax version
+.
+.TP
+\fB\-h, \-\-help\fR
+Print the synopsis and a list of the most commonly used commands\.
+.
+.TP
+\fB\-v\fR
+Run \fBrelax\fR command in verbose mode\.
+.
+.SH "COMMAND"
+.
+.TP
+\fBhelp\fR
+Print a command usage\.
+.
+.TP
+\fBinit\fR
+Initialize Relfile for a project\.
+.
+.TP
+\fBdist\fR
+Execute \fBarchive\fR and \fBexport\fR commands\.
+.
+.TP
+\fBarchive\fR
+Create an archive file for a project with a scheme and a provisioning profile\.
+.
+.TP
+\fBexport\fR
+Create an IPA file from an archive file\.
+.
+.TP
+\fBvalidate\fR
+Validate an archive file or IPA file\.
+.
+.TP
+\fBresign\fR
+Resign an archive file or IPA file\.
+.
+.TP
+\fBprofile\fR
+Manage provisioning profiles\. See rekax\-profile(7)\.
+.
+.TP
+\fBkeychain\fR
+Manage keychains and certificates\. See relax\-keychain(7)\.
+.
+.SH "COPYRIGHT"
+Relax is Copyright (C) 2017\-present, Shin Yamamoto \fIhttp://scenee\.com/\fR
+.
+.SH "SEE ALSO"
+relax\-profile(7), relax\-keychain(7)

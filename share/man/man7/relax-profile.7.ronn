@@ -1,0 +1,34 @@
+relax-profile(7) -- relax profile module
+===========================================================
+
+## SYNOPSIS
+
+`relax profile` <commands> ...
+
+## DESCRIPTION
+
+The relax profile module has utility commands to manage your provisioning profiles
+from CLI.
+
+## COMMAND
+
+  * `add`:
+    Add a provisioning profile.
+
+  * `find`:
+    Find provisioning profiles whose name matches a keyword.
+
+  * `ls`:
+    List provisioning profiles.
+
+  * `rm`:
+    Remove provisioning profiles whose name matches a keyword.
+
+
+## COPYRIGHT
+
+Relax is Copyright (C) 2017-present, Shin Yamamoto <http://scenee.com/>
+
+## SEE ALSO
+
+relax(1), relax-keychain(7)

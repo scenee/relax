@@ -1,0 +1,57 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "RELAX\-KEYCHAIN" "7" "May 2018" "" ""
+.
+.SH "NAME"
+\fBrelax\-keychain\fR \- relax keychain module
+.
+.SH "SYNOPSIS"
+\fBrelax keychain\fR \fIcommands\fR \.\.\.
+.
+.SH "DESCRIPTION"
+The relax keychain module has utility commands to manage your keychain from CLI\. It allows you to ease to use features of \fB/usr/bin/security\fR\.
+.
+.SH "COMMAND"
+.
+.TP
+\fBadd\fR
+Add identities and certificates from a p12 file\.
+.
+.TP
+\fBcerts\fR
+List valid certificates\.
+.
+.TP
+\fBcreate\fR
+Create a custom keychain\.
+.
+.TP
+\fBdelete\fR
+Delete a custom keychain\.
+.
+.TP
+\fBinfo\fR
+Show information of a p12 file\.
+.
+.TP
+\fBls\fR
+List keychains\.
+.
+.TP
+\fBreset\fR
+Reset the default keychain to login\.keychain\.
+.
+.TP
+\fBrm\fR
+Remove identities and certificates of a p12 file\.
+.
+.TP
+\fBuse\fR
+Set a keychain as the default keychain\.
+.
+.SH "COPYRIGHT"
+Relax is Copyright (C) 2017\-present, Shin Yamamoto \fIhttp://scenee\.com/\fR
+.
+.SH "SEE ALSO"
+relax(1), relax\-profile(7)

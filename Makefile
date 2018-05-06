@@ -12,9 +12,15 @@ build:
 test: bats
 	@PATH="/bin:$$PWD/bats/bin:$$PWD/bin:$$PATH" test/run.sh ${keychain}
 
+.PHONY: version
 version: 
 	@PATH="$$PWD/bin:$$PATH" relax --version
 
+.PHONY: bats
 bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git
 
+.PHONY: man
+man:
+	@pushd share/man/man1 && ronn relax.1.ronn && popd
+	@pushd share/man/man7 && ronn relax-*.7.ronn && popd
