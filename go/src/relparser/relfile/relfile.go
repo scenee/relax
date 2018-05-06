@@ -43,20 +43,6 @@ func LoadRelfile(path string) (*Relfile, error) {
 	return &rel, nil
 }
 
-func prepareFile(out string) (f *os.File) {
-	var err error
-	// Remove an existing file
-	if _, err = os.Stat(out); err == nil {
-		os.Remove(out)
-	}
-
-	if f, err = os.OpenFile(out, os.O_RDWR|os.O_CREATE, 0600); err != nil {
-		logger.Fatal(err)
-	}
-
-	return f
-}
-
 //
 // Relfile
 //

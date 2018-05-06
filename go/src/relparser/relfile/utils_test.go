@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestUpdatedMap(t *testing.T) {
+func TestMergeMap(t *testing.T) {
 	old := map[string]interface{}{
 		"Foo": "Hello",
 		"Bar": 1,
@@ -24,5 +24,5 @@ func TestUpdatedMap(t *testing.T) {
 		},
 	}
 
-	fmt.Println(updatedMap(old, new))
+	fmt.Println(mergeMap(old, new))
 }

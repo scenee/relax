@@ -108,6 +108,10 @@ func (opts *ExportOptions) SetProvisioningProfiles(provisioningProfile string, b
 	opts.SigningStyle = "manual"
 
 	infos := FindProvisioningProfile(provisioningProfile, "")
+	if len(infos) == 0 {
+		logger.Fatalf("Not installed \"%s\"", provisioningProfile)
+	}
+
 	pp := infos[0].Pp
 
 	opts.ProvisioningProfiles = map[string]string{bundleID: pp.Name}

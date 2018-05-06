@@ -13,7 +13,7 @@ import (
 
 type Distribution struct {
 	// Required
-	Scheme              string `yaml:"scheme""`
+	Scheme              string `yaml:"scheme"`
 	ProvisioningProfile string `yaml:"provisioning_profile"`
 
 	// Optional
@@ -97,7 +97,7 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 			switch old := old.(type) {
 			case map[string]interface{}:
 				if new, ok := new.(map[string]interface{}); ok {
-					new := updatedMap(old, new)
+					new := mergeMap(old, new)
 					data[k] = new
 					continue
 				}

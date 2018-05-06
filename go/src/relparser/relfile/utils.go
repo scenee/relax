@@ -7,6 +7,20 @@ import (
 	"strings"
 )
 
+func prepareFile(out string) (f *os.File) {
+	var err error
+	// Remove an existing file
+	if _, err = os.Stat(out); err == nil {
+		os.Remove(out)
+	}
+
+	if f, err = os.OpenFile(out, os.O_RDWR|os.O_CREATE, 0600); err != nil {
+		logger.Fatal(err)
+	}
+
+	return f
+}
+
 func getBundleID(infoPlist string) string {
 	var (
 		err     error
@@ -36,7 +50,7 @@ func getBundleID(infoPlist string) string {
 	}
 }
 
-func updatedMap(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
+func mergeMap(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
 	res := make(map[string]interface{})
 	for k, v := range old {
 		res[k] = v
@@ -46,7 +60,7 @@ func updatedMap(old map[string]interface{}, new map[string]interface{}) map[stri
 			switch _v := _v.(type) {
 			case map[string]interface{}:
 				if v, ok := v.(map[string]interface{}); ok {
-					v = updatedMap(_v, v)
+					v = mergeMap(_v, v)
 				}
 			}
 		}
