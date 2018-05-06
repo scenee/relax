@@ -14,6 +14,7 @@ import (
 
 func usage() {
 	fmt.Println("usage: relparser [-f <Relfile>] list")
+	fmt.Println("usage: relparser [-f <Relfile>] check <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] source <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] build_options <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] plist <distribution>")
@@ -72,6 +73,9 @@ func main() {
 	case "source":
 		out := rel.GenSource(dist)
 		fmt.Println(out.Name())
+
+	case "check":
+		rel.Check(dist)
 
 	case "plist":
 		rel.GenPlist(dist, infoPlist, out)

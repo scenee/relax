@@ -1,9 +1,13 @@
 package relfile
 
 import (
+	"crypto/sha1"
+	"crypto/x509"
 	"fmt"
 	"github.com/DHowett/go-plist"
 	"os"
+	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -28,10 +32,6 @@ type Distribution struct {
 	ExportOptions ExportOptions          `yaml:"export_options,omitempty"`
 }
 
-//
-// Utils
-//
-
 func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	type typeAlias Distribution
 	var t = &typeAlias{
@@ -47,21 +47,50 @@ func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err err
 	return nil
 }
 
-func (d *Distribution) IsMatchBundleID(infoPlist string) bool {
-	// get bundle identifier
-	var bundleID string
-	if d.BundleID == "" {
-		bundleID = getBundleID(infoPlist)
-	} else {
-		bundleID = d.BundleID
+func (d *Distribution) Check() {
+	// Check the ProvisioningProfile existence
+	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	if len(infos) == 0 {
+		logger.Fatalf("\"%s\" not found.", d.ProvisioningProfile)
 	}
 
-	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	// Check the related Certificate existence
 	pp := infos[0].Pp
 
-	// TODO:
-	fmt.Printf("%v == %v", pp.AppID(), bundleID)
-	return true
+	ok := false
+	for _, data := range pp.DeveloperCertificates {
+		var (
+			cert *x509.Certificate
+			err  error
+		)
+		// fmt.Printf("%q\n", data)
+		if cert, err = x509.ParseCertificate(data); err != nil {
+			fmt.Println("error:", err)
+			return
+		}
+		sha1Fingerprint := sha1.Sum(cert.Raw)
+		// fmt.Printf("%X\n", sha1Fingerprint)
+		if data, err = exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning").Output(); err == nil {
+			// fmt.Printf("%s\n", string(data[:]))
+			re := regexp.MustCompile(fmt.Sprintf("%X", sha1Fingerprint))
+			matches := re.FindStringSubmatch(string(data[:]))
+			if len(matches) > 0 {
+				ok = true
+			}
+		}
+	}
+
+	if !ok {
+		logger.Fatalf("No identities found for \"%s\". Please check your certificates in Keychain Access.app.", d.ProvisioningProfile)
+	}
+
+	if d.BundleID != "" {
+		re := regexp.MustCompile(strings.Replace(pp.AppID(), "*", ".*", -1))
+		matches := re.FindStringSubmatch(d.BundleID)
+		if len(matches) == 0 {
+			logger.Fatalf("\"%s\" doesn't match AppID of \"%s\".", d.BundleID, d.ProvisioningProfile)
+		}
+	}
 }
 
 func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
@@ -121,7 +150,7 @@ func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
 	)
 
 	if d.ProvisioningProfile == "" {
-		logger.Fatalf("`provisioning_profile` field is required in Relfile")
+		logger.Fatalf("`provisioning_profile` field is required in Relfile.")
 	}
 
 	encoder = plist.NewEncoder(out)

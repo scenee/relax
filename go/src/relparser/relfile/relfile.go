@@ -62,6 +62,11 @@ func (r Relfile) List() {
 	}
 }
 
+func (r Relfile) Check(dist string) {
+	d := r.Distributions[dist]
+	d.Check()
+}
+
 func (r Relfile) GenOptionsPlist(dist string, infoPlist, out string) {
 	d := r.Distributions[dist]
 

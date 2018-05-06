@@ -45,7 +45,6 @@ read_path () {
 	fi
 }
 
-
 # find_mobileprovision [-v] [--team <teamid>] [--latest] <provisioning-profile-name>
 find_mobileprovision () {
 	lspp "$@"
@@ -441,6 +440,11 @@ print_info_plist () {
 	esac
 }
 
+# check_distribution <distribution>
+check_distribution() {
+	relparser check "$1"
+}
+
 teardown_build () {
 	__kill_bg_xcodebuid_task
 
@@ -703,3 +707,4 @@ declare -x -f update_archived_entitlements_xcent
 declare -x -f find_mobileprovision
 declare -x -f read_path
 declare -x -f dec_provisioning_profile
+declare -x -f check_distribution

@@ -167,6 +167,8 @@ done
 
 [[ ${distribution:-undefined} != undefined ]] || usage
 
+check_distribution $distribution
+
 if [[ -z "$target_archive_file" ]]; then
 	target_archive_file="$(relax-show $distribution archive)"
 	if [[ ! -d $target_archive_file ]]; then

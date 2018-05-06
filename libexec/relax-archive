@@ -168,6 +168,8 @@ done
 
 [[ ${Distribution:-undefined} != undefined ]] || usage
 
+check_distribution $Distribution
+
 trap 'teardown_build;' EXIT INT TERM
 setup_build $Distribution
 
