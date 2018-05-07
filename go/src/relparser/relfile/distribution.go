@@ -88,7 +88,7 @@ func (d *Distribution) Check() {
 	}
 
 	if !ok {
-		logger.Fatalf("No valid identities found for \"%s\". Please check your certificates and the expirations in Keychain Access.app.", d.ProvisioningProfile)
+		logger.Fatalf("No valid set of certificate and identity found for \"%s\". Please check 'My Certificates' in Keychain Access.app.", d.ProvisioningProfile)
 	}
 
 	if d.BundleID != "" {
