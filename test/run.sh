@@ -20,9 +20,9 @@ if [[ ${DECORD_KEY:-none} = "none" || ${CERTS_PASS:-none} = "none" ]]; then
 	exit 1
 fi
 
-###################
-# Set up keychain #
-###################
+############################
+# Set up a custom keychain #
+############################
 
 relax keychain create $keychain -p relax
 
@@ -30,9 +30,12 @@ relax dec -p "$DECORD_KEY" sample/certificates/RelaxCertificates.p12.enc
 
 relax keychain add sample/certificates/RelaxCertificates.p12 -P "$CERTS_PASS"  -k $keychain -p relax
 
-############################
-# Install mobileprovisions #
-############################
+trap "relax keychain reset" EXIT
+relax keychain use $keychain -p relax
+
+#################################
+# Install Provisioning Profiles #
+#################################
 
 relax dec -p "$DECORD_KEY" sample/certificates/Relax_Development.mobileprovision.enc
 relax dec -p "$DECORD_KEY" sample/certificates/Relax_AdHoc.mobileprovision.enc
@@ -44,16 +47,12 @@ relax profile add sample/certificates/Relax_AdHoc.mobileprovision
 # Run Test #
 ############
 
-
-trap "relax keychain reset" EXIT
-relax keychain use $keychain -p relax
-
 export NOCOLOR=true
 bats test
 
-######################
-# Tear down keychain #
-######################
+#############
+# Tear down #
+#############
 
 relax profile rm "Relax Development"
 relax profile rm "Relax AdHoc"

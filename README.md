@@ -3,27 +3,26 @@
 
 # Relax
 
-Relax is a lazy(yes, just for laziness) release tool for iOS App distributions for who you don't want to be bothering with codesign and Xcode stuffs!!
+Relax is a lazy(yes, just for laziness) release tool for iOS developers who don't want to be bothering with codesign and Xcode stuffs!!
 
-You just configure `scheme` and `provisioning_profile` for a distribution. You don't need to waste your time for codesigning problem especially on your CI workflow. Relax will save your time. 
+You just configure `scheme` and `provisioning_profile` to build archive and ipa files.
 
-It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
+You don't need to waste your time for codesigning problem especially on your CI workflow. Relax will save your time. It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
 
-Relax is not faster than xcodebuild, but simple.
+Relax is not faster than xcodebuild, but more simple.
 
 Relax is..
 
 - **Easy**
     - You just configure `scheme`, `provisioning_profile`.
-    - Relax generates a suitable ExportOptions.plist from `provisioning_profile`.
-- **Reproducible** 
-    - Relax builds an app only on **'Manual' signing** to prevent codesigning problems and make a build reproducible.
+    - Relax generates an ExportOptions.plist from `provisioning_profile`.
     - Relax switches the codesigning mode **from Automatic to Manual automatically**.
-    - You can create an **isolated keychain db** with Relax. You could reproduce a build in your local machine if you use it. See `keychain` command.
+- **Reproducible** 
+    - Relax builds an app **only on 'Manual' signing mode** to prevent codesigning problems and make a build reproducible.
+    - You can create an **isolated keychain db** with Relax. You could reproduce a build in your local machine as well if you use it. See `keychain` command.
 - **Fine-tunable**
-    - Easy to configure and understand multi distributions(i.e. adhoc, enterprise & appstore) having a few differences on code signing, Info.plist, Build Settings in Relfile.
-    - You can tune your Info.plist and Xcode build settings for the differences on each distribution.
-    - No longer need to create many xcconfig files or build 'configuration's in your project.
+    - Relfile helps you to configure and understand multi distributions(i.e. adhoc, enterprise & appstore) having a few differences on code signing, Info.plist, Build Settings.
+    - You no longer need to use many xcconfig files or build configurations in your project for the differences.
 
 
 # Installation
@@ -41,6 +40,7 @@ $ brew install relax
 $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | bash
 ```
 
+
 # Requirements
 
 - macOS 10.11+
@@ -57,18 +57,20 @@ including keychain and provisioning profiles.
 # Build an IPA in oneline
 
 ```bash
-$ relax dist -s 'Sample App' -p 'Relax AdHoc'
-$ # OR
 $ relax dist --scheme 'Sample App' --profile 'Relax AdHoc'
+$ # OR
+$ relax dist -s 'Sample App' -p 'Relax AdHoc'
 ```
 
-# Getting Started w/ Relfile
+# Build an IPA w/ Relfile
 
 ```bash
 $ cd /path/to/your/project
 $ relax init
+$ # Update Relfile
 $ relax dist adhoc
 ```
+
 
 # Relfile
 
@@ -90,7 +92,7 @@ distributions:
     version: '1.0.1'
     configuration: Debug
     bundle_identifier: com.scenee.SampleApp.dev
-    bundle_version: '%b-%h-$c'  # See 'Bundle Version Format section'
+    bundle_version: '$BUILD_NUMBER'  # You can use shell environment variables!
     info_plist:
       CFBundleName: 'SmapleApp(Debug)'
       UISupportedExternalAccessoryProtocols:
@@ -108,7 +110,7 @@ distributions:
 
     # Optional
     bundle_identifier: com.scenee.SampleApp
-    bundle_version: '$BUILD_NUMBER'  # You can use shell environment variables!
+    bundle_version: '%b-%h-$c'  # See 'Bundle Version Format section'
     info_plist:
       UISupportedExternalAccessoryProtocols:
         - com.example.accessory
@@ -123,41 +125,29 @@ distributions:
 log_formatter: xcpretty # Optional
 ```
 
-## Use an Environment variable
+## Use Environment variables in Relfile
 
-You can use an Environment variable in Relfile.
-An example is here.
+You can use Environment variables in Relfile. For example,
 
 ```yaml
 development2:
   scheme: Sample App
-  bundle_identifier: com.scenee.SampleApp.$BUNDLE_SUFFIX
+  bundle_version: $BUILD_NUMBER
   ....
 ```
 
 ```bash
-$ BUNDLE_SUFFIX=debug relax archive development2
+$ BUILD_NUMBER=11 relax archive development2
 ```
 
 or
 
 ```bash
-$ export BUNDLE_SUFFIX=debug 
+$ export BUILD_NUMBER=11
 $ relax archive development2
 ```
 
-But you can't use Xcode build setting variables (PRODUCT_NAME etc.) in Relfile.
-Because they can be overridden by Relfile's definitions.
-
-## Bundle Version Format
-
-The characters and their meanings are as follows.
-
-| Character | Meaning |
-|:---------|:-------|
-|%c| Build configuration|
-|%h| Git abbreviated commit hash|
-|%b| Git branch name|
+But you can't use Xcode build setting variables (i.e. PRODUCT_NAME etc.) in Relfile because they can be overridden by Relfile's definitions.
 
 ## Export Option Support
 
@@ -177,18 +167,31 @@ The characters and their meanings are as follows.
 | uploadBitcode                            | OK                                                                                              |
 | uploadSymbols                            | OK                                                                                              |
 
+## Bundle Version Format
+
+The characters and their meanings are as follows.
+
+| Character | Meaning |
+|:---------|:-------|
+|%c| Build configuration|
+|%h| Git abbreviated commit hash|
+|%b| Git branch name|
+
+
 # Advanced
 
-## Create a xcarchive file
+## Create an archive file
 
 ```bash
 $ relax archive dev
 ```
 
-## Export a xcarchive file to an IPA file
+## Export an archive file to an IPA file
 
 ```bash
 $ relax export "/path/to/xcarchive"
+$ # OR
+$ relax export dev
 ```
 
 ## Validate an IPA
@@ -219,7 +222,7 @@ $ relax symbolicate sampleapp.crash SampleApp.xcarchive
 The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
 Actually this is an useful wrapper of `security` command.
 
-Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/run.sh) for detail.
+Run here and see [this script](<F28>https://github.com/SCENEE/relax/blob/master/test/run.sh#L24) for detail.
 ```
 $ relax help keychain
 ```
@@ -228,10 +231,11 @@ $ relax help keychain
 
 The `profile` module commands make it easy to find, use or remove provisioning profiles without Xcode Preferences.
 
-Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/run.sh) for detail.
+Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/run.sh#L37) for detail.
 ```
 $ relax help profile
 ```
+
 
 # Known Issues
 
