@@ -8,7 +8,7 @@ usage () {
 
 	Options:
 	    -c		Specify a configuration
-	    --no-cache	Remove a DerivedData of the schema
+	    --no-cache	Remove a DerivedData of the scheme
 	    --progress	Show a progress indicator
 	EOM
 	fin
@@ -37,7 +37,7 @@ set_archive_config () {
 		die "$FUNCNAME(): not found $xcscheme_path"
 	fi
 
-	logi "$ARROW Set \""$_CONFIGURATION"\" to BuildConfiguration in xcscheme"
+	logv "Set \""$_CONFIGURATION"\" to BuildConfiguration in scheme: $xcscheme_path"
 	sed -i."$BAK_EXT" "/<ArchiveAction/,/<\/ArchiveAction>/s/buildConfiguration = \".*\"/buildConfiguration = \"$_CONFIGURATION\"/" "$xcscheme_path"
 }
 
@@ -50,15 +50,13 @@ make_archive () {
 	local xcscheme_path="$(__find_xcscheme "$_SCHEME")"
 	if [[ -n "$xcscheme_path" ]]; then
 		set_archive_config "$xcscheme_path" "$_CONFIGURATION"
-		logi "Scheme: $xcscheme_path"
 		cp "$xcscheme_path" "$PRODUCT_BUILD_ROOT/${xcscheme_path##*/}"
 	fi
 
 	if [[ $No_cache == true ]]; then
 		if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-			logi "$ARROW Cleaning DerivedData of $TARGETNAME"
+			logi "$ARROW Remove DerivedData of $TARGETNAME: $OBJROOT"
 			rm -rf $OBJROOT
-			logi "Removed $OBJROOT"
 		fi
 	fi
 
