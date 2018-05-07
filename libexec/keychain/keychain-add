@@ -33,6 +33,9 @@ __validate_certs ()
 		esac
 	done
 
+	# Install AppleWWDRCA.cert if needed
+	secutil install "Apple Worldwide Developer Relations Certification Authority"
+
 	logi "p12: $p12"
 	
 	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints

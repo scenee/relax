@@ -14,7 +14,7 @@ import (
 
 func usage() {
 	fmt.Println("usage: relparser [-f <Relfile>] list")
-	fmt.Println("usage: relparser [-f <Relfile>] check <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] check <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] source <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] build_options <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] plist <distribution>")

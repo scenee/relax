@@ -1,6 +1,7 @@
 package relfile
 
 import (
+	"certutil"
 	"crypto/sha1"
 	"crypto/x509"
 	"fmt"
@@ -68,20 +69,26 @@ func (d *Distribution) Check() {
 			fmt.Println("error:", err)
 			return
 		}
+		issuerCN := cert.Issuer.CommonName
+		if data, err = exec.Command("/usr/bin/security", "find-certificate", "-c", issuerCN).Output(); err != nil {
+			logger.Printf("\"%s\" certificate doesn't installed in Keychain.", issuerCN)
+			certutil.InstallCertificate(issuerCN)
+		}
+
 		sha1Fingerprint := sha1.Sum(cert.Raw)
-		// fmt.Printf("%X\n", sha1Fingerprint)
-		if data, err = exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning").Output(); err == nil {
-			// fmt.Printf("%s\n", string(data[:]))
-			re := regexp.MustCompile(fmt.Sprintf("%X", sha1Fingerprint))
-			matches := re.FindStringSubmatch(string(data[:]))
-			if len(matches) > 0 {
-				ok = true
-			}
+
+		if data, err = exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning").Output(); err != nil {
+			logger.Fatalln(err)
+		}
+		re := regexp.MustCompile(fmt.Sprintf("%X", sha1Fingerprint))
+		matches := re.FindStringSubmatch(string(data[:]))
+		if len(matches) > 0 {
+			ok = true
 		}
 	}
 
 	if !ok {
-		logger.Fatalf("No identities found for \"%s\". Please check your certificates in Keychain Access.app.", d.ProvisioningProfile)
+		logger.Fatalf("No valid identities found for \"%s\". Please check your certificates and the expirations in Keychain Access.app.", d.ProvisioningProfile)
 	}
 
 	if d.BundleID != "" {

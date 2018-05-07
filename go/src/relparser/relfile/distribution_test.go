@@ -11,6 +11,7 @@ func TestCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := r.Distributions["adhoc"]
-	infopath := "../../../../sample/SampleApp/Info.plist"
-	d.Check(infopath)
+	//infopath := "../../../../sample/SampleApp/Info.plist"
+	//d.Check(infopath)
+	d.Check()
 }

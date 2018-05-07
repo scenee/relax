@@ -2,3 +2,6 @@
 /src/github.com
 /pkg
 *.test
+relparser
+lspp
+secutil
