@@ -34,7 +34,7 @@ __validate_certs ()
 	done
 
 	# Install AppleWWDRCA.cert if needed
-	secutil install "Apple Worldwide Developer Relations Certification Authority"
+	secutil -k $keychain install "Apple Worldwide Developer Relations Certification Authority"
 
 	logi "p12: $p12"
 	

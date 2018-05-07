@@ -72,7 +72,7 @@ func (d *Distribution) Check() {
 		issuerCN := cert.Issuer.CommonName
 		if data, err = exec.Command("/usr/bin/security", "find-certificate", "-c", issuerCN).Output(); err != nil {
 			logger.Printf("\"%s\" certificate doesn't installed in Keychain.", issuerCN)
-			certutil.InstallCertificate(issuerCN)
+			certutil.InstallCertificate(issuerCN, "")
 		}
 
 		sha1Fingerprint := sha1.Sum(cert.Raw)

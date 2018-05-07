@@ -2,6 +2,7 @@ package main
 
 import (
 	"certutil"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,7 +13,7 @@ import (
 //
 
 func usage() {
-	fmt.Println("usage: secutil install <commonname>")
+	fmt.Println("usage: secutil [-k <keychain>] install <certifcate>")
 	os.Exit(0)
 }
 
@@ -24,27 +25,28 @@ func init() {
 
 func main() {
 	var (
-		cmd string
-		cn  string
+		cmd      string
+		cn       string
+		keychain string
 	)
 
-	if len(os.Args) != 3 {
-		usage()
-	}
+	flag.StringVar(&keychain, "k", "", "Use the keychain rather than the default keychain")
 
-	cmd = os.Args[1]
-	cn = os.Args[2]
+	flag.Parse()
 
-	if cmd == "" {
+	cmd = flag.Arg(0)
+	cn = flag.Arg(1)
+
+	if cmd == "" || cn == "" {
 		usage()
 	}
 
 	switch cmd {
 	case "install":
-		if _, err := exec.Command("/usr/bin/security", "find-certificate", "-c", cn).Output(); err == nil {
+		if _, err := exec.Command("/usr/bin/security", "find-certificate", "-c", cn, keychain).Output(); err == nil {
 			return
 		}
-		certutil.InstallCertificate(cn)
+		certutil.InstallCertificate(cn, keychain)
 	default:
 		usage()
 	}

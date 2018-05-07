@@ -39,7 +39,7 @@ create_keychain () {
 	$SECURITY set-keychain-settings -t 3600 $keychain
 
 	# Install AppleWWDRCA.cert
-	secutil install "Apple Worldwide Developer Relations Certification Authority"
+	secutil -k $keychain install "Apple Worldwide Developer Relations Certification Authority"
 
 	logi "Created: $keychain"
 }

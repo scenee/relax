@@ -16,7 +16,7 @@ const (
 	AppleWWDRCACertificateURL = "https://developer.apple.com/certificationauthority/AppleWWDRCA.cer"
 )
 
-func InstallCertificate(cn string) {
+func InstallCertificate(cn string, keychain string) {
 	var (
 		resp                *http.Response
 		temp                *os.File
@@ -32,7 +32,7 @@ func InstallCertificate(cn string) {
 		logger.Fatalf("\"%s\" isn't supported.", cn)
 	}
 
-	logger.Printf("Installing \"%s\"...", cn)
+	logger.Printf("Installing \"%s\"...\n", cn)
 	if temp, err = ioutil.TempFile("", tempName); err != nil {
 		logger.Fatalf("Failed to open temp file for \"%s\": %v", cn, err)
 	}
@@ -44,7 +44,13 @@ func InstallCertificate(cn string) {
 	if _, err = io.Copy(temp, resp.Body); err != nil {
 		logger.Fatalf("Failed to download \"%s\": %v", cn, err)
 	}
-	if _, err = exec.Command("/usr/bin/security", "add-certificates", temp.Name()).Output(); err != nil {
-		logger.Fatalf("Failed to install \"%s\": %v", cn, err)
+	if keychain == "" {
+		if _, err = exec.Command("/usr/bin/security", "add-certificates", temp.Name()).Output(); err != nil {
+			logger.Fatalf("Failed to install \"%s\": %v", cn, err)
+		}
+	} else {
+		if _, err = exec.Command("/usr/bin/security", "add-certificates", "-k", keychain, temp.Name()).Output(); err != nil {
+			logger.Fatalf("Failed to install \"%s\": %v", cn, err)
+		}
 	}
 }
