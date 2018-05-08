@@ -29,7 +29,7 @@ NOTE:
 
 You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
 
-But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L40).
+But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L43).
 
 # Installation
 
@@ -66,9 +66,9 @@ $ relax dist adhoc
 You can build it without Relfile in one line.
 
 ```bash
-$ relax dist </path/to/xcodeproj_or_xcworkspace> --scheme <scheme_name> --profile <profile_name>
+$ relax dist /path/to/xcodeproj_or_xcworkspace --scheme scheme_name --profile profile_name
 $ # OR
-$ relax dist </path/to/xcodeproj_or_xcworkspace> -s <scheme_name> -p <profile_name>
+$ relax dist /path/to/xcodeproj_or_xcworkspace -s scheme_name -p profile_name
 ```
 
 # Relfile
