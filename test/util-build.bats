@@ -61,7 +61,6 @@ teardown () {
 	_BUILD_SETTINGS=(OTHER_SWIFT_FLAGS='-DMOCK')
 	run get_build_params_file "Sample App"
 	assert_success
-	cat "$output" >> ../bats.log
 	cat "$output" | grep -q "OTHER_SWIFT_FLAGS=-DMOCK"
 	popd >/dev/null
 }
