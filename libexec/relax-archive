@@ -55,7 +55,7 @@ make_archive () {
 
 	if [[ $No_cache == true ]]; then
 		if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-			logi "$ARROW Remove DerivedData of $TARGETNAME: $OBJROOT"
+			logi "$ARROW Removing DerivedData: $OBJROOT"
 			rm -rf $OBJROOT
 		fi
 	fi

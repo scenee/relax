@@ -21,7 +21,7 @@ load test_helper
 @test "relax archive development2" {
   export BUNDLE_SUFFIX=debug
   export VERSION="0.0.1"
-  run  relax archive development2
+  run  relax -v archive development2
   assert_success
   [[ ! "${output}" =~ "Cleaning DerivedData" ]]
 }
@@ -29,9 +29,9 @@ load test_helper
 @test "relax archive development2 --no-cache " {
   export BUNDLE_SUFFIX=debug
   export VERSION="0.0.1"
-  run  relax archive development2 --no-cache
+  run  relax -v archive development2 --no-cache
   assert_success
-  [[ "${output}" =~ "Cleaning DerivedData" ]]
+  [[ "${output}" =~ "Removing DerivedData" ]]
 }
 
 @test "relax archive adhoc" {

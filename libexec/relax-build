@@ -110,9 +110,8 @@ build_framework() {
 	local configuration=$2
 
 	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logi "$ARROW Clean DerivedData of $TARGETNAME"
+		logv "Removing DerivedData: $OBJROOT"
 		rm -rf $OBJROOT
-		logi "Removed $OBJROOT"
 	fi
 
 	# If we're already inside this script then die
@@ -324,8 +323,6 @@ while [ $# -ne 0 ];  do
 done
 
 [[ ${Distribution:-undefined} != undefined ]] || usage
-
-check_distribution $Distribution
 
 trap "teardown_build" EXIT INT TERM
 setup_build $Distribution
