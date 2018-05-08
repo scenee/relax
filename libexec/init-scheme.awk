@@ -1,17 +1,15 @@
 /Schemes/ {
-	print "xcode_schemes=()"
     while (1) {
-        if ( (getline foo) > 0 ) {
-			if ( foo ~ /^ *$/ ) {
+        if ( (getline line) > 0 ) {
+			if ( line ~ /^ *$/ ) {
 				break
 			} 
-			gsub(/^  */,"", foo)
-			gsub(/ *$/,"", foo)
-            print "xcode_schemes+=(\""foo"\")"
+			gsub(/^  */,"", line)
+			gsub(/ *$/,"", line)
+            print line
         }
         else {
 			break
         }
     }
-	print "export xcode_schemes"
 }

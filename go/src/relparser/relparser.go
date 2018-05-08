@@ -9,18 +9,13 @@ import (
 )
 
 //
-// Global variables
-//
-
-var logger *log.Logger
-
-//
 // Utils
 //
 
 func usage() {
 	fmt.Println("usage: relparser [-f <Relfile>] list")
-	fmt.Println("       relparser [-f <Relfile>] [-o <output>] source <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] check <distribution>")
+	fmt.Println("       relparser [-f <Relfile>] source <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] build_options <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] [-plist <Info.plist>] plist <distribution>")
 	fmt.Println("       relparser [-f <Relfile>] [-o <output>] -plist <Info.plist> export_options <distribution>")
@@ -31,7 +26,6 @@ func usage() {
 // Main
 //
 func init() {
-	logger = log.New(os.Stderr, "error: ", 0)
 }
 
 func main() {
@@ -68,16 +62,20 @@ func main() {
 
 	rel, err = relfile.LoadRelfile(in)
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 	}
 
 	if rel.Version == "" || len(rel.Distributions) == 0 {
-		logger.Fatalf("Please update your Relfile format to 2.x. See https://github.com/SCENEE/relax#relfile")
+		log.Fatalf("Please update your Relfile format to 2.x. See https://github.com/SCENEE/relax#relfile")
 	}
 
 	switch cmd {
 	case "source":
-		rel.GenSrouce(dist, out)
+		out := rel.GenSource(dist)
+		fmt.Println(out.Name())
+
+	case "check":
+		rel.Check(dist)
 
 	case "plist":
 		rel.GenPlist(dist, infoPlist, out)
@@ -87,7 +85,7 @@ func main() {
 
 	case "export_options":
 		if infoPlist == "" {
-			logger.Fatalf("Pass a Info.plist path using '-plist' option")
+			log.Fatalf("Pass a Info.plist path using '-plist' option")
 		}
 		rel.GenOptionsPlist(dist, infoPlist, out)
 

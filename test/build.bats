@@ -6,7 +6,7 @@ load test_helper
   run relax build framework
   assert_success
   [[ ! "${output}" =~ "\[[ \*]*\]" ]]
-  [[ "${output}" =~ "Time:" ]]
+  [[ ! "${output}" =~ "Time:" ]]
   file ./SampleFramework.framework/SampleFramework | grep -q arm.*
   file ./SampleFramework.framework/SampleFramework | grep -q x86_64
   ls ./SampleFramework.framework/Modules/SampleFramework.swiftmodule | grep -q arm*
@@ -16,7 +16,7 @@ load test_helper
 @test "relax build framework --progress" {
   run relax build framework --progress
   assert_success
-  [[ "${output}" =~ "\[[ \*]*\]" ]]
+  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
 }
 

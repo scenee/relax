@@ -15,19 +15,19 @@ teardown () {
 }
 
 @test "is_distribution_profile(Adhoc)" {
-	run __is_distribution_profile sample/certificates/Relax_AdHoc.mobileprovision
+	run _is_distribution_profile sample/certificates/Relax_AdHoc.mobileprovision
 	assert_success
 	[ $output = "true" ]
 }
 
 @test "is_distribution_profile(Development)" {
-	run __is_distribution_profile sample/certificates/Relax_Development.mobileprovision
+	run _is_distribution_profile sample/certificates/Relax_Development.mobileprovision
 	assert_success
 	[ $output = "false" ]
 }
 	
 @test "is_distribution_profile(Error)" {
-	run __is_distribution_profile README.md
+	run _is_distribution_profile README.md
 	assert_failure
 }
 
@@ -58,10 +58,9 @@ teardown () {
 
 @test "get_build_params_file()" {
 	pushd sample >/dev/null
-	build_settings=(OTHER_SWIFT_FLAGS='-DMOCK')
+	_BUILD_SETTINGS=(OTHER_SWIFT_FLAGS='-DMOCK')
 	run get_build_params_file "Sample App"
 	assert_success
-	cat "$output" >> ../bats.log
 	cat "$output" | grep -q "OTHER_SWIFT_FLAGS=-DMOCK"
 	popd >/dev/null
 }

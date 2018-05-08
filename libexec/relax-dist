@@ -1,0 +1,61 @@
+#!/bin/bash -eu
+# Summary: Create a IPA file
+
+usage () {
+	cat <<-EOM
+	Usage: ${ME} dist </path/to/project_or_workspace> --scheme <Scheme> --profile <Profile>
+	       ${ME} dist <distirbution>
+	
+	--scheme,-s	A scheme name
+	--profile,-p	A provisioning profile name
+
+	EOM
+	fin
+}
+
+Distribution=
+Project=
+Scheme=
+Profile=
+
+while [[ $# != 0 ]]; do
+	arg=$1
+	shift
+	case $arg in
+	--scheme|-s)
+		Scheme="$1"
+		shift
+		;;
+	--profile|-p)
+		Profile="$1"
+		shift
+		;;
+	*)
+		if [[ "$arg" =~ .*\.(xcodeproj|xcworkspace) ]]; then
+			if [[ -d "$arg" ]]; then 
+				Project="$arg"
+			else
+				die "Not found $arg"
+			fi
+		else
+			Distribution="$arg"
+		fi
+		;;
+	esac
+done
+
+if [[ -n "$Scheme" && -n "$Profile" ]]; then
+	generate_relfile "$Project" "$Scheme" "$Profile"
+	REL_CONFIG_PATH="$REL_TEMP_DIR/Relfile"
+	Distribution=adhoc
+	REL_DISTRIBUTIONS="$Distribution"
+else
+	if [[ -n "$Scheme" || -n "$Profile" ]]; then
+		usage
+	fi
+fi
+
+[[ -n "$Distribution" ]] || usage
+
+relax-archive "$Distribution"
+relax-export "$Distribution"

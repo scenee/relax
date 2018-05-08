@@ -1,9 +1,14 @@
 package relfile
 
 import (
+	"certutil"
+	"crypto/sha1"
+	"crypto/x509"
 	"fmt"
 	"github.com/DHowett/go-plist"
 	"os"
+	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -12,89 +17,86 @@ import (
 //
 
 type Distribution struct {
-	Sdk                 string                 `yaml:"sdk",omitempty"`
-	Scheme              string                 `yaml:"scheme""`
-	TeamID              string                 `yaml:"team_id"`
-	ProvisioningProfile string                 `yaml:"provisioning_profile,omitempty"`
-	Configuration       string                 `yaml:"configuration,omitempty"`
-	Version             string                 `yaml:"version,omitempty"`
-	BundleID            string                 `yaml:"bundle_identifier,omitempty"`
-	BundleVersion       string                 `yaml:"bundle_version,omitempty"`
-	InfoPlist           map[string]interface{} `yaml:"info_plist,omitempty"`
-	BuildSettings       map[string]interface{} `yaml:"build_settings,omitempty"`
-	BuildOptions        BuildOptions           `yaml:"build_options,omitempty"`
-	ExportOptions       ExportOptions          `yaml:"export_options,omitempty"`
+	// Required
+	Scheme              string `yaml:"scheme"`
+	ProvisioningProfile string `yaml:"provisioning_profile"`
+
+	// Optional
+	Sdk           string                 `yaml:"sdk",omitempty"`
+	Configuration string                 `yaml:"configuration,omitempty"`
+	Version       string                 `yaml:"version,omitempty"`
+	BundleID      string                 `yaml:"bundle_identifier,omitempty"`
+	BundleVersion string                 `yaml:"bundle_version,omitempty"`
+	InfoPlist     map[string]interface{} `yaml:"info_plist,omitempty"`
+	BuildSettings map[string]interface{} `yaml:"build_settings,omitempty"`
+	BuildOptions  BuildOptions           `yaml:"build_options,omitempty"`
+	ExportOptions ExportOptions          `yaml:"export_options,omitempty"`
 }
 
-//
-// Utils
-//
+func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	type typeAlias Distribution
+	var t = &typeAlias{
+		Sdk: "iphoneos",
+	}
 
-const PREFIX string = "REL_CONFIG"
-
-func genSourceline(key, value string) string {
-	k := strings.Join([]string{PREFIX, key}, "_")
-	return fmt.Sprintf("export %v=\"%v\"\n", k, value)
-}
-
-func genSourceLine2(name string, key string, value interface{}) string {
-	k := strings.Join([]string{PREFIX, name, key}, "_")
-	return fmt.Sprintf("export %v=\"%v\"\n", k, value)
-}
-
-func getBundleID(path string) string {
-	var (
-		err     error
-		decoder *plist.Decoder
-		f       *os.File
-		data    map[string]interface{}
-	)
-
-	f, err = os.Open(path)
+	err = unmarshal(t)
 	if err != nil {
-		logger.Fatalf("open error:", err)
-	} else {
-		defer f.Close()
-		decoder = plist.NewDecoder(f)
+		return err
 	}
 
-	err = decoder.Decode(&data)
-	if err != nil {
-		logger.Fatalf("decode error:", err)
-	}
-
-	props, ok := data["ApplicationProperties"].(map[string]interface{})
-	if ok {
-		return props["CFBundleIdentifier"].(string)
-	} else {
-		return data["CFBundleIdentifier"].(string)
-	}
+	*d = Distribution(*t)
+	return nil
 }
 
-func cleanupInterfaceArray(in []interface{}) []interface{} {
-	res := make([]interface{}, len(in))
-	for i, v := range in {
-		res[i] = cleanupMapValue(v)
+func (d *Distribution) Check() {
+	// Check the ProvisioningProfile existence
+	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	if len(infos) == 0 {
+		logger.Fatalf("\"%s\" not found.", d.ProvisioningProfile)
 	}
-	return res
-}
 
-func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
-	for k, v := range in {
-		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
+	// Check the related Certificate existence
+	pp := infos[0].Pp
+
+	ok := false
+	for _, data := range pp.DeveloperCertificates {
+		var (
+			cert *x509.Certificate
+			err  error
+		)
+		// fmt.Printf("%q\n", data)
+		if cert, err = x509.ParseCertificate(data); err != nil {
+			fmt.Println("error:", err)
+			return
+		}
+		issuerCN := cert.Issuer.CommonName
+		if data, err = exec.Command("/usr/bin/security", "find-certificate", "-c", issuerCN).Output(); err != nil {
+			logger.Printf("\"%s\" certificate doesn't installed in Keychain.", issuerCN)
+			certutil.InstallCertificate(issuerCN, "")
+		}
+
+		sha1Fingerprint := sha1.Sum(cert.Raw)
+
+		if data, err = exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning").Output(); err != nil {
+			logger.Fatalln(err)
+		}
+		re := regexp.MustCompile(fmt.Sprintf("%X", sha1Fingerprint))
+		matches := re.FindStringSubmatch(string(data[:]))
+		if len(matches) > 0 {
+			ok = true
+		}
 	}
-	return res
-}
 
-func cleanupMapValue(v interface{}) interface{} {
-	switch v := v.(type) {
-	case []interface{}:
-		return cleanupInterfaceArray(v)
-	case map[interface{}]interface{}:
-		return cleanupInterfaceMap(v)
-	default:
-		return v
+	if !ok {
+		logger.Fatalf("No valid set of certificate and identity found for \"%s\". Please check 'My Certificates' in Keychain Access.app.", d.ProvisioningProfile)
+	}
+
+	if d.BundleID != "" {
+		re := regexp.MustCompile(strings.Replace(pp.AppID(), "*", ".*", -1))
+		matches := re.FindStringSubmatch(d.BundleID)
+		if len(matches) == 0 {
+			logger.Fatalf("\"%s\" doesn't match AppID of \"%s\".", d.BundleID, d.ProvisioningProfile)
+		}
 	}
 }
 
@@ -126,7 +128,18 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 	/* Update Info.plist data */
 	for k, v := range d.InfoPlist {
 		//fmt.Printf("---\t%v: %v\n", k, v)
-		data[k] = cleanupMapValue(v)
+		new := cleanupMapValue(v)
+		if old, ok := data[k]; ok {
+			switch old := old.(type) {
+			case map[string]interface{}:
+				if new, ok := new.(map[string]interface{}); ok {
+					new := mergeMap(old, new)
+					data[k] = new
+					continue
+				}
+			}
+		}
+		data[k] = new
 	}
 
 	encoder := plist.NewEncoder(out)
@@ -138,49 +151,53 @@ func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 }
 
 func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
-
 	var (
-		bundleID string
-		encoder  *plist.Encoder
-		opts     ExportOptions
+		encoder *plist.Encoder
+		opts    ExportOptions
 	)
 
-	// get bundle identifier
-	if d.BundleID == "" {
-		bundleID = getBundleID(infoPlist)
-	} else {
-		bundleID = d.BundleID
+	if d.ProvisioningProfile == "" {
+		logger.Fatalf("`provisioning_profile` field is required in Relfile.")
 	}
 
 	encoder = plist.NewEncoder(out)
 	encoder.Indent("\t")
 
 	// fmt.Println("export options:", d.ExportOptions)
+
+	// Info.plist is one in xcarchive file. So we have to use the BundleID, not in Relfile.
+	bundleID := getBundleID(infoPlist)
+
 	opts = d.ExportOptions
-	opts.TeamID = d.TeamID
-	if d.ProvisioningProfile != "" {
-		opts.SetProvisioningProfiles(bundleID, d.ProvisioningProfile)
-	}
+	opts.SetProvisioningProfiles(d.ProvisioningProfile, bundleID)
 	opts.Encode(encoder)
 }
 
 func (d Distribution) writeSource(name string, out *os.File) {
-
 	var (
 		err            error
 		source         string
 		build_settings string
 	)
 
-	source += genSourceLine2(name, "scheme", d.Scheme)
-	source += genSourceLine2(name, "sdk", d.Sdk)
-	source += genSourceLine2(name, "configuration", d.Configuration)
-	source += genSourceLine2(name, "provisioning_profile", d.ProvisioningProfile)
-	source += genSourceLine2(name, "team_id", d.TeamID)
-	source += genSourceLine2(name, "bundle_identifier", d.BundleID)
-	source += genSourceLine2(name, "bundle_version", d.BundleVersion)
-	source += genSourceLine2(name, "version", d.Version)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_SCHEME", d.Scheme)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_SDK", d.Sdk)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_CONFIGURATION", d.Configuration)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", d.ProvisioningProfile)
 
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_VERSION", d.Version)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_ID", d.BundleID)
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_VERSION", d.BundleVersion)
+
+	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+
+	if len(infos) == 0 {
+		logger.Fatalf("Not installed \"%s\"", d.ProvisioningProfile)
+	}
+
+	pp := infos[0].Pp
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
+	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
 	// fmt/Println("--- Build settings\n")
 	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
 

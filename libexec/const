@@ -1,12 +1,8 @@
 #!/bin/bash -eu
 # @(#) relax: constants
 
+export RELFILE_VERSION=2
 export REL_CONFIG="Relfile"
 export REL_RELEASE_ROOT="dist"
 export REL_DATA_DIR=".relax"
-export REL_TEMP_ROOT="$( [[ ${TMPDIR:-undefined} != undefined ]] && echo "$TMPDIR/$ME" || echo "/tmp/$ME" )"
-export REL_CACHE_DIR="$HOME/$REL_DATA_DIR/caches"
-[[ -d $REL_CACHE_DIR ]] || mkdir -p $REL_CACHE_DIR
-
-# TODO Rename this with 'REL_BAK_EXT'
-export BAK_EXT="bak.relax"
+export REL_BAK_EXT="bak.relax"

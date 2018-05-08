@@ -17,60 +17,6 @@ usage () {
 	fin
 }
 
-export_generate_optoin_list() {
-	logi "$ARROW Generating ExportOptions.plist"
-
-	local plistbuddy_cmd_file=$REL_TEMP_DIR/plistbuddy_cmd
-
-	if [ ! -z $export_option_method ]; then
-		echo "Add :method string $export_option_method" \
-			>> $plistbuddy_cmd_file
-	else 
-		die "Undefined a method of ExportOptions plist in Relfile"
-	fi
-
-	if [ ! -z $team_id ]; then
-		echo "Add :teamID string $team_id" \
-			>> $plistbuddy_cmd_file
-	fi
-
-	if [ ! -z $export_option_thinning ]; then
-		echo "Add :thinning string '$export_option_thinning'" \
-			>> $plistbuddy_cmd_file
-	fi
-
-	if [ ! -z $export_option_compile_bitcode ]; then
-		echo "Add :compileBitcode bool $export_option_compile_bitcode" \
-			>> $plistbuddy_cmd_file
-	fi
-
-	local is_appstore=false
-	if [ $export_option_method = "appstore" ]; then
-		is_appstore=true
-	fi
-
-	# For App Store
-	if [ ! -z $export_option_upload_symbols ]; then
-		if ! $is_appstore; then
-			logi "$WARN uploadSymbol options is for App Store exports."
-		fi
-		echo "Add :updateSymbols bool $export_option_upload_symbols" \
-			>> $plistbuddy_cmd_file
-	fi
-
-	# For App Store
-	if [ ! -z $export_option_upload_bitcode ]; then
-		if ! $is_appstore; then
-			logi "$WARN uploadBitcode options is for App Store exports."
-		fi
-		echo "Add :uploadBitcode bool $export_option_upload_bitcode" \
-			>> $plistbuddy_cmd_file
-	fi
-
-	cat $plistbuddy_cmd_file | \
-		xargs -I{} /usr/libexec/PlistBuddy -c {} $EXPORT_OPTIONS_PLIST >/dev/null 2>&1
-}
-
 export_archive () {
 	if [[ $# != 1 ]]; then
 		die "export_archive: bad argument"
@@ -91,14 +37,16 @@ export_archive () {
 			-o "$EXPORT_OPTIONS_PLIST" \
 			-plist "$raw_info_plist"  \
 			export_options $distribution
-		cat $EXPORT_OPTIONS_PLIST
-		printf "\n"
+		logi "$(cat $EXPORT_OPTIONS_PLIST)"
+		logi ""
 	fi
 
-	if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$team_id"; then
-		:
-	else
-		update_archived_entitlements_xcent "$team_id" "$app_path"
+	if [[ -f "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" ]]; then
+		if cat "${app_path}/$ARCHIVED_ENTITLEMENTS_XCENT" | grep -q "$_TEAM_ID"; then
+			:
+		else
+			update_archived_entitlements_xcent "$_TEAM_ID" "$app_path"
+		fi
 	fi
 
 	if [ -z "$(find "$archive_path" -type f)" ]; then
@@ -164,7 +112,7 @@ export_archive () {
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
 	else
-		logi "$ARROW $ipa_path"
+		echo "$ipa_path"
 	fi
 }
 
@@ -205,10 +153,10 @@ do
 		use_packageapp=true
 		;;
 	*)
-		if [[ $arg =~ (.).xcarchive ]]; then
+		if [[ "$arg" =~ (.*).xcarchive ]]; then
 			target_archive_file="$arg"
-			if [[ ! -d $target_archive_file ]]; then
-				die "Not found $target_archive_file "
+			if [[ ! -d "$target_archive_file" ]]; then
+				die "Not found $target_archive_file"
 			fi
 		else
 			distribution=$arg
@@ -218,6 +166,8 @@ do
 done
 
 [[ ${distribution:-undefined} != undefined ]] || usage
+
+check_distribution $distribution
 
 if [[ -z "$target_archive_file" ]]; then
 	target_archive_file="$(relax-show $distribution archive)"

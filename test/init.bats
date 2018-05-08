@@ -4,12 +4,11 @@ load test_helper
 
 @test "relax init" {
   mv Relfile Relfile.bak
-  run relax init
-  assert_success
+  echo -e "1\n1" | relax init
 
-  [[ "${lines[5]}" =~ "version: '2'" ]] \
-  && [ "$(sed -n 's/  *compileBitcode\: \(.*\)/\1/p' Relfile)" == 'false' ]
+  cat Relfile | grep -q -e "version: '2'"
+  cat Relfile | grep -q -e "xcodeproj: SampleApp"
+  cat Relfile | grep -q -e "scheme: Sample App"
 
   mv Relfile.bak Relfile
 }
-

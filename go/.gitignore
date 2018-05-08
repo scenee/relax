@@ -1,3 +1,7 @@
 /src/gopkg.in
 /src/github.com
 /pkg
+*.test
+relparser
+lspp
+secutil

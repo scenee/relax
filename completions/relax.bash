@@ -20,7 +20,7 @@ _relax() {
 
 	if [[ -n $special ]]; then
 		case $special in
-			archive|build|export|show|package|upload|resign)
+			apply|archive|build|dist|export|show|package|upload|resign)
 				if [[ $prev = $special ]]; then
 					COMPREPLY=( $( compgen -W "$(relax completions $special)" -- $cur ) )
 				else
