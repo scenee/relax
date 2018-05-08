@@ -2,24 +2,20 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} [option] keychain <command> ...
-
-	Options:
-	    -v		: Be verbose when executing commands
-	    -h		: Show help
+	Usage: ${ME} keychain <command> ...
 
 	Commands:
-	    ls		List keychains
+	    add		Add identities in a pkcs12 file
+	    certs	List identities(pairs of certificate and private key)
 	    create	Create a keychain
 	    delete	Delete a keychain
-	    use		Set up a keychain to use it
-	    reset	Reset the default keychain to login.keychain
-	    certs	List identities(pairs of certificate and private key)
 	    info	Print hashs and common names of identities in a pkcs12 file
-	    add		Add identities in a pkcs12 file
+	    ls		List keychains
+	    reset	Reset the default keychain to login.keychain
 	    rm		Remove an identity with the hash
-	    help	Show help
+	    use		Set up a keychain to use it
 	EOM
+	fin
 }
 
 

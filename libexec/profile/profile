@@ -2,19 +2,13 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} [option] profile <command> ...
-
-	Options:
-	    -v		: Be verbose when executing commands
-	    -h		: Show help
+	Usage: ${ME} profile <command> ...
 
 	Commands:
 	    add		Add a provisioning profile
-	    rm		Remove a provisioning profile
-	    dec		Decode a provisioning profile
 	    find	Find provisioning profiles
 	    ls		List provisioning profiles
-	    help	Show help
+	    rm		Remove a provisioning profile
 	EOM
 	fin
 }
