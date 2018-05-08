@@ -5,7 +5,7 @@
 
 Relax is a lazy(yes, just for laziness) release tool for iOS developers who don't want to be bothering with codesign and Xcode stuffs!!
 
-You just configure `scheme` and `provisioning_profile` to build archive and ipa files.
+You just configure `scheme` and `provisioning_profile` to build archive and IPA files.
 
 You don't need to waste your time for codesigning problem especially on your CI workflow. Relax will save your time. It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
 
@@ -26,8 +26,10 @@ Relax is..
 
 
 NOTE:
+
 You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
-But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use them**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L40).
+
+But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L40).
 
 # Installation
 
@@ -52,32 +54,26 @@ $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | 
 
 NOTE: Relax might be working on Xcode 7.3.1
 
-Relax depends on only command line tools pre-installed in macOS and Xcode.
-You don't need to take care of a host environment(i.e. ruby version and gem settings).
+Relax depends on only command line tools pre-installed in macOS and Xcode. You don't need to take care of a host environment(i.e. ruby version and gem settings). As a result, You can set up iOS build environment on a new machine quickly including keychain and provisioning profiles. 
 
-As a result, You can set up iOS build environment on a new machine quickly
-including keychain and provisioning profiles. 
-
-# Build an IPA w/ Relfile
+# Build an IPA
 
 ```bash
-$ cd /path/to/your/project
 $ relax init
 $ relax dist adhoc
 ```
 
-# Build an IPA in oneline
+You can build it without Relfile in one line.
 
 ```bash
-$ relax dist </path/to/yourprojectfile_or_workspace> --scheme 'Sample App' --profile 'Relax AdHoc'
+$ relax dist </path/to/xcodeproj_or_xcworkspace> --scheme <scheme_name> --profile <profile_name>
 $ # OR
-$ relax dist </path/to/yourprojectfile_or_workspace> -s 'Sample App' -p 'Relax AdHoc'
+$ relax dist </path/to/xcodeproj_or_xcworkspace> -s <scheme_name> -p <profile_name>
 ```
-
 
 # Relfile
 
-Relfile is a configuration file for Relax. The declarative file will really make you easy to understand what build settings you use to build a distribution and customize them. See [this Refile](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
+Relfile is a configuration file for Relax. The declarative file will really make you easy to understand how to customize Info.plist and build settings for a distribution. See [here](https://github.com/SCENEE/relax/blob/master/sample/Relfile) for detail.
 
 Here is an example.
 
@@ -130,7 +126,7 @@ log_formatter: xcpretty # Optional
 
 ## Use Environment variables in Relfile
 
-You can use Environment variables in Relfile. For example,
+You can use Environment variables in Relfile. That's much useful in CI services. For example,
 
 ```yaml
 development2:
@@ -150,7 +146,7 @@ $ export BUILD_NUMBER=11
 $ relax archive development2
 ```
 
-But you can't use Xcode build setting variables (i.e. PRODUCT_NAME etc.) in Relfile because they can be overridden by Relfile's definitions.
+But, you know, you can't use Xcode build setting variables (like PRODUCT_NAME etc.) in Relfile because they can be overridden by Relfile's definitions.
 
 ## Export Option Support
 
@@ -172,6 +168,7 @@ But you can't use Xcode build setting variables (i.e. PRODUCT_NAME etc.) in Relf
 
 ## Bundle Version Format
 
+You can use specific format characters in a value of `bundle_version` field.
 The characters and their meanings are as follows.
 
 | Character | Meaning |
@@ -197,7 +194,7 @@ $ # OR
 $ relax export dev
 ```
 
-## Validate an IPA
+## Validate an IPA file
 
 Check a IPA file if it has a correct codesigning and entitlements.
 
@@ -205,9 +202,11 @@ Check a IPA file if it has a correct codesigning and entitlements.
 $ relax validate "$(relax show adhoc ipa)"
 ```
 
-## Resign an IPA for an enterprise distribution
+You can also validate an archive file.
 
-Resign a IPA file for a distribution with a different bundle identifier, cetificate and provisioning profile
+## Resign an IPA file for an enterprise distribution
+
+Resign an IPA file for a distribution with a different bundle identifier, certificate and provisioning profile.
 
 ```bash
 $ relax resign -m "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  "$(relax show dev ipa)"
