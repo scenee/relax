@@ -448,10 +448,10 @@ check_distribution() {
 teardown_build () {
 	__kill_bg_xcodebuid_task
 
-	find $HERE -name "*.$BAK_EXT" |\
+	find $HERE -name "*.$REL_BAK_EXT" |\
 	while IFS= read bak
 	do
-		cp "$bak" "${bak%.$BAK_EXT}"
+		cp "$bak" "${bak%.$REL_BAK_EXT}"
 	done
 }
 
@@ -495,7 +495,7 @@ setup_build () {
 		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
 	fi
 
-	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.$BAK_EXT
+	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.$REL_BAK_EXT
 
 	if [[ "${team_id:-undefined}" != undefined ]]; then
 		__replace_development_team $_TEAM_ID
@@ -518,9 +518,9 @@ setup_build () {
 		return
 	fi
 
-	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$BAK_EXT"
+	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$REL_BAK_EXT"
 	logv "Info plist: $INFO_PLIST_PATH"
-	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$BAK_EXT" "$INFO_PLIST_PATH"
+	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$REL_BAK_EXT" "$INFO_PLIST_PATH"
 
 	# Team ID
 	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
