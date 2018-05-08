@@ -2,7 +2,7 @@
 
 load test_helper
 
-@test "relax dist  --scheme \"Sample App\" --profile \"Relax AdHoc\"" {
+@test "relax dist /path/to/project --scheme \"Sample App\" --profile \"Relax AdHoc\"" {
   run relax dist SampleApp.xcodeproj --scheme "Sample App" --profile "Relax AdHoc"
   assert_success
   [[ "${output}" =~ "xcarchive" ]]

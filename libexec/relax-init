@@ -31,52 +31,73 @@ done
 if ! test -f $PWD/$REL_CONFIG; then
 	scheme=
 	project=
+	number=
+	i=
 
 	logi "Creating Relfile"
+	
+	# Set up Xcodeproj or Workspace
+	ls | grep -e xcworkspace -e xcodeproj > $REL_TEMP_DIR/xcode_projects
 
-	# Check xcworkproj existance
-	if ls | grep xcworkspace > /dev/null; then
-		workspace=$(ls | grep xcworkspace)
-		logi "Found workspace: ${workspace}"
-		xcodebuild -list -workspace "$workspace" > $REL_TEMP_DIR/xcode_build_list
-		project="$workspace"
-	elif ls | grep xcodeproj > /dev/null; then
-		xcodeproj=$(ls | grep xcodeproj)
-		logi "Found project: ${xcodeproj}"
-		xcodebuild -list -project "$xcodeproj" > $REL_TEMP_DIR/xcode_build_list
-		project="$xcodeproj"
-	fi
+	i=1
+	while IFS='\n' read e
+	do
+		logi "$i. $e"
+		i=$(($i + 1))
+	done < $REL_TEMP_DIR/xcode_projects
 
-	# Set up Scheme
-	## Get scheme list
+	logi "Select Entry point by number:"
+	read -p "? " number
 
-	cat $REL_TEMP_DIR/xcode_build_list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
-
-	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode_build_list \
-		> $REL_TEMP_DIR/xcode-build-schemes
-	source $REL_TEMP_DIR/xcode-build-schemes
-
-	n=1
-	(
-		IFS='\n'
-		for  s in ${xcode_schemes[@]}
-		do
-			echo "$n. $s"
-			n=$(($n + 1))
-		done
-	)
-	echo "Select Scheme by number:"
-	read number
-	if [[ $number < ${#xcode_schemes[@]} && $number > 0 ]]; then
-		scheme=${xcode_schemes[$(($number - 1))]}
+	if [[ $number < $i && $number > 0 ]]; then
+		project="$(sed -n "${number}p" $REL_TEMP_DIR/xcode_projects)"
 	else
 		die "Invalid number"
 	fi
 
+	if [[ $project =~ "xcworkspace" ]]; then
+		logi "Workspace: $project"
+		xcodebuild -list -workspace "$project" > $REL_TEMP_DIR/xcode_build_list
+	elif [[ $project =~ "xcodeproj" ]]; then
+		logi "Project: $project"
+		xcodebuild -list -project "$project" > $REL_TEMP_DIR/xcode_build_list
+	else
+		die "Unexpected inputs: $project"
+	fi
+
+	# Set up Scheme
+	cat $REL_TEMP_DIR/xcode_build_list \
+		| grep -q 'This project contains no schemes.' \
+			&& die "Please set up a shared scheme"
+
+	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode_build_list \
+		> $REL_TEMP_DIR/xcode_build_schemes
+
+	i=1
+	while IFS='\n' read s
+	do
+		logi "$i. $s"
+		i=$(($i + 1))
+	done < $REL_TEMP_DIR/xcode_build_schemes
+
+	logi "Select Scheme by number:"
+	read -p "? " number
+
+	if [[ $number < $i && $number > 0 ]]; then
+		scheme="$(sed -n "${number}p" $REL_TEMP_DIR/xcode_build_schemes)"
+	else
+		die "Invalid number"
+	fi
+
+	logi "Scheme: $scheme"
+
 	## Generate Relfile
 	generate_relfile "$project" "$scheme" ""
+
 	cp $REL_TEMP_DIR/Relfile ./Relfile
+
 	logi "Done"
+	logw "Fill in the ${BOLD}\`provisioning_profile\`${NC} field in Relfile."
 else
 	fin "Found an existing Relfile"
 fi

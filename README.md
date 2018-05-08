@@ -58,21 +58,20 @@ You don't need to take care of a host environment(i.e. ruby version and gem sett
 As a result, You can set up iOS build environment on a new machine quickly
 including keychain and provisioning profiles. 
 
+# Build an IPA w/ Relfile
+
+```bash
+$ cd /path/to/your/project
+$ relax init
+$ relax dist adhoc
+```
+
 # Build an IPA in oneline
 
 ```bash
 $ relax dist </path/to/yourprojectfile_or_workspace> --scheme 'Sample App' --profile 'Relax AdHoc'
 $ # OR
 $ relax dist </path/to/yourprojectfile_or_workspace> -s 'Sample App' -p 'Relax AdHoc'
-```
-
-# Build an IPA w/ Relfile
-
-```bash
-$ cd /path/to/your/project
-$ relax init
-$ # Update Relfile
-$ relax dist adhoc
 ```
 
 

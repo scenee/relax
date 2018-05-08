@@ -20,7 +20,7 @@ generate_relfile () {
 	
 	EOF
 
-	echo 'version: '${RELFILE_VERSION}'' >> $REL_TEMP_DIR/Relfile
+	echo "version: '${RELFILE_VERSION}'" >> $REL_TEMP_DIR/Relfile
 
 	if [[ $project  =~ (.*).xcworkspace ]]; then
 		workspace_name=${BASH_REMATCH[1]}
