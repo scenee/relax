@@ -21,9 +21,13 @@ Relax is..
     - Relax builds an app **only on 'Manual' signing mode** to prevent codesigning problems and make a build reproducible.
     - You can create an **isolated keychain db** with Relax. You could reproduce a build in your local machine as well if you use it. See `keychain` command.
 - **Fine-tunable**
-    - Relfile helps you to configure and understand multi distributions(i.e. adhoc, enterprise & appstore) having a few differences on code signing, Info.plist, Build Settings.
+    - Relfile helps you to configure and understand multi distributions(i.e. ad-hoc, enterprise & app-store) having a few differences on code signing, Info.plist, Build Settings.
     - You no longer need to use many xcconfig files or build configurations in your project for the differences.
 
+
+NOTE:
+You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
+But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use them**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L40).
 
 # Installation
 
@@ -222,7 +226,7 @@ $ relax symbolicate sampleapp.crash SampleApp.xcarchive
 The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
 Actually this is an useful wrapper of `security` command.
 
-Run here and see [this script](<F28>https://github.com/SCENEE/relax/blob/master/test/run.sh#L24) for detail.
+Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/run.sh#L24) for detail.
 ```
 $ relax help keychain
 ```
