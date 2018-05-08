@@ -13,8 +13,6 @@ print_completion_path () {
 	echo "$completion"
 }
 
-Scheme=
-
 while [ $# -ne 0 ];
 do
 	arg=$1
@@ -31,21 +29,52 @@ do
 done
 
 if ! test -f $PWD/$REL_CONFIG; then
+	scheme=
+	project=
+
+	logi "Creating Relfile"
+
+	# Check xcworkproj existance
+	if ls | grep xcworkspace > /dev/null; then
+		workspace=$(ls | grep xcworkspace)
+		logi "Found workspace: ${workspace}"
+		xcodebuild -list -workspace "$workspace" > $REL_TEMP_DIR/xcode_build_list
+		project="$workspace"
+	elif ls | grep xcodeproj > /dev/null; then
+		xcodeproj=$(ls | grep xcodeproj)
+		logi "Found project: ${xcodeproj}"
+		xcodebuild -list -project "$xcodeproj" > $REL_TEMP_DIR/xcode_build_list
+		project="$xcodeproj"
+	fi
+
 	# Set up Scheme
 	## Get scheme list
-	xcodebuild -list > $REL_TEMP_DIR/xcode-build-list
 
-	cat $REL_TEMP_DIR/xcode-build-list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
+	cat $REL_TEMP_DIR/xcode_build_list | grep -q 'This project contains no schemes.' && die "Please set up a shared scheme"
 
-	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode-build-list \
+	awk -f $LIBEXEC_DIR/init-scheme.awk $REL_TEMP_DIR/xcode_build_list \
 		> $REL_TEMP_DIR/xcode-build-schemes
 	source $REL_TEMP_DIR/xcode-build-schemes
 
-	## Generate Relfile configuration
-	Scheme="${xcode_schemes[0]}"
+	n=1
+	(
+		IFS='\n'
+		for  s in ${xcode_schemes[@]}
+		do
+			echo "$n. $s"
+			n=$(($n + 1))
+		done
+	)
+	echo "Select Scheme by number:"
+	read number
+	if [[ $number < ${#xcode_schemes[@]} && $number > 0 ]]; then
+		scheme=${xcode_schemes[$(($number - 1))]}
+	else
+		die "Invalid number"
+	fi
 
-	logi "$ARROW Creating Relfile"
-	generate_relfile "$Scheme" ""
+	## Generate Relfile
+	generate_relfile "$project" "$scheme" ""
 	cp $REL_TEMP_DIR/Relfile ./Relfile
 	logi "Done"
 else

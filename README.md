@@ -61,9 +61,9 @@ including keychain and provisioning profiles.
 # Build an IPA in oneline
 
 ```bash
-$ relax dist --scheme 'Sample App' --profile 'Relax AdHoc'
+$ relax dist </path/to/yourprojectfile_or_workspace> --scheme 'Sample App' --profile 'Relax AdHoc'
 $ # OR
-$ relax dist -s 'Sample App' -p 'Relax AdHoc'
+$ relax dist </path/to/yourprojectfile_or_workspace> -s 'Sample App' -p 'Relax AdHoc'
 ```
 
 # Build an IPA w/ Relfile

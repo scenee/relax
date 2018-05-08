@@ -3,7 +3,8 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} dist --scheme <Scheme> --profile <Profile>
+	Usage: ${ME} dist </path/to/project_or_workspace> --scheme <Scheme> --profile <Profile>
+	       ${ME} dist <distirbution>
 	
 	--scheme,-s	A scheme name
 	--profile,-p	A provisioning profile name
@@ -13,6 +14,7 @@ usage () {
 }
 
 Distribution=
+Project=
 Scheme=
 Profile=
 
@@ -29,14 +31,21 @@ while [[ $# != 0 ]]; do
 		shift
 		;;
 	*)
-		Distribution="$arg"
+		if [[ "$arg" =~ .*\.(xcodeproj|xcworkspace) ]]; then
+			if [[ -d "$arg" ]]; then 
+				Project="$arg"
+			else
+				die "Not found $arg"
+			fi
+		else
+			Distribution="$arg"
+		fi
 		;;
 	esac
 done
 
-
 if [[ -n "$Scheme" && -n "$Profile" ]]; then
-	generate_relfile "$Scheme" "$Profile"
+	generate_relfile "$Project" "$Scheme" "$Profile"
 	REL_CONFIG_PATH="$REL_TEMP_DIR/Relfile"
 	Distribution=adhoc
 	REL_DISTRIBUTIONS="$Distribution"

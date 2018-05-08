@@ -5,10 +5,11 @@
 ### YAML ###
 ############
 
-# generate_relfile <scheme> <profile>
+# generate_relfile <scheme> <profile> <project>
 generate_relfile () {
-	local scheme="$1"
-	local profile="$2"
+	local project="$1"
+	local scheme="$2"
+	local profile="$3"
 
 	[[ -n "$profile" ]] || profile='"<# Your Provisioning Profile #>"'
 
@@ -20,32 +21,19 @@ generate_relfile () {
 	EOF
 
 	echo 'version: '${RELFILE_VERSION}'' >> $REL_TEMP_DIR/Relfile
-	# Check xcworkproj existance
-	if ls | grep xcworkspace > /dev/null; then
-		workspace=$(ls | grep xcworkspace)
-		logi "Found workspace: ${workspace}"
 
-		if [[ $workspace =~ (.*).xcworkspace ]]; then
-			workspace_name=${BASH_REMATCH[1]}
-			echo "" >> $REL_TEMP_DIR/Relfile
-			echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
-			echo "" >> $REL_TEMP_DIR/Relfile
-		fi
+	if [[ $project  =~ (.*).xcworkspace ]]; then
+		workspace_name=${BASH_REMATCH[1]}
+		echo "" >> $REL_TEMP_DIR/Relfile
+		echo "workspace: $workspace_name" >> $REL_TEMP_DIR/Relfile
+		echo "" >> $REL_TEMP_DIR/Relfile
+	elif [[ $project =~ (.*).xcodeproj ]]; then
+		xcodeproj_name=${BASH_REMATCH[1]}
+		echo "" >> $REL_TEMP_DIR/Relfile
+		echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
+		echo "" >> $REL_TEMP_DIR/Relfile
 	else
-		if ls | grep xcodeproj > /dev/null; then
-			xcodeproj=$(ls | grep xcodeproj)
-
-			logi "Found project: ${xcodeproj}"
-
-			if [[ $xcodeproj =~ (.*).xcodeproj ]]; then
-				xcodeproj_name=${BASH_REMATCH[1]}
-				echo "" >> $REL_TEMP_DIR/Relfile
-				echo "xcodeproj: $xcodeproj_name" >> $REL_TEMP_DIR/Relfile
-				echo "" >> $REL_TEMP_DIR/Relfile
-			fi
-		else
-			die "Not found .xcodeproj/.xcworkspace file"
-		fi
+		die "Not found .xcodeproj/.xcworkspace file"
 	fi
 
 	cat <<-EOF >> $REL_TEMP_DIR/Relfile
