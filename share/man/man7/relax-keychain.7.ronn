@@ -1,0 +1,48 @@
+relax-keychain(7) -- relax keychain module
+===========================================================
+
+## SYNOPSIS
+
+`relax keychain` <commands> ...
+
+## DESCRIPTION
+
+The relax keychain module has utility commands to manage your keychain from CLI.
+It allows you to ease to use features of `/usr/bin/security`.
+
+## COMMAND
+
+  * `add`:
+    Add identities and certificates from a p12 file.
+
+  * `certs`:
+    List valid certificates.
+
+  * `create`:
+    Create a custom keychain.
+
+  * `delete`:
+    Delete a custom keychain.
+
+  * `info`:
+    Show information of a p12 file.
+
+  * `ls`:
+    List keychains.
+
+  * `reset`:
+    Reset the default keychain to login.keychain.
+
+  * `rm`:
+    Remove identities and certificates of a p12 file.
+
+  * `use`:
+    Set a keychain as the default keychain.
+
+## COPYRIGHT
+
+Relax is Copyright (C) 2017-present, Shin Yamamoto <http://scenee.com/>
+
+## SEE ALSO
+
+relax(1), relax-profile(7)

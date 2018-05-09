@@ -1,0 +1,66 @@
+relax(1) -- A lazy release tool for iOS developers
+===========================================================
+
+## SYNOPSIS
+
+`relax` [<options>...] <commands> ...
+
+## DESCRIPTION
+
+Relax is a lazy) release tool for iOS developers who don't want to be bothering with codesign and Xcode stuff.
+You don't just configure `scheme` and `provisioning_profile` to build archive and IPA files, but also tune the
+build settings and Info.plist for each distribution.
+
+Relax allows you to:
+
+- Ease to build & distribute your app for a provisioning profile.
+- Make your build reproducible in any build machines.
+- Manage various configurations for each distribution.
+
+## OPTIONS
+
+  * `--version`:
+    Print the relax version
+
+  * `-h, --help`:
+    Print the synopsis and a list of the most commonly used commands.
+
+  * `-v`:
+    Run `relax` command in verbose mode.
+
+## COMMAND
+
+  * `help`:
+    Print a command usage.
+
+  * `init`:
+    Initialize Relfile for a project.
+
+  * `dist`:
+    Execute `archive` and `export` commands.
+
+  * `archive`:
+    Create an archive file for a project with a scheme and a provisioning profile.
+
+  * `export`:
+    Create an IPA file from an archive file.
+
+  * `validate`:
+    Validate an archive file or IPA file.
+
+  * `resign`:
+    Resign an archive file or IPA file.
+
+  * `profile`:
+    Manage provisioning profiles. See rekax-profile(7).
+
+  * `keychain`:
+    Manage keychains and certificates. See relax-keychain(7).
+
+## COPYRIGHT
+
+Relax is Copyright (C) 2017-present, Shin Yamamoto <http://scenee.com/>
+
+## SEE ALSO
+
+relax-profile(7), relax-keychain(7)
