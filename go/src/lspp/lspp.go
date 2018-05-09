@@ -44,7 +44,7 @@ func findProvisioningProfile(pattern string, team string, isLatest bool, isVerbo
 		}
 		names += "\t" + info.Pp.Name
 		var s string
-		teamId := info.Pp.TeamIdentifier()
+		teamId := info.Pp.TeamID()
 		if isVerbose {
 			s = fmt.Sprintf("%v -- %v %v %v %v", info.Name, info.Pp.CreationDate.Local().Format("2006-01-02 15:04:05"), teamId, info.Pp.TeamName, info.Pp.Name)
 		} else {

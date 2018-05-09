@@ -17,4 +17,6 @@ shell_session_update() { :; }
 
 set -ue
 
+export TRAVIS_CI=true
+
 make test
