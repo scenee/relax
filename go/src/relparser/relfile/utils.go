@@ -61,6 +61,8 @@ func mergeMap(old map[string]interface{}, new map[string]interface{}) map[string
 			case map[string]interface{}:
 				if v, ok := v.(map[string]interface{}); ok {
 					v = mergeMap(_v, v)
+					res[k] = v
+					continue
 				}
 			}
 		}

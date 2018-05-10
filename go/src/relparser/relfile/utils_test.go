@@ -1,7 +1,6 @@
 package relfile
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -16,13 +15,33 @@ func TestMergeMap(t *testing.T) {
 	}
 
 	new := map[string]interface{}{
-		"Fiz": true,
 		"Foo": "Hello1",
+		"Fiz": true,
 		"Baz": map[string]interface{}{
-			"Foo": "World1",
-			"Bar": 2,
+			"Bar": "ok",
 		},
 	}
 
-	fmt.Println(mergeMap(old, new))
+	merged := mergeMap(old, new)
+
+	if v, ok := merged["Foo"]; !ok || v != "Hello1" {
+		t.Error("Invalid merged value", merged)
+	}
+
+	if v, ok := merged["Bar"]; !ok || v != 1 {
+		t.Error("Invalid merged value", merged)
+	}
+
+	if v, ok := merged["Fiz"]; !ok || v != true {
+		t.Error("Invalid merged value", merged)
+	}
+
+	baz := merged["Baz"].(map[string]interface{})
+
+	if v, ok := baz["Foo"]; !ok || v != "World" {
+		t.Error("Invalid merged value", merged)
+	}
+	if v, ok := baz["Bar"]; !ok || v != "ok" {
+		t.Error("Invalid merged value", merged)
+	}
 }
