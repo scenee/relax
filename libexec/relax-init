@@ -28,6 +28,7 @@ do
 	esac
 done
 
+
 if ! test -f $PWD/$REL_CONFIG; then
 	scheme=
 	project=

@@ -4,7 +4,7 @@
 
 version: '2'
 xcodeproj: SampleApp # 'xcodeproj' or `workspace`
-log_formatter: xcpretty
+# log_formatter: xcpretty
 uploader:
   crashlytics:
     token:   "$CL_TOKEN"

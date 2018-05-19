@@ -79,11 +79,6 @@ clean_temp () {
 	if [[ ! -z $REL_TEMP_DIR ]] && [[ -d $REL_TEMP_DIR ]]; then
 		rm -rf $REL_TEMP_DIR
 	fi
-	find $HERE -name "*.$REL_BAK_EXT" |\
-	while IFS= read bak
-	do
-		rm "$bak"
-	done
 }
 
 fin () {

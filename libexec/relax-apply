@@ -11,6 +11,19 @@ usage () {
 	fin
 }
 
+teardown_build_dry() {
+	__kill_bg_xcodebuid_task
+
+	set +u
+	if [[ -d "$SRCROOT" ]]; then
+		while IFS= read bak
+		do
+			rm "$bak"
+		done < <(find "$SRCROOT" -name "*.$REL_BAK_EXT")
+	fi
+	set -u
+}
+
 Distribution=
 
 while [[ $# != 0 ]]; do
@@ -25,4 +38,6 @@ done
 
 [[ -n "$Distribution" ]] || usage
 
+
+trap 'teardown_build_dry;' EXIT INT TERM
 setup_build $Distribution
