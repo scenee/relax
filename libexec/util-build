@@ -345,7 +345,7 @@ load_xcode_build_settings () {
 		s/$/'/;
 		" | \
 		grep \
-		-e "CONFIGURATION\|INFOPLIST_PATH\|PRODUCT_SETTINGS_PATH"\
+		-e "CONFIGURATION\|INFOPLIST_PATH\|PRODUCT_SETTINGS_PATH\|SRCROOT"\
 		-e "PRODUCT_BUNDLE_IDENTIFIER\|DEVELOPMENT_TEAM"\
 		-e "FULL_PRODUCT_NAME\|PRODUCT_NAME\|TARGETNAME"\
 		-e "PROJECT_DIR\|PROJECT_FILE_PATH\|PROJECT_NAME"\
@@ -446,13 +446,17 @@ check_distribution() {
 }
 
 teardown_build () {
+	set +u
 	__kill_bg_xcodebuid_task
 
-	find $HERE -name "*.$REL_BAK_EXT" |\
-	while IFS= read bak
-	do
-		cp "$bak" "${bak%.$REL_BAK_EXT}"
-	done
+	if [[ -d "$SRCROOT" ]]; then
+		while read bak
+		do
+			cp "$bak" "${bak%.$REL_BAK_EXT}"
+			rm "$bak"
+		done < <(find "${SRCROOT}" -name "*.${REL_BAK_EXT}")
+	fi
+	set -u
 }
 
 # setup_build [--export <archive-path>] <release>

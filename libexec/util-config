@@ -46,7 +46,9 @@ generate_relfile () {
 
 
 config_get_distributions () {
+	set +u
 	[[ -f "$1" ]] && relparser -f "$1" list
+	set -u
 }
 
 # config_load <config-path> <release> <base> <out>
