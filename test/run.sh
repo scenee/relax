@@ -49,18 +49,6 @@ relax profile add sample/certificates/Relax_AdHoc.mobileprovision
 
 export NOCOLOR=true
 
-# Go builds are not available on the OS X environment in Travis CI
-if [[ $TRAVIS_CI != true ]]; then
-	export GOPATH="$PWD/go"
-	>/dev/null pushd go/src
-
-	go get ./...;
-	go test -v relparser/relfile
-	go test -v lspp
-
-	>/dev/null popd
-fi
-
 bats test
 
 #############
