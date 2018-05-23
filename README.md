@@ -36,8 +36,7 @@ But **`relax profile add` and `relax keychain add` help you to install them and 
 ## Homebrew
 
 ```bash
-$ brew tap SCENEE/homebrew-formulae
-$ brew install relax
+$ brew install scenee/formulae/relax
 ```
 
 ## Install script
