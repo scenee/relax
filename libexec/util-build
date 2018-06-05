@@ -30,13 +30,17 @@ read_path () {
 	local path=""
 	case $type in
 	ipa)
-		path="$(find "$data_root" -depth 1 -name "*.ipa")"
+		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.ipa" -print0 \
+		| xargs -0 stat -f"%m %N" | sort -rn \
+		| head -1 | cut -d" " -f 2-)"
 		;;
 	build)
 		path=$data_root
 		;;
 	archive)
-		path="$(find "$data_root" -name "*.xcarchive" -depth 1)"
+		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.xcarchive" -print0 \
+		| xargs -0 stat -f"%m %N" | sort -rn \
+		| head -1 | cut -d" " -f 2-)"
 		;;
 	esac
 
@@ -450,11 +454,12 @@ teardown_build () {
 	__kill_bg_xcodebuid_task
 
 	if [[ -d "$SRCROOT" ]]; then
+		find "${SRCROOT}" -name "*.${REL_BAK_EXT}" | \
 		while read bak
 		do
 			cp "$bak" "${bak%.$REL_BAK_EXT}"
 			rm "$bak"
-		done < <(find "${SRCROOT}" -name "*.${REL_BAK_EXT}")
+		done
 	fi
 	set -u
 }
