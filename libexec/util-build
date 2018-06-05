@@ -450,11 +450,12 @@ teardown_build () {
 	__kill_bg_xcodebuid_task
 
 	if [[ -d "$SRCROOT" ]]; then
+		find "${SRCROOT}" -name "*.${REL_BAK_EXT}" | \
 		while read bak
 		do
 			cp "$bak" "${bak%.$REL_BAK_EXT}"
 			rm "$bak"
-		done < <(find "${SRCROOT}" -name "*.${REL_BAK_EXT}")
+		done
 	fi
 	set -u
 }
