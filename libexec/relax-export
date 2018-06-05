@@ -106,9 +106,7 @@ export_archive () {
 			--embed "PROVISIONING_PROFILE=$mobileprovision" >/dev/null
 	fi
 	
-	local ipa_path=$(find "$export_path" -maxdepth 1 -mindepth 1 -name "*.ipa" -print0 \
-		| xargs -0 stat -f"%m %N" | sort -rn \
-		| head -1 | cut -d" " -f 2-)
+	local ipa_path="$(read_path $distribution ipa)"
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
 	else
