@@ -506,7 +506,7 @@ setup_build () {
 
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.$REL_BAK_EXT
 
-	if [[ "${team_id:-undefined}" != undefined ]]; then
+	if [[ "${_TEAM_ID:-undefined}" != undefined ]]; then
 		__replace_development_team $_TEAM_ID
 	fi
 

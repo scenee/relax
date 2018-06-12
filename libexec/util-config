@@ -104,8 +104,7 @@ _load_config() {
 	set +e
 	out="$(relparser -f "$relfile" source "$dist" 2>"$stdtemp")"
 	if [[ $? != 0 ]]; then
-		printf "$ERR "; cat "${stdtemp}"
-		die "Failed to parse $relfile"
+		die "$(cat "${stdtemp}")"
 	fi
 	set -e
 	sed -i.bak '1i\
