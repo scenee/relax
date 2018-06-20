@@ -298,7 +298,7 @@ get_build_params_file () {
 
 # FIXME This function doesn't load all xcode build settings.
 # load_xcode_build_settings [<xcode_build_params_file>]
-load_xcode_build_settings () {
+__load_xcode_build_settings () {
 	if test ! -d $REL_TEMP_DIR/xcode-settings; then
 		mkdir -p $REL_TEMP_DIR/xcode-settings;
 	fi
@@ -488,7 +488,7 @@ setup_build () {
 		readonly _BUILD_SETTINGS=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
 	set -u
 
-	load_xcode_build_settings "$(get_build_params_file "$_SCHEME")"
+	__load_xcode_build_settings "$(get_build_params_file "$_SCHEME")"
 
 	##########
 	# Backup #
@@ -697,12 +697,14 @@ update_archived_entitlements_xcent () {
 	cp "$_entitlements_xcent" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT"
 }
 
+declare -x -f __kill_bg_xcodebuid_task
+declare -x -f __check_scheme __replace_development_team __setup_build_params
+declare -x -f __load_xcode_build_settings 
+
 declare -x -f _is_distribution_profile
 
 declare -x -f print_progress_time progress_bar
-declare -x -f __kill_bg_xcodebuid_task
-declare -x -f __check_scheme __replace_development_team __setup_build_params
-declare -x -f load_xcode_build_settings get_build_params_file
+declare -x -f get_build_params_file
 declare -x -f get_info_plist_value print_info_plist
 declare -x -f print_xcode_version is_xcode_version
 declare -x -f setup_build teardown_build
