@@ -49,6 +49,9 @@ build_project () {
 			SKIP_INSTALL=YES \
 			STRIP_INSTALLED_PRODUC=NO \
 		)
+		if [[ "$ENABLE_BITCODE" == "YES" ]]; then
+			params+=( BITCODE_GENERATION_MODE=bitcode )
+		fi
 
 		local params_file=$REL_TEMP_DIR/xcode_build_params
 		> $params_file
