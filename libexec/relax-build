@@ -30,18 +30,39 @@ build_project () {
 	logi "$ARROW Building $TARGETNAME ($configuration) with $sdk SDK"
 
 	local params=()
-	local params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -configuration "$configuration")
-
-	while read p; do params+=( "$p" ); done < $params_file
-
 	## Disable 'build_options' because `-enable{Address,Thread}Sanitizer` options don't work on 'xcodebuild archive'
 	# while read p; do params+=( "$p" ); done < <(relparser -f "$REL_CONFIG_PATH" build_options "$Distribution")
 
-	local build_suffix=$(echo "${configuration}-${sdk}")
-	local build_settings_file="$PRODUCT_BUILD_ROOT/$build_suffix.settings"
-	local logfile="$PRODUCT_BUILD_ROOT/$build_suffix.log"
+	if [[ $PRODUCT_TYPE = "com.apple.product-type.library.static" || $PRODUCT_TYPE = "com.apple.product-type.framework" ]]; then
+		if [[ ${REL_CONFIG_workspace:-undefined} != "undefined" ]]; then
+			params=( -workspace "$REL_CONFIG_workspace.xcworkspace" )
+		else
+			params=( -project "$REL_CONFIG_xcodeproj.xcodeproj" )
+		fi
+		params+=( -scheme "${scheme}" -sdk "$sdk" -configuration "$configuration" )
+		params+=(
+			ONLY_ACTIVE_ARCH=NO \
+			CODE_SIGN_IDENTITY= \
+			CODE_SIGNING_REQUIRED=NO \
+			CLANG_ENABLE_CODE_COVERAGE=NO \
+			GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=NO \
+			SKIP_INSTALL=YES \
+			STRIP_INSTALLED_PRODUC=NO \
+		)
 
-	xcodebuild -showBuildSettings "${params[@]}" > "$build_settings_file" 
+		local params_file=$REL_TEMP_DIR/xcode_build_params
+		> $params_file
+		for p in "${params[@]}"
+		do
+			echo "$p" >> $params_file
+		done
+	else
+		params_file=$(get_build_params_file "$scheme" -sdk "$sdk" -configuration "$configuration")
+		while read p; do params+=( "$p" ); done < $params_file
+	fi
+
+	local build_suffix=$(echo "${configuration}-${sdk}")
+	local logfile="$PRODUCT_BUILD_ROOT/$build_suffix.log"
 
 	params+=( clean build )
 
@@ -328,7 +349,7 @@ trap "teardown_build" EXIT INT TERM
 setup_build $Distribution
 
 if test -z "$Configuration"; then
-	Configuration="$_CONFIGURATION"
+	Configuration="$CONFIGURATION"
 fi
 
 rm -rf $PRODUCT_BUILD_ROOT

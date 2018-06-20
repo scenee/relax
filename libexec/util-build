@@ -200,19 +200,6 @@ _is_distribution_profile () {
 	fi
 }
 
-
-# TODO This can be replaced in Golang.
-# __map_vals <release>
-__map_vals () {
-	local release=$1
-	test -n "$release" || die "'$release' distribution is not defined in Relfile"
-	set +u
-	test -z $_BUILD_SETTINGS && \
-		readonly _BUILD_SETTINGS=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
-	set -u
-}
-
-
 # __check_scheme <params> <scheme>
 __check_scheme () {
 	local build_params
@@ -479,62 +466,65 @@ setup_build () {
 		;;
 	esac
 
-	if test ! -d $REL_TEMP_DIR; then
-		die "Not found Temporary directory"
-	fi
+	test -d $REL_TEMP_DIR || die "Not found Temporary directory"
 
-	local release stdtemp
+	local release="$1"
+	local stdtemp=$REL_TEMP_DIR/stdtemp
 
-	release="$1"
-	stdtemp=$REL_TEMP_DIR/stdtemp
+	[[ " ${REL_DISTRIBUTIONS[@]} " =~ " ${release} " ]] || die "'$release' is undefined."
 
-	if [[ ! " ${REL_DISTRIBUTIONS[@]} " =~ " ${release} " ]]; then
-		die "'$release' is undefined."
-	fi
-
-	# Load Relfile
 	logi "$ARROW Set up '$release' distribution"
 
+	################
+	# Load Relfile #
+	################
 	config_load "$REL_CONFIG_PATH" "$release"
-	__map_vals "$release"
+
+	test -n "$release" || die "'$release' distribution is not defined in Relfile"
+
+	set +u
+	test -z $_BUILD_SETTINGS && \
+		readonly _BUILD_SETTINGS=( $(eval echo '$'{REL_CONFIG_${release}_build_settings[@]} ) )
+	set -u
 
 	load_xcode_build_settings "$(get_build_params_file "$_SCHEME")"
 
-	if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
-		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
-	fi
+	##########
+	# Backup #
+	##########
 
 	cp -a "$PROJECT_FILE_PATH"/project.pbxproj "$PROJECT_FILE_PATH"/project.pbxproj.$REL_BAK_EXT
-
-	if [[ "${_TEAM_ID:-undefined}" != undefined ]]; then
-		__replace_development_team $_TEAM_ID
-	fi
-
-	if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
-		die "This scheme($_SCHEME) isn't for an Application, Framework or Library target"
-	fi
+	# if [[ "${FULL_PRODUCT_NAME:-undefined}" = undefined ]]; then
+	# 	die "This scheme($_SCHEME) isn't for an Application, Framework or Library target"
+	# fi
+	
+	#@#########################################
+	# Configure Info.plist and build settings #
+	#@#########################################
 
 	logi "Configuration: $CONFIGURATION"
-	configuration=$CONFIGURATION
-
 	INFO_PLIST_PATH="$PRODUCT_SETTINGS_PATH"
 
 	# StaticLibrary doesn't have a Info.plist
 	if [ -z $INFO_PLIST_PATH ]; then
 		PRODUCT_BUILD_ROOT="$REL_RELEASE_ROOT/$release"
-		logi "Build Root: $PRODUCT_BUILD_ROOT"
+		logi "Distribution path: $PRODUCT_BUILD_ROOT"
 		mkdir -p "$PRODUCT_BUILD_ROOT"
 		return
 	fi
-
 	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$REL_BAK_EXT"
+
+	if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
+		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
+		if [[ "${_TEAM_ID:-undefined}" != undefined ]]; then
+			__replace_development_team $_TEAM_ID
+		fi
+		# Team ID
+		logi "Team ID: $_TEAM_ID"
+	fi
+
 	logv "Info plist: $INFO_PLIST_PATH"
 	config_gen_plist "$REL_CONFIG_PATH" "$release" "$INFO_PLIST_PATH.$REL_BAK_EXT" "$INFO_PLIST_PATH"
-
-	# Team ID
-	if test ${DEVELOPMENT_TEAM:-undefined} != undefined; then
-		logi "Team ID: $DEVELOPMENT_TEAM"
-	fi
 
 	# Bundle Identifier
 	if [[ $for_export == true ]]; then
@@ -621,33 +611,36 @@ setup_build () {
 	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $BUNDLE_SHORT_VERSION" "$INFO_PLIST_PATH"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_VERSION" "$INFO_PLIST_PATH"
 
-	logi "Version: $BUNDLE_SHORT_VERSION"
-	logi "Bundle Version: $BUNDLE_VERSION"
-
-	## Product Build Root
 	if [[ $BUNDLE_VERSION =~ (.*)\$\(CURRENT_PROJECT_VERSION\)(.*) ]]; then
 		BUNDLE_VERSION="${BASH_REMATCH[1]}${CURRENT_PROJECT_VERSION}${BASH_REMATCH[2]}"
 	fi
 	
+	logi "Version: $BUNDLE_SHORT_VERSION"
+	logi "Bundle Version: $BUNDLE_VERSION"
+
+	## Product Distribution path
 	PRODUCT_BUILD_ROOT=$(eval echo "$REL_RELEASE_ROOT/$release")
-	logi "Build Root: $PRODUCT_BUILD_ROOT"
+
+	logi "Distribution path: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
 
 	## Switch to Manual Signing
 	if is_xcode_version ">=" 8; then
-		if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-			sed -i .temp \
-			-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-			"$PROJECT_FILE_PATH"/project.pbxproj
-		else
-			s='[[:space:] ]*'
-			sed -i .temp \
-			-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
-			\1ProvisioningStyle = Manual;\
-			/" "$PROJECT_FILE_PATH"/project.pbxproj
+		if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
+			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
+				sed -i .temp \
+				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
+				"$PROJECT_FILE_PATH"/project.pbxproj
+			else
+				s='[[:space:] ]*'
+				sed -i .temp \
+				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
+				\1ProvisioningStyle = Manual;\
+				/" "$PROJECT_FILE_PATH"/project.pbxproj
+			fi
+			rm "$PROJECT_FILE_PATH"/project.pbxproj.temp
+			logi "$ARROW Switch to Manual signing with '$_PROVISIONING_PROFILE' provisioning profile"
 		fi
-		rm "$PROJECT_FILE_PATH"/project.pbxproj.temp
-		logi "$ARROW Switch to Manual signing with '$_PROVISIONING_PROFILE' provisioning profile"
 	fi
 }
 
@@ -707,7 +700,7 @@ declare -x -f _is_distribution_profile
 
 declare -x -f print_progress_time progress_bar
 declare -x -f __kill_bg_xcodebuid_task
-declare -x -f __check_scheme __map_vals __replace_development_team __setup_build_params
+declare -x -f __check_scheme __replace_development_team __setup_build_params
 declare -x -f load_xcode_build_settings get_build_params_file
 declare -x -f get_info_plist_value print_info_plist
 declare -x -f print_xcode_version is_xcode_version
