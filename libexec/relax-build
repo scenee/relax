@@ -91,20 +91,14 @@ build_project () {
 		fi
 	fi
 
-	load_xcode_build_settings "$params_file"
-
-	local product_path=$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME
+	local product_path=$BUILD_DIR/$configuration-$sdk/$FULL_PRODUCT_NAME
 	logv "Built Product: $product_path"
 
-	ls "$BUILT_PRODUCTS_DIR" | logd
-
 	cp -a "$product_path" "$PRODUCT_BUILD_ROOT"/
+	local dSYM="$BUILD_DIR/$configuration-$sdk/$DWARF_DSYM_FILE_NAME"
+	[ -d $dSYM ] && cp -a "$dSYM" "$PRODUCT_BUILD_ROOT"/
 
-	local dSYM="$BUILT_PRODUCTS_DIR/$DWARF_DSYM_FILE_NAME"
-
-	if [ -d $dSYM ]; then
-		cp -a "$dSYM" "$PRODUCT_BUILD_ROOT"/
-	fi
+	Output="$product_path"
 }
 
 merge_frameworks() {
@@ -154,11 +148,11 @@ build_framework() {
 	local framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
 
 	build_project "$scheme" "iphoneos" "$configuration"
-	os_fw="$CODESIGNING_FOLDER_PATH"
+	os_fw="$Output"
 
 	if [[ $No_simulator == false ]]; then
 		build_project "$scheme" "iphonesimulator" "$configuration"
-		local sim_fw="$CODESIGNING_FOLDER_PATH"
+		local sim_fw="$Output"
 		merge_frameworks "$name" "$os_fw" "$sim_fw" "$framework_location"
 	else
 		cp -a "$os_fw" "$framework_location"
@@ -249,11 +243,10 @@ build_framework_with_static () {
 	
 
 	build_project "$scheme" iphoneos "$configuration"
-	os_lib="$CODESIGNING_FOLDER_PATH"
-
+	os_lib="$Output"
 	if [[ $No_simulator == false ]]; then
 		build_project "$scheme" iphonesimulator "$configuration"
-		sim_lib="$CODESIGNING_FOLDER_PATH"
+		sim_lib="$Output"
 	fi
 
 	make_framework "$os_lib" "$sim_lib" "$framework_location"
@@ -298,6 +291,7 @@ Framework_name=
 Show_progress=false
 Distribution=
 Configuration=
+Output=
 
 while [ $# -ne 0 ];  do
 	arg=$1
