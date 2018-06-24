@@ -14,36 +14,53 @@ func TestNewProvisioningProfile(t *testing.T) {
 
 	ClearCache()
 
-	in = "../../../../sample/certificates/Relax_AdHoc.mobileprovision"
-	pp = NewProvisioningProfile(in)
-	if pp.TeamName != "Shin Yamamoto" {
+	in = "mobileprovisions/AdHoc.mobileprovision"
+	pp = newProvisioningProfile(in)
+	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
-	if pp.TeamID() != "J3D7L9FHSS" {
+	if pp.TeamID() != "AAAAAAAAAA" {
 		t.Errorf("TeamID failed %v", pp.TeamIdentifiers)
 	}
-	if pp.Name != "Relax AdHoc" {
+	if pp.Name != "Sample Ad Hoc" {
 		t.Errorf("Name failed")
 	}
 	if pp.Entitlements.GetTaskAllow {
 		t.Errorf("failed")
 	}
+	if pp.ProvisioningType() != ProvisioningTypeAdHoc {
+		t.Errorf("ProvisioningType failed")
+	}
 
-	in = "../../../../sample/certificates/Relax_Development.mobileprovision"
-	pp = NewProvisioningProfile(in)
-	if pp.TeamName != "Shin Yamamoto" {
+	in = "mobileprovisions/Development.mobileprovision"
+	pp = newProvisioningProfile(in)
+	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
-	if pp.TeamID() != "J3D7L9FHSS" {
+	if pp.TeamID() != "AAAAAAAAAA" {
 		t.Errorf("TeamID failed %v", pp.TeamIdentifiers)
 	}
-	if pp.Name != "Relax Development" {
+	if pp.Name != "Sample Development" {
 		t.Errorf("Name failed")
 	}
 	if pp.Entitlements.GetTaskAllow == false {
 		t.Errorf("failed %v", pp.Entitlements.GetTaskAllow)
 	}
+	if pp.ProvisioningType() != ProvisioningTypeDevelopment {
+		t.Errorf("ProvisioningType failed")
+	}
 
+	in = "mobileprovisions/Enterprise.mobileprovision"
+	pp = newProvisioningProfile(in)
+	if pp.ProvisioningType() != ProvisioningTypeEnterprise {
+		t.Errorf("ProvisioningType failed")
+	}
+
+	in = "mobileprovisions/AppStore.mobileprovision"
+	pp = newProvisioningProfile(in)
+	if pp.ProvisioningType() != ProvisioningTypeAppStore {
+		t.Errorf("ProvisioningType failed")
+	}
 }
 
 func TestFindProvisioningProfile(t *testing.T) {

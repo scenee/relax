@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	ProvisioningTypeEnterprise  = "enterprise"
 	ProvisioningTypeAdHoc       = "ad-hoc"
 	ProvisioningTypeAppStore    = "app-store"
 	ProvisioningTypeDevelopment = "development"
+	ProvisioningTypeEnterprise  = "enterprise"
 
 	CertificateTypeDeveloper    = "iPhone Developer"
 	CertificateTypeDistribution = "iPhone Distribution"
@@ -59,21 +59,20 @@ func (p ProvisioningProfile) AppID() (s string) {
 }
 
 func (p ProvisioningProfile) CertificateType() string {
-	switch p.ProvisioningType() {
-	case "development":
+	if p.ProvisioningType() == ProvisioningTypeDevelopment {
 		return CertificateTypeDeveloper
-	default:
+	} else {
 		return CertificateTypeDistribution
 	}
 }
 
 func (p ProvisioningProfile) ProvisioningType() string {
+	if p.ProvisionsAllDevices {
+		return ProvisioningTypeEnterprise
+	}
+
 	if p.ProvisionedDevices == nil {
-		if p.ProvisionsAllDevices {
-			return ProvisioningTypeEnterprise
-		} else {
-			return ProvisioningTypeAppStore
-		}
+		return ProvisioningTypeAppStore
 	} else {
 		if p.Entitlements.GetTaskAllow {
 			return ProvisioningTypeDevelopment
@@ -83,9 +82,8 @@ func (p ProvisioningProfile) ProvisioningType() string {
 	}
 }
 
-func NewProvisioningProfile(path string) *ProvisioningProfile {
+func decodeCMS(path string) string {
 	out, err := ioutil.TempFile("", "relax/provisioning_profile")
-	defer os.Remove(out.Name())
 
 	if err != nil {
 		logger.Fatalf("error: %v", err)
@@ -95,10 +93,20 @@ func NewProvisioningProfile(path string) *ProvisioningProfile {
 		logger.Fatalf("error: %v", err)
 	}
 
-	decoder := plist.NewDecoder(out)
+	return out.Name()
+}
+
+func newProvisioningProfile(path string) *ProvisioningProfile {
+	file, err := os.Open(path)
+
+	if err != nil {
+		logger.Fatalf("error: %v", err)
+	}
+
+	decoder := plist.NewDecoder(file)
 
 	pp := ProvisioningProfile{}
-	if err = decoder.Decode(&pp); err != nil {
+	if err := decoder.Decode(&pp); err != nil {
 		logger.Fatalf("error: %v", err)
 	}
 
@@ -174,7 +182,9 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 			}
 
 			in := PP_ROOT + "/" + name
-			pp := NewProvisioningProfile(in)
+			out := decodeCMS(in)
+			defer os.Remove(out)
+			pp := newProvisioningProfile(out)
 			info = ProvisioningProfileInfo{Pp: *pp, Name: in}
 
 			enc := gob.NewEncoder(&buffer)
