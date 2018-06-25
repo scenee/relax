@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -86,9 +87,25 @@ func (r Relfile) GenPlist(dist string, in string, out string) {
 }
 
 func (r Relfile) GenSource(dist string) *os.File {
+	var (
+		temp *os.File
+		err  error
+	)
+
 	d := r.Distributions[dist]
 
-	of := prepareFile(os.TempDir() + "/relax/" + dist + "_source")
+	out := os.Getenv("REL_TEMP_DIR")
+	if out == "" {
+		temp, err = ioutil.TempFile("", "relax/"+dist+"_source")
+	} else {
+		temp, err = ioutil.TempFile(out, dist+"_source")
+	}
+	if err != nil {
+		logger.Fatal(err)
+	}
+	out = temp.Name()
+
+	of := prepareFile(out)
 	defer of.Close()
 
 	r.writeSource(of)

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AppIDName</key>
+	<string>XC Wildcard</string>
+	<key>ApplicationIdentifierPrefix</key>
+	<array>
+	<string>AAAAAAAAAA</string>
+	</array>
+	<key>CreationDate</key>
+	<date>2018-01-01T00:00:00Z</date>
+	<key>Platform</key>
+	<array>
+		<string>iOS</string>
+	</array>
+	<key>DeveloperCertificates</key>
+	<array>
+		<data>c2FtcGxlY2VydGlmaWNhdGU=</data>
+	</array>
+	<key>Entitlements</key>
+	<dict>
+		<key>keychain-access-groups</key>
+		<array>
+			<string>AAAAAAAAAA.*</string>		
+		</array>
+		<key>get-task-allow</key>
+		<true/>
+		<key>application-identifier</key>
+		<string>AAAAAAAAAA.*</string>
+		<key>com.apple.developer.team-identifier</key>
+		<string>AAAAAAAAAA</string>
+	</dict>
+	<key>ExpirationDate</key>
+	<date>2018-12-31T00:00:00Z</date>
+	<key>Name</key>
+	<string>Sample Development</string>
+	<key>ProvisionedDevices</key>
+	<array>
+		<string>edb1980de8c07d58748cf2ae8288555da8446574</string>
+	</array>
+	<key>TeamIdentifier</key>
+	<array>
+		<string>AAAAAAAAAA</string>
+	</array>
+	<key>TeamName</key>
+	<string>Relax</string>
+	<key>TimeToLive</key>
+	<integer>365</integer>
+	<key>UUID</key>
+	<string>6965d483-1c3e-499f-a47e-7cbbce1d3136</string>
+	<key>Version</key>
+	<integer>1</integer>
+</dict>
+</plist>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AppIDName</key>
+	<string>Wildcard App ID</string>
+	<key>ApplicationIdentifierPrefix</key>
+	<array>
+	<string>AAAAAAAAAA</string>
+	</array>
+	<key>CreationDate</key>
+	<date>2018-01-01T00:00:00Z</date>
+	<key>Platform</key>
+	<array>
+		<string>iOS</string>
+	</array>
+	<key>DeveloperCertificates</key>
+	<array>
+		<data>DEADBEEF</data>
+	</array>
+	<key>Entitlements</key>
+	<dict>
+		<key>keychain-access-groups</key>
+		<array>
+			<string>AAAAAAAAAA.*</string>		
+		</array>
+		<key>get-task-allow</key>
+		<false/>
+		<key>application-identifier</key>
+		<string>AAAAAAAAAA.*</string>
+		<key>com.apple.developer.team-identifier</key>
+		<string>AAAAAAAAAA</string>
+	</dict>
+	<key>ExpirationDate</key>
+	<date>2018-12-31T00:00:00Z</date>
+	<key>Name</key>
+	<string>Sample Enterprise</string>
+	<key>ProvisionsAllDevices</key>
+	<true/>
+	<key>TeamIdentifier</key>
+	<array>
+		<string>AAAAAAAAAA</string>
+	</array>
+	<key>TeamName</key>
+	<string>Relax</string>
+	<key>TimeToLive</key>
+	<integer>365</integer>
+	<key>UUID</key>
+	<string>7E54A4A9-754A-42B9-A077-25F84806BD0D</string>
+	<key>Version</key>
+	<integer>1</integer>
+</dict>
+</plist>
