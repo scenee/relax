@@ -31,6 +31,9 @@ func TestNewProvisioningProfile(t *testing.T) {
 	if pp.ProvisioningType() != ProvisioningTypeAdHoc {
 		t.Errorf("ProvisioningType failed")
 	}
+	if pp.CertificateType() != CertificateTypeDistribution {
+		t.Errorf("CertificateType failed")
+	}
 
 	in = "mobileprovisions/Development.mobileprovision"
 	pp = newProvisioningProfile(in)
@@ -49,17 +52,26 @@ func TestNewProvisioningProfile(t *testing.T) {
 	if pp.ProvisioningType() != ProvisioningTypeDevelopment {
 		t.Errorf("ProvisioningType failed")
 	}
+	if pp.CertificateType() != CertificateTypeDeveloper {
+		t.Errorf("CertificateType failed")
+	}
 
 	in = "mobileprovisions/Enterprise.mobileprovision"
 	pp = newProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeEnterprise {
 		t.Errorf("ProvisioningType failed")
 	}
+	if pp.CertificateType() != CertificateTypeDistribution {
+		t.Errorf("CertificateType failed")
+	}
 
 	in = "mobileprovisions/AppStore.mobileprovision"
 	pp = newProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeAppStore {
 		t.Errorf("ProvisioningType failed")
+	}
+	if pp.CertificateType() != CertificateTypeDistribution {
+		t.Errorf("CertificateType failed")
 	}
 }
 
