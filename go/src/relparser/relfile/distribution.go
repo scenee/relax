@@ -190,14 +190,12 @@ func (d Distribution) writeSource(name string, out *os.File) {
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_VERSION", d.BundleVersion)
 
 	infos := FindProvisioningProfile("^"+d.ProvisioningProfile+"$", "")
-	if len(infos) == 0 {
-		logger.Fatalf("Not installed \"%s\"", d.ProvisioningProfile)
+	if len(infos) > 0 {
+		pp := infos[0].Pp
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", pp.Name)
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
 	}
-
-	pp := infos[0].Pp
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", pp.Name)
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
 
 	// FIXME: Improve here
 	// Build Settings

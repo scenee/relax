@@ -269,15 +269,17 @@ get_build_params_file () {
 
 	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
-	if is_xcode_version ">=" 8; then
-		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
-	fi
+	if [[ ${_PROVISIONING_PROFILE:-undefined} != undefined ]]; then
+		if is_xcode_version ">=" 8; then
+			build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
+		fi
 
-	if is_xcode_version ">=" 9; then
-		build_params+=( CODE_SIGN_STYLE="Manual" )
-	fi
+		if is_xcode_version ">=" 9; then
+			build_params+=( CODE_SIGN_STYLE="Manual" )
+		fi
 
-	build_params+=( CODE_SIGN_IDENTITY="$_IDENTITY" )
+		build_params+=( CODE_SIGN_IDENTITY="$_IDENTITY" )
+	fi
 
 	if test "${_BUILD_SETTINGS:-undefined}" != undefined; then
 		if test ${#_BUILD_SETTINGS[@]} -gt 0; then
@@ -522,6 +524,10 @@ setup_build () {
 		fi
 		# Team ID
 		logi "Team ID: $_TEAM_ID"
+	else
+		if [[ ${_PROVISIONING_PROFILE:-undefined} != undefined ]]; then
+			logw "Ignored 'provisioning_profile' field in Relfile because it's not needed for a library/framework build"
+		fi
 	fi
 
 	logv "Info plist: $INFO_PLIST_PATH"
