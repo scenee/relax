@@ -50,7 +50,7 @@ func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err err
 
 func (d *Distribution) Check() {
 	// Check the ProvisioningProfile existence
-	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
+	infos := FindProvisioningProfile("^"+d.ProvisioningProfile+"$", "")
 	if len(infos) == 0 {
 		logger.Fatalf("\"%s\" not found.", d.ProvisioningProfile)
 	}
@@ -181,29 +181,26 @@ func (d Distribution) writeSource(name string, out *os.File) {
 	)
 
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_SCHEME", d.Scheme)
+
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_SDK", d.Sdk)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_CONFIGURATION", d.Configuration)
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", d.ProvisioningProfile)
 
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_VERSION", d.Version)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_ID", d.BundleID)
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_BUNDLE_VERSION", d.BundleVersion)
 
-	infos := FindProvisioningProfile(d.ProvisioningProfile, "")
-
-	if len(infos) == 0 {
-		logger.Fatalf("Not installed \"%s\"", d.ProvisioningProfile)
+	infos := FindProvisioningProfile("^"+d.ProvisioningProfile+"$", "")
+	if len(infos) > 0 {
+		pp := infos[0].Pp
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_PROVISIONING_PROFILE", pp.Name)
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
+		source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
 	}
 
-	pp := infos[0].Pp
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_TEAM_ID", pp.TeamID())
-	source += fmt.Sprintf("export %v=\"%v\"\n", "_IDENTITY", pp.CertificateType())
-	// fmt/Println("--- Build settings\n")
-	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
-
-	source += fmt.Sprintf("%v=()\n", build_settings)
-
 	// FIXME: Improve here
+	// Build Settings
+	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
+	source += fmt.Sprintf("%v=()\n", build_settings)
 	for k, v := range d.BuildSettings {
 		switch v := v.(type) {
 		case []interface{}:
