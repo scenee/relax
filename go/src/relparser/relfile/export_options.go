@@ -107,7 +107,7 @@ func (opts *ExportOptions) SetProvisioningProfiles(provisioningProfile string, b
 
 	opts.SigningStyle = "manual"
 
-	infos := FindProvisioningProfile(provisioningProfile, "")
+	infos := FindProvisioningProfile("^"+provisioningProfile+"$", "")
 	if len(infos) == 0 {
 		logger.Fatalf("Not installed \"%s\"", provisioningProfile)
 	}
