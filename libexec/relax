@@ -58,7 +58,6 @@ usage () {
 
 	Commands:
 	    init	Set up $ME 
-	    add		Add a provisioning profile
 	    archive	Create an archive file
 	    build	Make a framework bundle from a static library
 	    export	Export an ipa file
