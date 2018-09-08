@@ -436,7 +436,7 @@ print_info_plist () {
 
 # check_distribution <distribution>
 check_distribution() {
-	relparser check "$1"
+	relparser -f "$REL_CONFIG_PATH" check "$1"
 }
 
 teardown_build () {
