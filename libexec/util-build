@@ -632,7 +632,7 @@ setup_build () {
 	mkdir -p "$PRODUCT_BUILD_ROOT"
 
 	## Switch to Manual Signing
-	if is_xcode_version ">=" 8; then
+	if is_xcode_version "==" 8; then
 		if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
 			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
 				sed -i .temp \
