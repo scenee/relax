@@ -131,7 +131,14 @@ func getCacheDBName() string {
 }
 
 func getCacheDB() (*leveldb.DB, error) {
-	return leveldb.OpenFile(getCacheDBName(), nil)
+	path := getCacheDBName()
+	db, err := leveldb.OpenFile(path, nil)
+	if err == nil {
+		// Prevent error<file missing [file=MANIFEST-000000]>
+		ClearCache()
+		return leveldb.OpenFile(path, nil)
+	}
+	return db, err
 }
 
 func ClearCache() error {
