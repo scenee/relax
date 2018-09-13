@@ -39,7 +39,7 @@ build_project () {
 		else
 			params=( -project "$REL_CONFIG_xcodeproj.xcodeproj" )
 		fi
-		params+=( -scheme "${scheme}" -sdk "$sdk" -configuration "$configuration" )
+		params+=( -scheme "${scheme}" -sdk "$sdk" -configuration "$configuration" -derivedDataPath "$REL_TEMP_DIR/$Distribution" )
 		params+=(
 			ONLY_ACTIVE_ARCH=NO \
 			CODE_SIGN_IDENTITY= \
@@ -126,11 +126,6 @@ merge_frameworks() {
 build_framework() {
 	local scheme=$1
 	local configuration=$2
-
-	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logv "Removing DerivedData: $OBJROOT"
-		rm -rf $OBJROOT
-	fi
 
 	# If we're already inside this script then die
 	if [ -n "$Build_cmd_semaphore" ]; then
@@ -223,12 +218,6 @@ build_framework_with_static () {
 	local scheme=$1
 	local configuration=$2
 	local framework_name=$3
-
-	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logi "$ARROW Cleaning DerivedData of $TARGETNAME"
-		rm -rf $OBJROOT
-		logi "Removed $OBJROOT"
-	fi
 
 	# If we're already inside this script then die
 	if [ -n "$Build_cmd_semaphore" ]; then

@@ -1,4 +1,5 @@
 /src/gopkg.in
 /src/github.com
+/src/howett.net
 /pkg
 *.test
