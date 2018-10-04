@@ -83,26 +83,36 @@ if [ $# = 0 ]; then
 fi
 
 
-case $1 in
--v)
-	REL_LOG_LEVEL=$REL_LOG_LEVEL_VERBOSE
-	shift
-	;;
--vvv)
-	REL_LOG_LEVEL=$REL_LOG_LEVEL_DEBUG,$REL_LOG_LEVEL_VERBOSE
-	set -x
-	shift
-	;;
---no-color)
-	export NOCOLOR=true
-	source color
-	shift
-	;;
--h|--help)
-	usage
-	;;
-esac
-
+while true;
+do
+	case $1 in
+	-v)
+		REL_LOG_LEVEL=$REL_LOG_LEVEL_VERBOSE
+		shift
+		;;
+	-vvv)
+		REL_LOG_LEVEL=$REL_LOG_LEVEL_DEBUG,$REL_LOG_LEVEL_VERBOSE
+		set -x
+		shift
+		;;
+	-f)
+		shift
+		REL_CONFIG_PATH=$1
+		shift
+		;;
+	--no-color)
+		export NOCOLOR=true
+		source color
+		shift
+		;;
+	-h|--help)
+		usage
+		;;
+	*)
+		break
+		;;
+	esac
+done
 [ $# != 0 ] || usage
 
 command=$1
@@ -131,7 +141,7 @@ case $command in
 
 		case $command in
 		build|archive|export|upload|package|show|completions|apply|dist)
-			REL_CONFIG_PATH="$(config_find)"
+			[[ -n $REL_CONFIG_PATH  ]] || REL_CONFIG_PATH="$(config_find)"
 			REL_DISTRIBUTIONS="$(config_get_distributions $REL_CONFIG_PATH | tr '\r\n' ' ')"
 			;;
 		*)

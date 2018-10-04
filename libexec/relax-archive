@@ -53,13 +53,6 @@ make_archive () {
 		cp "$xcscheme_path" "$PRODUCT_BUILD_ROOT/${xcscheme_path##*/}"
 	fi
 
-	if [[ $No_cache == true ]]; then
-		if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-			logi "$ARROW Removing DerivedData: $OBJROOT"
-			rm -rf $OBJROOT
-		fi
-	fi
-
 	logi "$ARROW Archiving $_SCHEME ($_CONFIGURATION) with $_SDK SDK"
 
 	### Finish update Info plist ###
@@ -67,7 +60,12 @@ make_archive () {
 		cp "$INFO_PLIST_PATH" "$PRODUCT_BUILD_ROOT/$(basename "$INFO_PLIST_PATH")"
 	fi
 
-	local params_file=$(get_build_params_file "$_SCHEME" -sdk "$_SDK" -archivePath "$archive_path")
+	local params_file=
+	if [[ $No_cache == true ]]; then
+		params_file=$(get_build_params_file "$_SCHEME" -sdk "$_SDK" -archivePath "$archive_path" -derivedDataPath "$REL_TEMP_DIR/$Distribution")
+	else
+		params_file=$(get_build_params_file "$_SCHEME" -sdk "$_SDK" -archivePath "$archive_path")
+	fi
 
 	while read p; do params+=( "$p" ); done < $params_file
 

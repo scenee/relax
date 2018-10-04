@@ -39,7 +39,7 @@ build_project () {
 		else
 			params=( -project "$REL_CONFIG_xcodeproj.xcodeproj" )
 		fi
-		params+=( -scheme "${scheme}" -sdk "$sdk" -configuration "$configuration" )
+		params+=( -scheme "${scheme}" -sdk "$sdk" -configuration "$configuration" -derivedDataPath "$REL_TEMP_DIR/$Distribution" )
 		params+=(
 			ONLY_ACTIVE_ARCH=NO \
 			CODE_SIGN_IDENTITY= \
@@ -91,14 +91,20 @@ build_project () {
 		fi
 	fi
 
-	local product_path=$BUILD_DIR/$configuration-$sdk/$FULL_PRODUCT_NAME
+	local product_path=$REL_TEMP_DIR/$Distribution/Build/Products/$configuration-$sdk/$FULL_PRODUCT_NAME
 	logv "Built Product: $product_path"
 
-	cp -a "$product_path" "$PRODUCT_BUILD_ROOT"/
+	# Save the built product
+	mkdir "$PRODUCT_BUILD_ROOT"/$configuration-$sdk
+	cp -a "$product_path" "$PRODUCT_BUILD_ROOT"/$configuration-$sdk/
 	local dSYM="$BUILD_DIR/$configuration-$sdk/$DWARF_DSYM_FILE_NAME"
-	[ -d $dSYM ] && cp -a "$dSYM" "$PRODUCT_BUILD_ROOT"/
+	[ -d $dSYM ] && cp -a "$dSYM" "$PRODUCT_BUILD_ROOT"/$configuration-$sdk/
 
-	Output="$product_path"
+	# Use a saved built output because Xcode 10 can clear `$product_path` artifact on the next build
+	local odir="$REL_TEMP_DIR/build/$configuration-$sdk"
+	mkdir -p "$odir"
+	mv "$product_path" "$odir"/
+	Output="$odir/$FULL_PRODUCT_NAME"
 }
 
 merge_frameworks() {
@@ -127,11 +133,6 @@ build_framework() {
 	local scheme=$1
 	local configuration=$2
 
-	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logv "Removing DerivedData: $OBJROOT"
-		rm -rf $OBJROOT
-	fi
-
 	# If we're already inside this script then die
 	if [ -n "$Build_cmd_semaphore" ]; then
 		die "Already building framework"
@@ -148,7 +149,8 @@ build_framework() {
 	local framework_location="${PRODUCT_BUILD_ROOT}/${name}.framework"
 
 	build_project "$scheme" "iphoneos" "$configuration"
-	os_fw="$Output"
+	# Save the build output because Xcode 10 can clear it on the next build
+	local os_fw="$Output"
 
 	if [[ $No_simulator == false ]]; then
 		build_project "$scheme" "iphonesimulator" "$configuration"
@@ -223,12 +225,6 @@ build_framework_with_static () {
 	local scheme=$1
 	local configuration=$2
 	local framework_name=$3
-
-	if [[ $OBJROOT =~ .*DerivedData.* ]] && [ -d "$OBJROOT" ]; then
-		logi "$ARROW Cleaning DerivedData of $TARGETNAME"
-		rm -rf $OBJROOT
-		logi "Removed $OBJROOT"
-	fi
 
 	# If we're already inside this script then die
 	if [ -n "$Build_cmd_semaphore" ]; then

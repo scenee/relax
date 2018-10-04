@@ -1,14 +1,6 @@
 PRIVATE
 /bats/
-
-*.log
-/sample/**/*.mobileprovision
-/sample/**/*.p12
 /sample/dist
 /sample/**/build/
 /sample/**/artifact/
-/sample/*.ipa
 /sample/**/xcuserdata/
-/sample/*.framework
-/sample/*.framework.zip
-/test/resign
