@@ -14,4 +14,9 @@ func TestCheck(t *testing.T) {
 	//infopath := "../../../../sample/SampleApp/Info.plist"
 	//d.Check(infopath)
 	d.Check()
+
+	if !d.ExportOptions.CompileBitcode && !d.ExportOptions.UploadBitcode {
+	} else {
+		t.Fatal("Invalid ExportOptions.UploadBitcode default")
+	}
 }
