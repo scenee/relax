@@ -2,12 +2,18 @@ language: swift
 os: osx
 git:
   depth: 1
+cache:
+  directories:
+  - /usr/local/Homebrew
+  - $HOME/Library/Caches/Homebrew
 
 jobs:
   include:
     - stage: Test go packages
-      osx_image: xcode10
-      script: test/go_packages.sh
+      language: go
+      before_install: brew update
+      install:  brew list --versions go | grep "1\.11.*" || brew upgrade go@1.11
+      script: make test-go
 
     - stage: Test relax commands
       osx_image: xcode8
