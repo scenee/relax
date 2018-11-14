@@ -97,6 +97,9 @@ func (opts *ExportOptions) UnmarshalYAML(unmarshal func(interface{}) error) (err
 	}
 
 	*opts = ExportOptions(*t)
+	if opts.CompileBitcode == false {
+		opts.UploadBitcode = false
+	}
 	return nil
 }
 

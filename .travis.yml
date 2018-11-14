@@ -1,16 +1,35 @@
-matrix:
-  include:
-    - os: osx
-      osx_image: xcode8
-    - os: osx
-      osx_image: xcode8.3
-    - os: osx
-      osx_image: xcode9.4
-    - os: osx
-      osx_image: xcode10
+language: swift
+os: osx
+git:
+  depth: 1
+cache:
+  directories:
+  - /usr/local/Homebrew
+  - $HOME/Library/Caches/Homebrew
 
-script:
-  - test/travis_ci.sh
+jobs:
+  include:
+    - stage: Test go packages
+      language: go
+      before_install: brew update
+      install:  brew list --versions go | grep "1\.11.*" || brew upgrade go@1.11
+      script: make test-go
+
+    - stage: Test relax commands
+      osx_image: xcode8
+      script: test/travis_ci.sh
+
+    - stage: Test relax commands
+      osx_image: xcode8.3
+      script: test/travis_ci.sh
+
+    - stage: Test relax commands
+      osx_image: xcode9.4
+      script: test/travis_ci.sh
+
+    - stage: Test relax commands
+      osx_image: xcode10
+      script: test/travis_ci.sh
 
 env:
   global:

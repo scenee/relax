@@ -29,7 +29,7 @@ NOTE:
 
 You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
 
-But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L31) and [here](https://github.com/SCENEE/relax/blob/master/test/run.sh#L43).
+But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L22) and [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L33).
 
 # Installation
 

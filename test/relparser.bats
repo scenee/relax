@@ -24,7 +24,7 @@ source libexec/util-build
 
 	[ "$(/usr/libexec/PlistBuddy  -c "Print :teamID" $TMPDIR/options.plist)" == "J3D7L9FHSS" ] \
 	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :compileBitcode" $TMPDIR/options.plist)" == "false" ] \
-	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :uploadBitcode" $TMPDIR/options.plist)" == "true" ] 
+	&& [ "$(/usr/libexec/PlistBuddy  -c "Print :uploadBitcode" $TMPDIR/options.plist)" == "false" ] 
 }
 
 @test "relparser plist" {
