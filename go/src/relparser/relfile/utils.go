@@ -45,9 +45,8 @@ func getBundleID(infoPlist string) string {
 	props, ok := data["ApplicationProperties"].(map[string]interface{})
 	if ok {
 		return props["CFBundleIdentifier"].(string)
-	} else {
-		return data["CFBundleIdentifier"].(string)
 	}
+	return data["CFBundleIdentifier"].(string)
 }
 
 func mergeMap(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {

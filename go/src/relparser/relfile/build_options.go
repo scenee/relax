@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// BuildOptions struct
 type BuildOptions struct {
 	EnableAddressSanitizer           bool   `yaml:"enableAddressSanitizer"`
 	EnableThreadSanitizer            bool   `yaml:"enableThreadSanitizer"`
@@ -18,6 +19,7 @@ type BuildOptions struct {
 	Xcconfig                         string `yaml:"xcconfig,omitempty"`
 }
 
+// PrintBuildOptions prints build options
 func (opt *BuildOptions) PrintBuildOptions() {
 
 	version := GetXcodeVersion()
@@ -49,14 +51,14 @@ func (opt *BuildOptions) PrintBuildOptions() {
 				func() string {
 					if valueField.Interface().(bool) {
 						return "YES"
-					} else {
-						return "NO"
 					}
+					return "NO"
 				}())
 		}
 	}
 }
 
+// GetXcodeVersion returns xcode version
 func GetXcodeVersion() string {
 	var (
 		err    error

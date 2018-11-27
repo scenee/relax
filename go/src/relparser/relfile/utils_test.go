@@ -1,6 +1,7 @@
 package relfile
 
 import (
+	"gopkg.in/yaml.v2"
 	"testing"
 )
 
@@ -44,4 +45,32 @@ func TestMergeMap(t *testing.T) {
 	if v, ok := baz["Bar"]; !ok || v != "ok" {
 		t.Error("Invalid merged value", merged)
 	}
+}
+
+type Sample struct {
+	Protocols []interface{} `yaml:"protocols"`
+}
+
+func TestYAMLArrayMerge(t *testing.T) {
+	var (
+		err error
+		s   Sample
+	)
+
+	yamlData := []byte(`
+# https://github.com/yaml/yaml/issues/35
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - <: *default
+    - baz
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(s)
 }

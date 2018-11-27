@@ -67,6 +67,7 @@ import (
   uploadSymbols : Bool
 */
 
+// ExportOptions struct
 type ExportOptions struct {
 	Method            string `yaml:"method"                      plist:"method"`
 	Thinning          string `yaml:"thinning,omitempty"          plist:"thinning,omitempty"`
@@ -82,6 +83,7 @@ type ExportOptions struct {
 	SigningStyle         string            `plist:"signingStyle,omitempty"`
 }
 
+// UnmarshalYAML gets a ExportOptions object from YAML
 func (opts *ExportOptions) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	type typeAlias ExportOptions
 	var t = &typeAlias{
@@ -103,6 +105,7 @@ func (opts *ExportOptions) UnmarshalYAML(unmarshal func(interface{}) error) (err
 	return nil
 }
 
+// SetProvisioningProfiles set export options from a provisioning profile
 func (opts *ExportOptions) SetProvisioningProfiles(provisioningProfile string, bundleID string) {
 	if provisioningProfile == "" {
 		logger.Fatalf("provisioningProfile is empty")
@@ -123,6 +126,7 @@ func (opts *ExportOptions) SetProvisioningProfiles(provisioningProfile string, b
 	opts.SigningCertificate = pp.CertificateType()
 }
 
+// Encode encodes plist
 func (opts *ExportOptions) Encode(encoder *plist.Encoder) {
 	err := encoder.Encode(opts)
 	if err != nil {
