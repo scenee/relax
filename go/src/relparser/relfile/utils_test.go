@@ -53,12 +53,15 @@ type Sample struct {
 
 func TestYAMLArrayMerge(t *testing.T) {
 	var (
-		err error
-		s   Sample
+		err            error
+		s              Sample
+		yamlData       []byte
+		protos         []interface{}
+		expectedProtos []string
+		failed         bool
 	)
 
-	yamlData := []byte(`
-# https://github.com/yaml/yaml/issues/35
+	yamlData = []byte(`
 base: &default
     - foo
     - bar
@@ -72,5 +75,77 @@ protocols:
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(s)
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"foo", "bar", "baz"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
+	}
+
+	yamlData = []byte(`
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - baz
+    - <: *default
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"baz", "foo", "bar"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
+	}
+
+	yamlData = []byte(`
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - <: *default
+    - baz
+    - <: *default
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"foo", "bar", "baz", "foo", "bar"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
+	}
 }
