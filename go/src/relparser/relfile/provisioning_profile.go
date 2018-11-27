@@ -23,10 +23,7 @@ const (
 	CertificateTypeDistribution = "iPhone Distribution"
 )
 
-//
-// Provisioning Profile
-//
-
+// ProvisioningProfile struct
 type ProvisioningProfile struct {
 	AppIDName             string       `plist:"AppIDName"`
 	CreationDate          time.Time    `plist:"CreationDate"`

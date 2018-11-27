@@ -3,10 +3,11 @@ package relfile
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/exec"
+
+	"gopkg.in/yaml.v2"
 )
 
 //

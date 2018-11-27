@@ -1,6 +1,7 @@
 package relfile
 
 import (
+	"gopkg.in/yaml.v2"
 	"testing"
 )
 
@@ -43,5 +44,108 @@ func TestMergeMap(t *testing.T) {
 	}
 	if v, ok := baz["Bar"]; !ok || v != "ok" {
 		t.Error("Invalid merged value", merged)
+	}
+}
+
+type Sample struct {
+	Protocols []interface{} `yaml:"protocols"`
+}
+
+func TestYAMLArrayMerge(t *testing.T) {
+	var (
+		err            error
+		s              Sample
+		yamlData       []byte
+		protos         []interface{}
+		expectedProtos []string
+		failed         bool
+	)
+
+	yamlData = []byte(`
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - <: *default
+    - baz
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"foo", "bar", "baz"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
+	}
+
+	yamlData = []byte(`
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - baz
+    - <: *default
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"baz", "foo", "bar"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
+	}
+
+	yamlData = []byte(`
+base: &default
+    - foo
+    - bar
+
+protocols:
+    - <: *default
+    - baz
+    - <: *default
+`)
+
+	err = yaml.Unmarshal(yamlData, &s)
+	if err != nil {
+		t.Error(err)
+	}
+	protos = cleanupMapValue(s.Protocols).([]interface{})
+	expectedProtos = []string{"foo", "bar", "baz", "foo", "bar"}
+
+	failed = false
+	for i, s := range expectedProtos {
+		_s, ok := protos[i].(string)
+		if ok && s == _s {
+			continue
+		}
+		failed = true
+	}
+	if failed {
+		t.Error("Does not match", protos, expectedProtos)
 	}
 }

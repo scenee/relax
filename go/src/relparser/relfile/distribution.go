@@ -12,17 +12,16 @@ import (
 	"strings"
 )
 
-//
-// Distribution
-//
-
+/*
+Distribution struct
+*/
 type Distribution struct {
 	// Required
 	Scheme              string `yaml:"scheme"`
 	ProvisioningProfile string `yaml:"provisioning_profile"`
 
 	// Optional
-	Sdk           string                 `yaml:"sdk",omitempty"`
+	Sdk           string                 `yaml:"sdk,omitempty"`
 	Configuration string                 `yaml:"configuration,omitempty"`
 	Version       string                 `yaml:"version,omitempty"`
 	BundleID      string                 `yaml:"bundle_identifier,omitempty"`
@@ -33,8 +32,10 @@ type Distribution struct {
 	ExportOptions ExportOptions          `yaml:"export_options,omitempty"`
 }
 
+// UnmarshalYAML Distribution
 func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	type typeAlias Distribution
+
 	var t = &typeAlias{
 		Sdk: "iphoneos",
 	}
@@ -48,6 +49,7 @@ func (d *Distribution) UnmarshalYAML(unmarshal func(interface{}) error) (err err
 	return nil
 }
 
+// Check Distribution
 func (d *Distribution) Check() {
 	// Check the ProvisioningProfile existence
 	infos := FindProvisioningProfile("^"+d.ProvisioningProfile+"$", "")
@@ -100,6 +102,7 @@ func (d *Distribution) Check() {
 	}
 }
 
+// WriteInfoPlist Output Info.plist
 func (d Distribution) WriteInfoPlist(basePlistPath string, out *os.File) {
 	//fmt.Println("--- WriteInfoPlist")
 	var (
@@ -175,9 +178,9 @@ func (d Distribution) writeExportOptions(infoPlist string, out *os.File) {
 
 func (d Distribution) writeSource(name string, out *os.File) {
 	var (
-		err            error
-		source         string
-		build_settings string
+		err           error
+		source        string
+		buildSettings string
 	)
 
 	source += fmt.Sprintf("export %v=\"%v\"\n", "_SCHEME", d.Scheme)
@@ -199,8 +202,8 @@ func (d Distribution) writeSource(name string, out *os.File) {
 
 	// FIXME: Improve here
 	// Build Settings
-	build_settings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
-	source += fmt.Sprintf("%v=()\n", build_settings)
+	buildSettings = strings.Join([]string{PREFIX, name, "build_settings"}, "_")
+	source += fmt.Sprintf("%v=()\n", buildSettings)
 	for k, v := range d.BuildSettings {
 		switch v := v.(type) {
 		case []interface{}:
@@ -208,12 +211,12 @@ func (d Distribution) writeSource(name string, out *os.File) {
 			for _, s := range v {
 				ss = append(ss, fmt.Sprintf("%v", s))
 			}
-			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, strings.Join(ss, "{}"))
+			source += fmt.Sprintf("%v+=(%v='%v')\n", buildSettings, k, strings.Join(ss, "{}"))
 		default:
-			source += fmt.Sprintf("%v+=(%v='%v')\n", build_settings, k, v)
+			source += fmt.Sprintf("%v+=(%v='%v')\n", buildSettings, k, v)
 		}
 	}
-	source += fmt.Sprintf("export %v\n", build_settings)
+	source += fmt.Sprintf("export %v\n", buildSettings)
 
 	_, err = out.WriteString(source)
 	if err != nil {

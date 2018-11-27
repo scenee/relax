@@ -32,5 +32,4 @@ func TestGenSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%s", data)
-
 }

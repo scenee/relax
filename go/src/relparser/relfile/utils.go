@@ -45,9 +45,8 @@ func getBundleID(infoPlist string) string {
 	props, ok := data["ApplicationProperties"].(map[string]interface{})
 	if ok {
 		return props["CFBundleIdentifier"].(string)
-	} else {
-		return data["CFBundleIdentifier"].(string)
 	}
+	return data["CFBundleIdentifier"].(string)
 }
 
 func mergeMap(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
@@ -73,10 +72,37 @@ func mergeMap(old map[string]interface{}, new map[string]interface{}) map[string
 
 func cleanupInterfaceArray(in []interface{}) []interface{} {
 	res := make([]interface{}, len(in))
+
+	offset := 0
+
 	for i, v := range in {
-		res[i] = cleanupMapValue(v)
+		_i := i + offset
+		switch v := v.(type) {
+		case map[interface{}]interface{}:
+			/*
+				'<' indicates the value should be merged with other items
+				See https://github.com/yaml/yaml/issues/35
+			*/
+			if _v, ok := v["<"]; ok {
+				if t, ok := _v.([]interface{}); ok {
+					_t := cleanupInterfaceArray(t)
+					res = append(res[:_i], append(_t, res[_i+1:]...)...)
+					offset += len(_t) - 1
+				}
+				continue
+			}
+			res[_i] = cleanupMapValue(v)
+		default:
+			res[_i] = cleanupMapValue(v)
+		}
 	}
-	return res
+	newRes := make([]interface{}, 0, len(res))
+	for _, v := range res {
+		if v != nil {
+			newRes = append(newRes, v)
+		}
+	}
+	return newRes
 }
 
 func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
