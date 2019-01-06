@@ -6,11 +6,12 @@ cache:
   directories:
   - /usr/local/Homebrew
   - $HOME/Library/Caches/Homebrew
-
+before_cache:
+  - brew cleanup
 jobs:
   include:
     - stage: Test go packages
-      language: go
+      osx_image: xcode10
       before_install: brew update
       install:  brew list --versions go | grep "1\.11.*" || brew upgrade go@1.11
       script: make test-go

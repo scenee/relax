@@ -36,7 +36,7 @@ __validate_certs ()
 	# Install AppleWWDRCA.cert if needed
 	secutil -k $keychain install "Apple Worldwide Developer Relations Certification Authority"
 
-	logi "p12: $p12"
+	logi "Validate $p12"
 	
 	local cert_fingerprints=$REL_TEMP_DIR/cert_fingerprints
 	pkcs12_fetch_identities "$p12" -P "$password" | awk '{ print $1 }' >> $cert_fingerprints
@@ -47,19 +47,19 @@ __validate_certs ()
 
 	$SECURITY find-identity -v -p codesigning "$keychain" > $validate_cert_ids
 
-	#cat $validate_cert_ids
+	cat $validate_cert_ids | tail -n 1 | logi
 
 	success=false
 	while IFS= read -r fp
 	do
-		#echo "ID: $fp"
+		logv "ID: $fp"
 		if grep -e $fp $validate_cert_ids; then
 			success=true
 		fi
 	done <$cert_fingerprints
 
 	if [[ $success = false ]]; then
-		die "There is no Xcode.app in this build machine, or 'Apple Worldwide Developer Relations Certification Authority'."
+		die "Not found valid certificates."
 	fi
 	set -e
 }
