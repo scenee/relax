@@ -32,6 +32,10 @@ jobs:
       osx_image: xcode10
       script: test/travis_ci.sh
 
+    - stage: Test relax commands
+      osx_image: xcode10.2
+      script: test/travis_ci.sh
+
 env:
   global:
   - secure: YPL0eJ1L8/1Etjvc+kjvOg7+FBF9WXajPpVblrIsH8KvNh8HRFmh1xIqQBFHGLu7QFzek/ih+LlKmVGG4NcHMcJLZ9+/IjoQhMfo9FsWWOlc7jRDTNA6pIL0ISRxJatVauvLGlrOegTwitpQmpGr2naHgtytBtLZ0CyFa1zcorc0mo8qfIdk+fFxauhAKfe0QrXeBgHXi0YjyISS1arcyeri1rBOvBEluu5IaLGqtYCNqmIPVKnhPrY0OD5xl69RxfuJ8RLuBgcTeFKLBIQl7GH9NofrtZ2uuoJTrcbMLMxZhTwPcOnG0jRnFzmkPwodA1zc6HDhvIrDTBKFwNEkU+hTDuExaX2uQJa+5yfrljIvTHMuX91K6L+dfkaC33ModmIyNnfDOUk2Q3vcNJUZ1OwwQj0TVrkhJScuLGki2IdbApfcVkBrZnTxc/CgopjN6Ett37iYoFB/kTcKIy4NyhA9FmlvQZnIw71/s9lVy9bYdlVpyXVkWVR3Md9/5lnGiKkXSUuy38FxRSrdOMnhUpTWI8UXy0/6I7/su8vIMAgEaZw6Cr1LVXQKQaaYWj97bUnhJ+hHdboI/Df2HGY178ZWXEWHsgW+WvowtEDwU2CS6V9wic6tWZ5XUNlgwiTupo3qpQXFxJkyx8vHNQwNVNZYt8pgi/M1u+isZkhqADw=
