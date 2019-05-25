@@ -48,10 +48,7 @@ $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | 
 
 # Requirements
 
-- macOS 10.11+
-- Xcode8.0+
-
-NOTE: Relax might be working on Xcode 7.3.1
+- Xcode9.0+
 
 Relax depends on only command line tools pre-installed in macOS and Xcode. You don't need to take care of a host environment(i.e. ruby version and gem settings). As a result, You can set up iOS build environment on a new machine quickly including keychain and provisioning profiles. 
 
