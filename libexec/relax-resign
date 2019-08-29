@@ -16,60 +16,72 @@ usage () {
 	fin
 }
 
-# resign_app <certificate> <mobileprovision> <app-path>
+# resign_app <app-path>
 resign_app () {
-	if [ $# != 3 ]; then
+	if [ $# != 1 ]; then
 		die "resign_app: bad argument "$@""
 	fi
 
-	local certificate="$1"
-	local mobileprovision="$2"
-	local app_path="$3"
-	local entitlements=$REL_TEMP_DIR/entitlements
+	local app_bundle="$1"
+	local entitlements=$REL_TEMP_DIR/old_entitlements.plist
+	local new_entitlements=$REL_TEMP_DIR/new_entitlements.plist
+	local mobileprovision
+	local new_bundle_id
 
-	if [[ ! -f "$mobileprovision" ]]; then
-		local mobileprovision_name="$mobileprovision"
+	if [[ ! -f "$Mobileprovision" ]]; then
+		local mobileprovision_name="$Mobileprovision"
 		mobileprovision="$(find_mobileprovision --latest "$mobileprovision_name")"
 		[[ -f "$mobileprovision" ]] || die "Not found $mobileprovision_name"
+	else
+		mobileprovision="$Mobileprovision"
 	fi
 	
-	/usr/bin/codesign -d --entitlements :- "$app_path" 2>/dev/null > $entitlements
 
 	# Get the current TEAM ID
-	local team=$(/usr/bin/codesign -dv "$app_path" 2>&1 | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
-	local identifier=$(/usr/bin/codesign -dv "$app_path" 2>&1 | sed -ne "s/^Identifier=\(.*\)/\1/p")
+	local team=$(/usr/bin/codesign -dv "$app_bundle" 2>&1 | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
+	local bundle_id=$(/usr/bin/codesign -dv "$app_bundle" 2>&1 | sed -ne "s/^Identifier=\(.*\)/\1/p")
 
 	# Get the resign TEAM ID from mobileprovision
 	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
 
 	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
 
-	local resign_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
+	if [[ ! -z $Bundle_id ]]; then
+		local info_plist="$(find "$app_bundle" -name Info.plist -maxdepth 1)"
+		local cmd="Set :CFBundleIdentifier $Bundle_id"
+		logi "$cmd in ${app_bundle##*/}/${info_plist##*/}"
+		/usr/libexec/PlistBuddy -c "$cmd" "$info_plist"
 
-	logi "TeamID: $team -> $resign_team"
+		new_bundle_id=$Bundle_id
+		logi "Bundle ID: $bundle_id -> $new_bundle_id"
+	else
+		new_bundle_id=$bundle_id
+		logi "Bundle ID: $bundle_id"
+	fi
+
+	local new_team=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" $temp_mobileprovision)
+
+	logi "TeamID: $team -> $new_team"
 
 	# Replace TEAMID in entitlements
 	logi "$ARROW Generating entitlements"
-	logv "--- Current entitilements ---"
+
+	/usr/bin/codesign -d --entitlements :- "$app_bundle" 2>/dev/null > "$entitlements"
+	logv "--- Current entitlements ---"
 	cat $entitlements | logv
 
-	/usr/libexec/PlistBuddy -x -c "Print :Entitlements" $temp_mobileprovision > $entitlements
-
-	logv "--- New Entitlements ---"
-	cat $entitlements | logv
-	
-	if [[ ! -z $bundle_identifier ]]; then
-		logi "$ARROW Updating Bundle Identifier($bundle_identifier)"
-		local info_plist="$(find "$app_path" -name Info.plist -maxdepth 1)"
-		local cmd="Set :CFBundleIdentifier $bundle_identifier"
-		logi "$cmd in ${app_path##*/}/${info_plist##*/}"
-		/usr/libexec/PlistBuddy -c "$cmd" "$info_plist"
+	sed -e "s/${team}/${new_team}/g" "$entitlements" > "$new_entitlements"
+	if [[ "$new_bundle_id" != "$bundle_id" ]]; then
+		sed -i.bak -e "s/${bundle_id}/${new_bundle_id}/g" "$new_entitlements"
 	fi
 
+	logv "--- New Entitlements ---"
+	cat $new_entitlements | logi
+	
 	# Replace the embedded provisioning profile
-	cp "$mobileprovision" "$app_path"/embedded.mobileprovision
+	cp "$mobileprovision" "$app_bundle"/embedded.mobileprovision
 
-	logi "$ARROW Resigning ${app_path##*/}"
+	logi "$ARROW Resigning ${app_bundle##*/}"
 
 	success=false
 	set +e
@@ -77,10 +89,10 @@ resign_app () {
 	exec 3> $stdtemp
 	while IFS= read -r bundle || [[ -n "$bundle" ]]
 	do
-		if [[ "${keychain:-undefined}" == undefined ]]; then
-			/usr/bin/codesign -fs "$certificate" --no-strict --entitlements="$entitlements" "$bundle" 2>&3
+		if [[ "${Keychain:-undefined}" == undefined ]]; then
+			/usr/bin/codesign -fs "$Certificate" --entitlements="$new_entitlements" "$bundle" 2>&3
 		else
-			/usr/bin/codesign -fs "$certificate" --keychain ${keychain##*/} --no-strict --entitlements="$entitlements" "$bundle" 2>&3
+			/usr/bin/codesign -fs "$Certificate" --keychain ${Keychain##*/} --entitlements="$new_entitlements" "$bundle" 2>&3
 		fi
 		if [[ $? != 0 ]]; then
 			success=false
@@ -90,7 +102,7 @@ resign_app () {
 		cat $stdtemp | logv
 		# Clear stdtemp
 		: > $stdtemp
-	done < <(find -d "${app_path}/.." \
+	done < <(find -d "${app_bundle}/.." \
 		\( -name "*.app" -o -name "*.appex" -o -name "*.framework" -o -name "*.dylib" \))
 	exec 3>&-
 	[[ $success = true ]] || die "$(cat $stdtemp)"
@@ -99,12 +111,10 @@ resign_app () {
 
 [[ $# != 0 ]] || usage
 
-mobileprovision=
-bundle_identifier=
-keychain=
-certificate=
-file_name=
-app_path=
+Mobileprovision=
+Bundle_id=
+Keychain=
+Certificate=
 
 while [ $# -ne 0 ];
 do
@@ -139,22 +149,22 @@ do
 		;;
 	-i|--identifer)
 		[[ $# != 0 ]] || usage
-		bundle_identifier=$1
+		Bundle_id=$1
 		shift
 		;;
 	-k|--keychain)
 		[[ $# != 0 ]] || usage
-		keychain=$1
+		Keychain=$1
 		shift
 		;;
 	-p)
 		[[ $# != 0 ]] || usage
-		mobileprovision=$1
+		Mobileprovision=$1
 		shift
 		;;
 		-c)
 		[[ $# != 0 ]] || usage
-		certificate=$1
+		Certificate=$1
 		shift
 		;;
 	esac
@@ -185,7 +195,7 @@ if [[ $target =~ (.*)\.xcarchive  ]]; then
 
 	app_path="$(find "$resign_root" -name *.app)";
 
-	resign_app "$certificate" "$mobileprovision"  "$app_path"
+	resign_app "$app_path"
 
 	cp -a "$resign_root" "$dest_path"
 
@@ -204,7 +214,7 @@ elif [[ $target =~ (.*)\.ipa ]]; then
 
 	app_path="$(find "$resign_root" -name *.app)";
 
-	resign_app "$certificate" "$mobileprovision"  "$app_path"
+	resign_app "$app_path"
 
 	# zip
 	(
