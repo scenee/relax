@@ -10,26 +10,12 @@ before_cache:
   - brew cleanup
 jobs:
   include:
-    - stage: Test go packages
-      osx_image: xcode10
-      before_install: brew update
-      install:  brew list --versions go | grep "1\.11.*" || brew upgrade go@1.11
-      script: make test-go
-
     - stage: Test relax commands
       osx_image: xcode8
       script: test/travis_ci.sh
 
     - stage: Test relax commands
       osx_image: xcode8.3
-      script: test/travis_ci.sh
-
-    - stage: Test relax commands
-      osx_image: xcode9.4
-      script: test/travis_ci.sh
-
-    - stage: Test relax commands
-      osx_image: xcode10
       script: test/travis_ci.sh
 
 env:
