@@ -24,17 +24,25 @@ jobs:
     - uses: actions/checkout@v1
     - name: Test relax on Xcode 9.4.1
       run: |
-        sudo xcode-select -s /Applications/Xcode_9.4.1.app/Contents/Developer
         test/travis_ci.sh
       env:
+        DEVELOPER_DIR: /Applications/Xcode_9.4.1.app/Contents/Developer
         CERTS_PASS: ${{ secrets.CERTS_PASS }}
         DECORD_KEY: ${{ secrets.DECORD_KEY }}
 
     - name: Test relax on Xcode 10.0
       run: |
-        sudo xcode-select -s /Applications/Xcode_10.app/Contents/Developer
         test/travis_ci.sh
       env:
+        DEVELOPER_DIR: /Applications/Xcode_10.app/Contents/Developer
+        CERTS_PASS: ${{ secrets.CERTS_PASS }}
+        DECORD_KEY: ${{ secrets.DECORD_KEY }}
+
+    - name: Test relax on Xcode 11
+      run: |
+        test/travis_ci.sh
+      env:
+        DEVELOPER_DIR: /Applications/Xcode_11.app/Contents/Developer
         CERTS_PASS: ${{ secrets.CERTS_PASS }}
         DECORD_KEY: ${{ secrets.DECORD_KEY }}
 
