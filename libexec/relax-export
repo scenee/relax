@@ -107,6 +107,11 @@ export_archive () {
 	fi
 	
 	local ipa_path="$(read_path $distribution ipa)"
+
+	local latests="$PRODUCT_BUILD_ROOT/latests"
+	mkdir -p "${latests}"
+	ln -Fs "$ipa_path" "${latests}/ipa"
+
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
 	else
