@@ -30,7 +30,7 @@ read_path () {
 	local path=""
 	case $type in
 	ipa)
-		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.ipa" -print0 \
+		path="$(find "$data_root" -name "*.ipa" -print0 \
 		| xargs -0 stat -f"%m %N" | sort -rn \
 		| head -1 | cut -d" " -f 2-)"
 		;;
@@ -38,7 +38,7 @@ read_path () {
 		path=$data_root
 		;;
 	archive)
-		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.xcarchive" -print0 \
+		path="$(find "$data_root" -name "*.xcarchive" -print0 \
 		| xargs -0 stat -f"%m %N" | sort -rn \
 		| head -1 | cut -d" " -f 2-)"
 		;;
