@@ -580,7 +580,7 @@ setup_build () {
 	fi
 
 	## Bundle Version
-	if [[ $for_export == true && "${_BUNDLE_VERSION:-undefined}" = undefined ]]; then
+	if [[ $for_export == true ]]; then
 		BUNDLE_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
 		if [[ -z "$BUNDLE_VERSION" ]]; then
 			BUNDLE_VERSION="$(get_info_plist_value ":CFBundleVersion" "$archived_info_plist")"
