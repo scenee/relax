@@ -108,7 +108,7 @@ export_archive () {
 	
 	local ipa_path="$(read_path $distribution ipa)"
 
-	local heads="$PRODUCT_BUILD_ROOT/heads"
+	local heads="$PRODUCT_BUILD_ROOT/$REL_RELEASE_HEADS"
 	mkdir -p "${heads}"
 	ln -Fs "$ipa_path" "${heads}/ipa"
 

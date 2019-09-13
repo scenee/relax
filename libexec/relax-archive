@@ -116,7 +116,7 @@ make_archive () {
 		fi
 	fi
 
-	local heads="$PRODUCT_BUILD_ROOT/heads"
+	local heads="$PRODUCT_BUILD_ROOT/$REL_RELEASE_HEADS"
 	mkdir -p "${heads}"
 	ln -Fs "$archive_path" "${heads}/archive"
 
