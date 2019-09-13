@@ -120,8 +120,6 @@ export_archive () {
 }
 
 prepare_export() {
-	local data_root="$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR"
-	mkdir -p "$data_root"
 	EXPORT_OPTIONS_PLIST=$REL_TEMP_DIR/ExportOptions.plist
 }
 

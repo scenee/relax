@@ -173,7 +173,4 @@ check_distribution $Distribution
 trap 'teardown_build;' EXIT INT TERM
 setup_build $Distribution
 
-data_root=$REL_RELEASE_ROOT/$Distribution/$REL_DATA_DIR
-mkdir -p "$data_root"
-
 make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"
