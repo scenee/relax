@@ -26,13 +26,13 @@ show () {
 	local path=""
 	case $type in
 	ipa)
-		path="$(readlink $data_root/latests/ipa)"
+		path="$(readlink $data_root/heads/ipa)"
 		;;
 	build)
 		path=$data_root
 		;;
 	archive)
-		path="$(readlink $data_root/latests/archive)"
+		path="$(readlink $data_root/heads/archive)"
 		;;
 	esac
 

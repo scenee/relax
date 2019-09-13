@@ -116,9 +116,9 @@ make_archive () {
 		fi
 	fi
 
-	local latests="$PRODUCT_BUILD_ROOT/latests"
-	mkdir -p "${latests}"
-	ln -Fs "$archive_path" "${latests}/archive"
+	local heads="$PRODUCT_BUILD_ROOT/heads"
+	mkdir -p "${heads}"
+	ln -Fs "$archive_path" "${heads}/archive"
 
 	echo "$archive_path"
 }
