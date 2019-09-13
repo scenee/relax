@@ -1,34 +1,29 @@
 # Relax
 
-Relax is a lazy(yes, just for laziness) release tool for iOS developers who don't want to be bothering with codesign and Xcode stuffs!!
+Relax is a tiny release tool for iOS developers who don't want to be bothering with code signing and Xcode stuffs!!
 
 You just configure `scheme` and `provisioning_profile` to build archive and IPA files.
 
-You don't need to waste your time for codesigning problem especially on your CI workflow. Relax will save your time. It's hard to understand `xcodebuild` stuff, for example, codesigning mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
-
-Relax is not faster than xcodebuild, but more simple.
+Relax will save your time. It's hard to understand `xcodebuild` stuff, for example, code signing mechanism. Relax takes care of much of the hassle of them. so you can focus on development.
 
 ## Features
 
 **Mutli distribution**
-* Easy to configure multi distribution(i.e. ad-hoc, enterprise & app-store) on code signing, Info.plist, build settings.
+
+* Eanble to configure multi distribution for each code signing identity, info plist and build settings(i.e. ad-hoc builds for different clients).
 
 **Less configuration**
-- Just configure `scheme` and `provisioning_profile`.
-- One configuration file instead of many xcconfig files or build configurations in your project.
-- Automatically generate ExportOptions.plist for each distribution.
+
+* One configuration file instead of many xcconfig files or build configurations in your project
+* Detect and check the related identity from a provisioning profile.
+* Automatically generate ExportOptions.plist for each distribution
 
 **Easy & Simple** 
-- Easy to install.
-- Provide simple tools to support...
-  - IPA distribution: Create, Validate and Resign IPA.
-  - CI environment: Provision and Inspect keychain and installed profiles.
 
-NOTE:
-
-You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
-
-But **`relax profile add` and `relax keychain add` help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands**. See [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L22) and [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L33).
+* Easy to install into macOS
+* Provide simple CLI to resolve issues of IPA distribution support and CI environment.
+  * Validate and Resign IPA
+  * Inspector of keychain and provisioning profiles
 
 ## Installation
 
@@ -44,27 +39,33 @@ $ brew install scenee/formulae/relax
 $ curl -fsSL https://raw.githubusercontent.com/SCENEE/relax/master/install.sh | bash
 ```
 
+NOTE: You don't need to take care of a host environment(i.e. ruby version and gem settings).
 
 ## Requirements
 
 - Xcode9.4.1+
 
-Relax depends on only command line tools pre-installed in macOS and Xcode. You don't need to take care of a host environment(i.e. ruby version and gem settings). As a result, You can set up iOS build environment on a new machine quickly including keychain and provisioning profiles. 
 
 ## Create a IPA file
-
-```bash
-$ relax init
-$ relax dist adhoc
-```
-
-You can build it without Relfile in one line.
 
 ```bash
 $ relax dist /path/to/xcodeproj_or_xcworkspace --scheme scheme_name --profile profile_name
 $ # OR
 $ relax dist /path/to/xcodeproj_or_xcworkspace -s scheme_name -p profile_name
 ```
+
+Or use Relfile.
+
+```bash
+$ relax init
+$ relax dist adhoc
+```
+
+### Notes
+
+* You need to create a provisioning profile for your identity(certificate) and install them to a build machine by yourself because Relax doesn't access to Apple Developer Center for security reasons.
+* **`relax profile add` and `relax keychain add`** help you to install them and resolve permissions for your identities in your keychain. I highly recommend to use those commands. See [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L22) and [here](https://github.com/SCENEE/relax/blob/master/test/setup.sh#L33).
+
 
 ## Relfile
 
@@ -190,7 +191,7 @@ $ relax export dev
 
 ### Validate a IPA file
 
-Check a IPA file if it has a correct codesigning and entitlements.
+Check a IPA file if it has a correct code signing and entitlements.
 
 ```bash
 $ relax validate "$(relax show adhoc ipa)"
@@ -208,7 +209,7 @@ $ relax resign -i "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile
 
 ### `keychain` commands
 
-The `keychain` module commands make you free from keychain stuff and prevent a codesign build break!
+The `keychain` module commands make you free from keychain stuff and prevent a build break!
 Actually this is an useful wrapper of `security` command.
 
 Run here and see [this script](https://github.com/SCENEE/relax/blob/master/test/run.sh#L24) for detail.
