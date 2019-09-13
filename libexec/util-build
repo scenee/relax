@@ -30,7 +30,7 @@ read_path () {
 	local path=""
 	case $type in
 	ipa)
-		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.ipa" -print0 \
+		path="$(find "$data_root" -name "*.ipa" -print0 \
 		| xargs -0 stat -f"%m %N" | sort -rn \
 		| head -1 | cut -d" " -f 2-)"
 		;;
@@ -38,7 +38,7 @@ read_path () {
 		path=$data_root
 		;;
 	archive)
-		path="$(find "$data_root" -maxdepth 1 -mindepth 1 -name "*.xcarchive" -print0 \
+		path="$(find "$data_root" -name "*.xcarchive" -print0 \
 		| xargs -0 stat -f"%m %N" | sort -rn \
 		| head -1 | cut -d" " -f 2-)"
 		;;
@@ -270,14 +270,8 @@ get_build_params_file () {
 	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
 
 	if [[ ${_PROVISIONING_PROFILE:-undefined} != undefined ]]; then
-		if is_xcode_version ">=" 8; then
-			build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
-		fi
-
-		if is_xcode_version ">=" 9; then
-			build_params+=( CODE_SIGN_STYLE="Manual" )
-		fi
-
+		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
+		build_params+=( CODE_SIGN_STYLE="Manual" )
 		build_params+=( CODE_SIGN_IDENTITY="$_IDENTITY" )
 	fi
 
@@ -519,6 +513,7 @@ setup_build () {
 
 	if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
 		test -n "$_PROVISIONING_PROFILE" || die "Relfile requires 'provisioning_profile' field for $release."
+		logi "Provisioning Profile: '$_PROVISIONING_PROFILE'"
 		if [[ "${_TEAM_ID:-undefined}" != undefined ]]; then
 			__replace_development_team $_TEAM_ID
 		fi
@@ -585,7 +580,7 @@ setup_build () {
 	fi
 
 	## Bundle Version
-	if [[ $for_export == true && "${_BUNDLE_VERSION:-undefined}" = undefined ]]; then
+	if [[ $for_export == true ]]; then
 		BUNDLE_VERSION="$(get_info_plist_value ":ApplicationProperties:CFBundleVersion" "$archived_info_plist")"
 		if [[ -z "$BUNDLE_VERSION" ]]; then
 			BUNDLE_VERSION="$(get_info_plist_value ":CFBundleVersion" "$archived_info_plist")"
@@ -630,25 +625,6 @@ setup_build () {
 
 	logi "Distribution path: $PRODUCT_BUILD_ROOT"
 	mkdir -p "$PRODUCT_BUILD_ROOT"
-
-	## Switch to Manual Signing
-	if is_xcode_version "==" 8; then
-		if [[  "$PRODUCT_TYPE" ==  "com.apple.product-type.application" ]]; then
-			if grep -q ProvisioningStyle "$PROJECT_FILE_PATH"/project.pbxproj; then
-				sed -i .temp \
-				-e "s/\(ProvisioningStyle = \)Automatic/\1Manual/" \
-				"$PROJECT_FILE_PATH"/project.pbxproj
-			else
-				s='[[:space:] ]*'
-				sed -i .temp \
-				-e "s/\($s\)\(DevelopmentTeam = .*;\)/\1\2\\
-				\1ProvisioningStyle = Manual;\
-				/" "$PROJECT_FILE_PATH"/project.pbxproj
-			fi
-			rm "$PROJECT_FILE_PATH"/project.pbxproj.temp
-			logi "$ARROW Switch to Manual signing with '$_PROVISIONING_PROFILE' provisioning profile"
-		fi
-	fi
 }
 
 

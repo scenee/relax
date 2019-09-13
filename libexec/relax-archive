@@ -116,6 +116,10 @@ make_archive () {
 		fi
 	fi
 
+	local heads="$PRODUCT_BUILD_ROOT/$REL_RELEASE_HEADS"
+	mkdir -p "${heads}"
+	ln -Fs "$archive_path" "${heads}/archive"
+
 	echo "$archive_path"
 }
 
@@ -168,8 +172,5 @@ check_distribution $Distribution
 
 trap 'teardown_build;' EXIT INT TERM
 setup_build $Distribution
-
-data_root=$REL_RELEASE_ROOT/$Distribution/$REL_DATA_DIR
-mkdir -p "$data_root"
 
 make_archive "$PRODUCT_BUILD_ROOT/$PRODUCT_NAME.xcarchive" "$@"

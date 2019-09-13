@@ -17,10 +17,7 @@ export NOTE=${BOLD}NOTE:${NC}
 
 export HERE="${PWD}"
 export REL_TEMP_ROOT="$( [[ ${TMPDIR:-undefined} != undefined ]] && echo "$TMPDIR/$ME" || echo "/tmp/$ME" )"
-export REL_CACHE_DIR="$HOME/$REL_DATA_DIR/caches"
 export REL_TEMP_DIR=
-
-[[ -d $REL_CACHE_DIR ]] || mkdir -p $REL_CACHE_DIR
 
 #################
 ### Functions ###

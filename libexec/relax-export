@@ -107,6 +107,11 @@ export_archive () {
 	fi
 	
 	local ipa_path="$(read_path $distribution ipa)"
+
+	local heads="$PRODUCT_BUILD_ROOT/$REL_RELEASE_HEADS"
+	mkdir -p "${heads}"
+	ln -Fs "$ipa_path" "${heads}/ipa"
+
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
 	else
@@ -115,8 +120,6 @@ export_archive () {
 }
 
 prepare_export() {
-	local data_root="$REL_RELEASE_ROOT/$distribution/$REL_DATA_DIR"
-	mkdir -p "$data_root"
 	EXPORT_OPTIONS_PLIST=$REL_TEMP_DIR/ExportOptions.plist
 }
 

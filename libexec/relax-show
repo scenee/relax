@@ -16,6 +16,30 @@ usage() {
 	fin
 }
 
+# show <release> <type>
+show () {
+	local release=$1
+	local type=$2
+
+	local release_root=$REL_RELEASE_ROOT/$release
+
+	local path=""
+	case $type in
+	ipa)
+		path="$(readlink $release_root/$REL_RELEASE_HEADS/ipa)"
+		;;
+	build)
+		path=$release_root
+		;;
+	archive)
+		path="$(readlink $release_root/$REL_RELEASE_HEADS/archive)"
+		;;
+	esac
+
+	if [[ -n "$path" ]]; then
+		echo "$path"
+	fi
+}
 [[ $# != 0 ]] || usage
 
 arg=$1
@@ -41,6 +65,6 @@ case $arg in
 
 	[[ $# == 1 ]] || usage
 
-	read_path "$distribution" "$1"
+	show "$distribution" "$1"
 	;;
 esac

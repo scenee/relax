@@ -57,17 +57,16 @@ usage () {
 	    -h		Show help
 
 	Commands:
-	    init	Set up $ME 
+	    help	Show help
+	    init	Generate Relfile
 	    archive	Create an archive file
 	    build	Make a framework bundle from a static library
 	    export	Export an ipa file
 	    show	Print the latest archive/ipa file path.
-	    package	Make artifact package 
+	    apply	Apply Refile configuration to your project
 	    resign	Resign an .ipa file
-	    upload	Upload an ipa file to a distribution service(i.e. Crashlytics Beta)
 	    validate	Print the embedded provisioning profile and entitlements of an app
 	    symbolicate	Symbolicate a crash log with the related archive
-	    help	Show help
 
 	Modules:
 	    keychain	See 'relax keychain help'
