@@ -6,7 +6,6 @@ load test_helper
   export COUNTRY=ja
   run relax archive development
   assert_success
-  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ ! "${output}" =~ "Time:" ]]
 }
 
@@ -14,7 +13,6 @@ load test_helper
   export COUNTRY=ja
   run relax archive development --progress
   assert_success
-  [[ ! "${output}" =~ "\[[ \*]*\]" ]]
   [[ "${output}" =~ "Time:" ]]
 }
 
