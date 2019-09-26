@@ -267,7 +267,7 @@ get_build_params_file () {
 	[[ ${build_params[@]} =~ "-configuration" ]] || [[ -z $_CONFIGURATION ]] ||\
 		build_params+=( -configuration "$_CONFIGURATION" )
 
-	build_params+=( ONLY_ACTIVE_ARCH=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym )
+	build_params+=( ONLY_ACTIVE_ARCH=NO )
 
 	if [[ ${_PROVISIONING_PROFILE:-undefined} != undefined ]]; then
 		build_params+=( PROVISIONING_PROFILE_SPECIFIER="$_PROVISIONING_PROFILE" )
