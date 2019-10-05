@@ -24,7 +24,7 @@
 	<dict>
 		<key>keychain-access-groups</key>
 		<array>
-			<string>AAAAAAAAAA.*</string>		
+			<string>AAAAAAAAAA.*</string>
 		</array>
 		<key>get-task-allow</key>
 		<false/>

@@ -19,6 +19,7 @@ build:
 		go get -d ./src/...; \
 		go install -a relparser; \
 		go install -a lspp; \
+		go install -a pputil; \
 		popd > /dev/null;
 
 .PHONY: man

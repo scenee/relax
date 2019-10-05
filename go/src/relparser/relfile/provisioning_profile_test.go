@@ -15,7 +15,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	ClearCache()
 
 	in = "mobileprovisions/AdHoc.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
@@ -36,7 +36,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/Development.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
@@ -57,7 +57,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/Enterprise.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeEnterprise {
 		t.Errorf("ProvisioningType failed")
 	}
@@ -66,7 +66,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/AppStore.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeAppStore {
 		t.Errorf("ProvisioningType failed")
 	}

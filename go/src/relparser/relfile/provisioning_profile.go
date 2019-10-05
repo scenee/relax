@@ -107,7 +107,6 @@ func (p ProvisioningProfile) GetValidIdentities() []Identity {
 			cert *x509.Certificate
 			err  error
 		)
-		// fmt.Printf("%q\n", data)
 		if cert, err = x509.ParseCertificate(data); err != nil {
 			fmt.Println("error:", err)
 			return ids
@@ -158,7 +157,8 @@ func decodeCMS(path string) string {
 	return out.Name()
 }
 
-func newProvisioningProfile(path string) *ProvisioningProfile {
+// MakeProvisioningProfile : Create a ProvisioningProfile value
+func MakeProvisioningProfile(path string) *ProvisioningProfile {
 	file, err := os.Open(path)
 
 	if err != nil {
@@ -257,7 +257,7 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 			in := ppRoot + "/" + name
 			out := decodeCMS(in)
 			defer os.Remove(out)
-			pp := newProvisioningProfile(out)
+			pp := MakeProvisioningProfile(out)
 			info = ProvisioningProfileInfo{Pp: *pp, Name: in}
 
 			enc := gob.NewEncoder(&buffer)
