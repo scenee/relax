@@ -14,12 +14,18 @@ import (
 )
 
 const (
-	ProvisioningTypeAdHoc       = "ad-hoc"
-	ProvisioningTypeAppStore    = "app-store"
+	// ProvisioningTypeAdHoc : Adhoc type
+	ProvisioningTypeAdHoc = "ad-hoc"
+	// ProvisioningTypeAppStore : AppStore type
+	ProvisioningTypeAppStore = "app-store"
+	// ProvisioningTypeDevelopment : Development type
 	ProvisioningTypeDevelopment = "development"
-	ProvisioningTypeEnterprise  = "enterprise"
+	// ProvisioningTypeEnterprise : Enterprise type
+	ProvisioningTypeEnterprise = "enterprise"
 
-	CertificateTypeDeveloper    = "iPhone Developer"
+	// CertificateTypeDeveloper : development
+	CertificateTypeDeveloper = "iPhone Developer"
+	// CertificateTypeDistribution : distribution
 	CertificateTypeDistribution = "iPhone Distribution"
 )
 
@@ -39,30 +45,32 @@ type ProvisioningProfile struct {
 	Version               int          `plist:"Version"`
 }
 
-/* Mested struct is not working in go-plist...
- */
+// Entitlements : Nested struct is not working in go-plist...
 type Entitlements struct {
 	GetTaskAllow            bool   `plist:"get-task-allow"`
 	ApplicationIdentifier   string `plist:"application-identifier"`
 	DeveloperTeamIdentifier string `plist:"com.apple.developer.team-identifier"`
 }
 
+// TeamID :
 func (p ProvisioningProfile) TeamID() (s string) {
 	return p.Entitlements.DeveloperTeamIdentifier
 }
 
+// AppID :
 func (p ProvisioningProfile) AppID() (s string) {
 	return strings.TrimLeft(p.Entitlements.ApplicationIdentifier, p.TeamID()+".")
 }
 
+// CertificateType :
 func (p ProvisioningProfile) CertificateType() string {
 	if p.ProvisioningType() == ProvisioningTypeDevelopment {
 		return CertificateTypeDeveloper
-	} else {
-		return CertificateTypeDistribution
 	}
+	return CertificateTypeDistribution
 }
 
+// ProvisioningType :
 func (p ProvisioningProfile) ProvisioningType() string {
 	if p.ProvisionsAllDevices {
 		return ProvisioningTypeEnterprise
@@ -70,13 +78,19 @@ func (p ProvisioningProfile) ProvisioningType() string {
 
 	if p.ProvisionedDevices == nil {
 		return ProvisioningTypeAppStore
-	} else {
-		if p.Entitlements.GetTaskAllow {
-			return ProvisioningTypeDevelopment
-		} else {
-			return ProvisioningTypeAdHoc
-		}
 	}
+
+	if p.Entitlements.GetTaskAllow {
+		return ProvisioningTypeDevelopment
+	}
+	return ProvisioningTypeAdHoc
+}
+
+// GetIdentity :
+func (p ProvisioningProfile) GetIdentity() []string {
+	certs := []string{}
+	return certs
+
 }
 
 func decodeCMS(path string) string {
@@ -110,6 +124,7 @@ func newProvisioningProfile(path string) *ProvisioningProfile {
 	return &pp
 }
 
+// NewEntitlements :
 func NewEntitlements(m map[string]interface{}) Entitlements {
 	return Entitlements{
 		GetTaskAllow:            m["get-task-allow"].(bool),
@@ -118,6 +133,7 @@ func NewEntitlements(m map[string]interface{}) Entitlements {
 	}
 }
 
+// ProvisioningProfileInfo :
 type ProvisioningProfileInfo struct {
 	Pp   ProvisioningProfile
 	Name string
@@ -138,12 +154,14 @@ func getCacheDB() (*leveldb.DB, error) {
 	return db, err
 }
 
+// ClearCache :
 func ClearCache() error {
 	return os.RemoveAll(getCacheDBName())
 }
 
-var PP_ROOT string = os.Getenv("HOME") + "/Library/MobileDevice/Provisioning Profiles"
+var ppRoot string = os.Getenv("HOME") + "/Library/MobileDevice/Provisioning Profiles"
 
+// FindProvisioningProfile ;
 func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfileInfo {
 	db, err := getCacheDB()
 	if err != nil {
@@ -151,7 +169,7 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 	}
 	defer db.Close()
 
-	files, err := ioutil.ReadDir(PP_ROOT)
+	files, err := ioutil.ReadDir(ppRoot)
 	if err != nil {
 		logger.Fatalf("error: %v", err)
 	}
@@ -185,7 +203,7 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 				}
 			}
 
-			in := PP_ROOT + "/" + name
+			in := ppRoot + "/" + name
 			out := decodeCMS(in)
 			defer os.Remove(out)
 			pp := newProvisioningProfile(out)
