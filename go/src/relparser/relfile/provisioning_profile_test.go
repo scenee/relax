@@ -75,6 +75,29 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 }
 
+func TestGetValidIdentities(t *testing.T) {
+	infos := FindProvisioningProfile("Relax AdHoc", "")
+	pp := infos[0].Pp
+	ids := pp.GetValidIdentities()
+
+	if len(ids) == 0 {
+		t.Errorf("GetValidIdentities failed: not found identity for %v", pp.Name)
+		return
+	}
+	var exp string
+
+	id := ids[0]
+
+	exp = "00D0F760D573CFAEBE09DB0E3E62B4F251999973"
+	if id.Sha1 != exp {
+		t.Errorf("GetValidIdentities failed: %v is not equal to %v", id.Sha1, exp)
+	}
+	exp = "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)"
+	if id.Name != exp {
+		t.Errorf("GetValidIdentities failed: %v is not equal to %v", id.Name, exp)
+	}
+}
+
 func TestFindProvisioningProfile(t *testing.T) {
 	ClearCache()
 	infos := FindProvisioningProfile("Relax", "")

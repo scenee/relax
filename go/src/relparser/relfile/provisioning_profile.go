@@ -1,8 +1,13 @@
 package relfile
 
 import (
+	"bufio"
 	"bytes"
+	"certutil"
+	"crypto/sha1"
+	"crypto/x509"
 	"encoding/gob"
+	"fmt"
 	"github.com/DHowett/go-plist"
 	"github.com/syndtr/goleveldb/leveldb"
 	"io/ioutil"
@@ -86,11 +91,57 @@ func (p ProvisioningProfile) ProvisioningType() string {
 	return ProvisioningTypeAdHoc
 }
 
-// GetIdentity :
-func (p ProvisioningProfile) GetIdentity() []string {
-	certs := []string{}
-	return certs
+// Identity :
+type Identity struct {
+	// Sha1 : Identity SHA1 fingerprint
+	Sha1 string
+	// Name : Identity name
+	Name string
+}
 
+// GetValidIdentities :
+func (p ProvisioningProfile) GetValidIdentities() []Identity {
+	ids := []Identity{}
+	for _, data := range p.DeveloperCertificates {
+		var (
+			cert *x509.Certificate
+			err  error
+		)
+		// fmt.Printf("%q\n", data)
+		if cert, err = x509.ParseCertificate(data); err != nil {
+			fmt.Println("error:", err)
+			return ids
+		}
+		issuerCN := cert.Issuer.CommonName
+		if data, err = exec.Command("/usr/bin/security", "find-certificate", "-c", issuerCN).Output(); err != nil {
+			logger.Printf("\"%s\" certificate doesn't installed in Keychain.", issuerCN)
+			certutil.InstallCertificate(issuerCN, "")
+		}
+
+		sha1Fingerprint := sha1.Sum(cert.Raw)
+
+		cmd := exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning")
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return ids
+		}
+		if err := cmd.Start(); err != nil {
+			return ids
+		}
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			re := regexp.MustCompile(fmt.Sprintf(`(%X) "(.+)"`, sha1Fingerprint))
+			result := re.FindAllStringSubmatch(scanner.Text(), 1)
+			if len(result) != 1 {
+				continue
+			}
+			m := result[0]
+			sha1 := m[1]
+			name := m[2]
+			ids = append(ids, Identity{sha1, name})
+		}
+	}
+	return ids
 }
 
 func decodeCMS(path string) string {
