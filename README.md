@@ -201,10 +201,10 @@ You can also validate an archive file.
 
 ### Resign a IPA file for an enterprise distribution
 
-Resign a IPA file for a distribution with a different bundle identifier, certificate and provisioning profile.
+Resign a IPA file for a distribution by a provisioning profile. The related identity is selected automatically from active keychains.
 
 ```bash
-$ relax resign -i "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>" -c "iPhone Distribution: My Company"  /path/to/ipa
+$ relax resign -i "com.mycompany.SampleApp" -p "<enterprise-provisioning-profile>"  /path/to/ipa
 ```
 
 ### `keychain` commands

@@ -15,7 +15,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	ClearCache()
 
 	in = "mobileprovisions/AdHoc.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
@@ -36,7 +36,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/Development.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.TeamName != "Relax" {
 		t.Errorf("TeamName failed")
 	}
@@ -57,7 +57,7 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/Enterprise.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeEnterprise {
 		t.Errorf("ProvisioningType failed")
 	}
@@ -66,12 +66,35 @@ func TestNewProvisioningProfile(t *testing.T) {
 	}
 
 	in = "mobileprovisions/AppStore.mobileprovision"
-	pp = newProvisioningProfile(in)
+	pp = MakeProvisioningProfile(in)
 	if pp.ProvisioningType() != ProvisioningTypeAppStore {
 		t.Errorf("ProvisioningType failed")
 	}
 	if pp.CertificateType() != CertificateTypeDistribution {
 		t.Errorf("CertificateType failed")
+	}
+}
+
+func TestGetValidIdentities(t *testing.T) {
+	infos := FindProvisioningProfile("Relax AdHoc", "")
+	pp := infos[0].Pp
+	ids := pp.GetValidIdentities()
+
+	if len(ids) == 0 {
+		t.Errorf("GetValidIdentities failed: not found identity for %v", pp.Name)
+		return
+	}
+	var exp string
+
+	id := ids[0]
+
+	exp = "00D0F760D573CFAEBE09DB0E3E62B4F251999973"
+	if id.Sha1 != exp {
+		t.Errorf("GetValidIdentities failed: %v is not equal to %v", id.Sha1, exp)
+	}
+	exp = "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)"
+	if id.Name != exp {
+		t.Errorf("GetValidIdentities failed: %v is not equal to %v", id.Name, exp)
 	}
 }
 

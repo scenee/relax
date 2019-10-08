@@ -4,14 +4,9 @@
 
 usage () {
 	cat <<-EOM
-	Usage: ${ME} resign [-k|--keychain <keychain>] [-i|--identifer <bundl-identifer>]  -p <mobileprovision-name|path> -c <certificate-name> <ipa|xcarchive>
+	Usage: ${ME} resign [-k|--keychain <keychain>] [-i|--identifer <bundl-identifer>]  -p <mobileprovision-name|path> <ipa|xcarchive>
 
-	Resign a product with a mobileprovision and a certificate
-	This command doens't check consistencies between them.
-	You can check valid mobileprovision and certificates with the below command.
-	    ${ME} ls-profiles
-	    ${ME} ls-certs
-	
+	Resign a product with a mobileprovision.
 	EOM
 	fin
 }
@@ -25,6 +20,7 @@ resign_app () {
 	local app_bundle="$1"
 	local entitlements=$REL_TEMP_DIR/old_entitlements.plist
 	local new_entitlements=$REL_TEMP_DIR/new_entitlements.plist
+
 	local mobileprovision
 	local new_bundle_id
 
@@ -35,16 +31,25 @@ resign_app () {
 	else
 		mobileprovision="$Mobileprovision"
 	fi
+
 	
+	# Get the resign TEAM ID from mobileprovision
+	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
+	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
+
+	# Check the identity for provisioning profile
+	local ppout="$(pputil check "$temp_mobileprovision")"
+	local cert_hash="$(awk -F "," '{ print $1 }' <<< "$ppout")"
+	local cert_name="$(awk -F "," '{ $1=""; print $0 }' <<< "$ppout")"
+
+	logi "Identity: $cert_name [$cert_hash]"
+	if [ -z "${cert_hash//[$'\t\r\n']}" ]; then
+		die "Not found identity. Please install an P12 file in Keychain Access."
+	fi
 
 	# Get the current TEAM ID
 	local team=$(/usr/bin/codesign -dv "$app_bundle" 2>&1 | sed -ne "s/^TeamIdentifier=\(.*\)/\1/p")
 	local bundle_id=$(/usr/bin/codesign -dv "$app_bundle" 2>&1 | sed -ne "s/^Identifier=\(.*\)/\1/p")
-
-	# Get the resign TEAM ID from mobileprovision
-	local temp_mobileprovision=$REL_TEMP_DIR/mobileprovision
-
-	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
 
 	if [[ ! -z $Bundle_id ]]; then
 		local info_plist="$(find "$app_bundle" -name Info.plist -maxdepth 1)"
@@ -90,9 +95,9 @@ resign_app () {
 	while IFS= read -r bundle || [[ -n "$bundle" ]]
 	do
 		if [[ "${Keychain:-undefined}" == undefined ]]; then
-			/usr/bin/codesign -fs "$Certificate" --entitlements="$new_entitlements" "$bundle" 2>&3
+			/usr/bin/codesign -fs "$cert_hash" --entitlements="$new_entitlements" "$bundle" 2>&3
 		else
-			/usr/bin/codesign -fs "$Certificate" --keychain ${Keychain##*/} --entitlements="$new_entitlements" "$bundle" 2>&3
+			/usr/bin/codesign -fs "$cert_hash" --keychain ${Keychain##*/} --entitlements="$new_entitlements" "$bundle" 2>&3
 		fi
 		if [[ $? != 0 ]]; then
 			success=false
@@ -114,7 +119,6 @@ resign_app () {
 Mobileprovision=
 Bundle_id=
 Keychain=
-Certificate=
 
 while [ $# -ne 0 ];
 do
@@ -160,11 +164,6 @@ do
 	-p)
 		[[ $# != 0 ]] || usage
 		Mobileprovision=$1
-		shift
-		;;
-		-c)
-		[[ $# != 0 ]] || usage
-		Certificate=$1
 		shift
 		;;
 	esac

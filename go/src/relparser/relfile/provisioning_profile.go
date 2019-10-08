@@ -1,8 +1,13 @@
 package relfile
 
 import (
+	"bufio"
 	"bytes"
+	"certutil"
+	"crypto/sha1"
+	"crypto/x509"
 	"encoding/gob"
+	"fmt"
 	"github.com/DHowett/go-plist"
 	"github.com/syndtr/goleveldb/leveldb"
 	"io/ioutil"
@@ -14,12 +19,18 @@ import (
 )
 
 const (
-	ProvisioningTypeAdHoc       = "ad-hoc"
-	ProvisioningTypeAppStore    = "app-store"
+	// ProvisioningTypeAdHoc : Adhoc type
+	ProvisioningTypeAdHoc = "ad-hoc"
+	// ProvisioningTypeAppStore : AppStore type
+	ProvisioningTypeAppStore = "app-store"
+	// ProvisioningTypeDevelopment : Development type
 	ProvisioningTypeDevelopment = "development"
-	ProvisioningTypeEnterprise  = "enterprise"
+	// ProvisioningTypeEnterprise : Enterprise type
+	ProvisioningTypeEnterprise = "enterprise"
 
-	CertificateTypeDeveloper    = "iPhone Developer"
+	// CertificateTypeDeveloper : development
+	CertificateTypeDeveloper = "iPhone Developer"
+	// CertificateTypeDistribution : distribution
 	CertificateTypeDistribution = "iPhone Distribution"
 )
 
@@ -39,30 +50,32 @@ type ProvisioningProfile struct {
 	Version               int          `plist:"Version"`
 }
 
-/* Mested struct is not working in go-plist...
- */
+// Entitlements : Nested struct is not working in go-plist...
 type Entitlements struct {
 	GetTaskAllow            bool   `plist:"get-task-allow"`
 	ApplicationIdentifier   string `plist:"application-identifier"`
 	DeveloperTeamIdentifier string `plist:"com.apple.developer.team-identifier"`
 }
 
+// TeamID :
 func (p ProvisioningProfile) TeamID() (s string) {
 	return p.Entitlements.DeveloperTeamIdentifier
 }
 
+// AppID :
 func (p ProvisioningProfile) AppID() (s string) {
 	return strings.TrimLeft(p.Entitlements.ApplicationIdentifier, p.TeamID()+".")
 }
 
+// CertificateType :
 func (p ProvisioningProfile) CertificateType() string {
 	if p.ProvisioningType() == ProvisioningTypeDevelopment {
 		return CertificateTypeDeveloper
-	} else {
-		return CertificateTypeDistribution
 	}
+	return CertificateTypeDistribution
 }
 
+// ProvisioningType :
 func (p ProvisioningProfile) ProvisioningType() string {
 	if p.ProvisionsAllDevices {
 		return ProvisioningTypeEnterprise
@@ -70,13 +83,64 @@ func (p ProvisioningProfile) ProvisioningType() string {
 
 	if p.ProvisionedDevices == nil {
 		return ProvisioningTypeAppStore
-	} else {
-		if p.Entitlements.GetTaskAllow {
-			return ProvisioningTypeDevelopment
-		} else {
-			return ProvisioningTypeAdHoc
+	}
+
+	if p.Entitlements.GetTaskAllow {
+		return ProvisioningTypeDevelopment
+	}
+	return ProvisioningTypeAdHoc
+}
+
+// Identity :
+type Identity struct {
+	// Sha1 : Identity SHA1 fingerprint
+	Sha1 string
+	// Name : Identity name
+	Name string
+}
+
+// GetValidIdentities :
+func (p ProvisioningProfile) GetValidIdentities() []Identity {
+	ids := []Identity{}
+	for _, data := range p.DeveloperCertificates {
+		var (
+			cert *x509.Certificate
+			err  error
+		)
+		if cert, err = x509.ParseCertificate(data); err != nil {
+			fmt.Println("error:", err)
+			return ids
+		}
+		issuerCN := cert.Issuer.CommonName
+		if data, err = exec.Command("/usr/bin/security", "find-certificate", "-c", issuerCN).Output(); err != nil {
+			logger.Printf("\"%s\" certificate doesn't installed in Keychain.", issuerCN)
+			certutil.InstallCertificate(issuerCN, "")
+		}
+
+		sha1Fingerprint := sha1.Sum(cert.Raw)
+
+		cmd := exec.Command("/usr/bin/security", "find-identity", "-v", "-p", "codesigning")
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return ids
+		}
+		if err := cmd.Start(); err != nil {
+			return ids
+		}
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			re := regexp.MustCompile(fmt.Sprintf(`(%X) "(.+)"`, sha1Fingerprint))
+			result := re.FindAllStringSubmatch(scanner.Text(), 1)
+			if len(result) != 1 {
+				continue
+			}
+			m := result[0]
+			sha1 := m[1]
+			name := m[2]
+			ids = append(ids, Identity{sha1, name})
 		}
 	}
+	return ids
 }
 
 func decodeCMS(path string) string {
@@ -93,7 +157,8 @@ func decodeCMS(path string) string {
 	return out.Name()
 }
 
-func newProvisioningProfile(path string) *ProvisioningProfile {
+// MakeProvisioningProfile : Create a ProvisioningProfile value
+func MakeProvisioningProfile(path string) *ProvisioningProfile {
 	file, err := os.Open(path)
 
 	if err != nil {
@@ -110,6 +175,7 @@ func newProvisioningProfile(path string) *ProvisioningProfile {
 	return &pp
 }
 
+// NewEntitlements :
 func NewEntitlements(m map[string]interface{}) Entitlements {
 	return Entitlements{
 		GetTaskAllow:            m["get-task-allow"].(bool),
@@ -118,6 +184,7 @@ func NewEntitlements(m map[string]interface{}) Entitlements {
 	}
 }
 
+// ProvisioningProfileInfo :
 type ProvisioningProfileInfo struct {
 	Pp   ProvisioningProfile
 	Name string
@@ -138,12 +205,14 @@ func getCacheDB() (*leveldb.DB, error) {
 	return db, err
 }
 
+// ClearCache :
 func ClearCache() error {
 	return os.RemoveAll(getCacheDBName())
 }
 
-var PP_ROOT string = os.Getenv("HOME") + "/Library/MobileDevice/Provisioning Profiles"
+var ppRoot string = os.Getenv("HOME") + "/Library/MobileDevice/Provisioning Profiles"
 
+// FindProvisioningProfile ;
 func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfileInfo {
 	db, err := getCacheDB()
 	if err != nil {
@@ -151,7 +220,7 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 	}
 	defer db.Close()
 
-	files, err := ioutil.ReadDir(PP_ROOT)
+	files, err := ioutil.ReadDir(ppRoot)
 	if err != nil {
 		logger.Fatalf("error: %v", err)
 	}
@@ -185,10 +254,10 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 				}
 			}
 
-			in := PP_ROOT + "/" + name
+			in := ppRoot + "/" + name
 			out := decodeCMS(in)
 			defer os.Remove(out)
-			pp := newProvisioningProfile(out)
+			pp := MakeProvisioningProfile(out)
 			info = ProvisioningProfileInfo{Pp: *pp, Name: in}
 
 			enc := gob.NewEncoder(&buffer)
