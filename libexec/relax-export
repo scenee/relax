@@ -110,7 +110,7 @@ export_archive () {
 
 	local heads="$PRODUCT_BUILD_ROOT/$REL_RELEASE_HEADS"
 	mkdir -p "${heads}"
-	ln -Fs "$ipa_path" "${heads}/ipa"
+	ln -sfh "$ipa_path" "${heads}/ipa"
 
 	if [[ ! -n $ipa_path ]]; then
 		die "Not found IPA file in $export_path"
