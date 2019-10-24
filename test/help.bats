@@ -47,8 +47,3 @@ load test_helper
 	assert_success
 }
 
-@test "relax help upload" {
-	run relax help upload
-	assert_success
-}
-
