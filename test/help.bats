@@ -22,6 +22,11 @@ load test_helper
 	assert_success
 }
 
+@test "relax apply" {
+	run relax help apply
+	assert_success
+}
+
 @test "relax help archive" {
 	run relax help archive
 	assert_success
@@ -44,11 +49,6 @@ load test_helper
 
 @test "relax help show" {
 	run relax help show
-	assert_success
-}
-
-@test "relax help upload" {
-	run relax help upload
 	assert_success
 }
 

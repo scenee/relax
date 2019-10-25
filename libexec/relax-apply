@@ -6,7 +6,6 @@ usage () {
 	Usage: ${ME} apply <distribution>
 	
 	Apply your Info.plist and Build settings for a distribution in Relfile into your project.
-
 	EOM
 	fin
 }
@@ -30,6 +29,9 @@ while [[ $# != 0 ]]; do
 	arg=$1
 	shift
 	case $arg in
+	-h)
+		usage
+		;;
 	*)
 		Distribution="$arg"
 		;;

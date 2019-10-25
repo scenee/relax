@@ -30,16 +30,6 @@ load test_helper
   [[ -z ${output} ]]
 }
 
-@test "relax completiens upload" {
-  run relax completions upload
-  [[ ${output} = "crashlytics testfairy" ]]
-}
-
-@test "relax completiens upload crashlytics" {
-  run relax completions upload crashlytics
-  [[ -z ${output} ]]
-}
-
 @test "relax completions archive" {
   run relax completions archive
   [[ ${output} =~ "development" ]]
