@@ -15,13 +15,13 @@ fi
 # Set up a custom keychain #
 ############################
 
-relax KEYCHAIN create $KEYCHAIN -p relax
+relax keychain create $KEYCHAIN -p relax
 
 relax dec -p "$DECORD_KEY" sample/certificates/RelaxCertificates.p12.enc
 
-relax KEYCHAIN add sample/certificates/RelaxCertificates.p12 -P "$CERTS_PASS"  -k $KEYCHAIN -p relax
+relax keychain add sample/certificates/RelaxCertificates.p12 -P "$CERTS_PASS"  -k $KEYCHAIN -p relax
 
-relax KEYCHAIN use $KEYCHAIN -p relax
+relax keychain use $KEYCHAIN -p relax
 
 #################################
 # Install Provisioning Profiles #
