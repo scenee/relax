@@ -129,7 +129,7 @@ case $command in
 		module_path="$(command -v "$module" || true)"
 		if ! [ -n "$module_path" ]; then
 			die "No such command \`$command'"
-		elif grep -q "relax" <<< "$module_path"; then
+		elif grep -q "$SOURCE_PATH/libexec/$module" <<< "$module_path"; then
 			"$module_path" "$@"
 		else
 			die "No such command \`$command'"
