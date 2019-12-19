@@ -31,8 +31,8 @@ check_binary_image () {
 		fi
 	done
 
-	if [[ $result == false ]]; then
-		logi "$WARN Not found a binary image for the crash log: $app_path/$product_name"
+	if [[ $result == true ]]; then
+		logi "info: A local binary image exists for $product_name so that it has an effect on the symbolication."
 	fi
 }
 
@@ -41,8 +41,8 @@ symbolicate () {
 	local crashlog material out
 	[ $# -eq 2 ] || usage
 
-	crashlog=$1
-	material=$2
+	crashlog="$1"
+	material="$2"
 
 	[[ -d /Applications/Xcode.app ]] || die "Please install Xcode.app"
 	
@@ -63,15 +63,16 @@ symbolicate () {
 	fi
 
 	logi "$ARROW Symbolicating '$crashlog'..."
-	logi "Log: symbolicate.log"
+        local logfile="relax-symbolicate_$(date +"%Y-%m-%dT%H:%M%:%S_%Z").log"
+	logi "info: A symbolicatecrash log in $logfile"
 
-	check_binary_image $app_path $crashlog
+	check_binary_image "$app_path" "$crashlog"
 	out=${crashlog%%\.crash}-symbolicated.crash
 	logv "Using $app_path"
 	if [[ -d "$dsym_path" ]]; then
-		logv "Using $dsym_path"
+		logi "info: Use $dsym_path"
 	fi
-	if "$symbolicatecrash_path" -v "$crashlog" "$app_path" "$dsym_path" -o "$out" 2>symbolicate.log; then
+	if "$symbolicatecrash_path" -v "$crashlog" "$app_path" "$dsym_path" -o "$out" 2>"$logfile"; then
 		logi "$ARROW $out"
 	else
 		die
