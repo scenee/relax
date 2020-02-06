@@ -5,19 +5,19 @@
 print_module_completions () {
 	local _module _command _command_path
 
-	[[ $# != 0 ]] || return
+	[[ $# != 0 ]] || return 0
 	_module="$1"
 	shift
 
-	[[ $# != 0 ]] || return
+	[[ $# != 0 ]] || return 0
 	_command="$1"
 	shift
 
-	[[ -n "$_command" ]] || return
+	[[ -n "$_command" ]] || return 0
 
 	_command_path="$(command -v "$_module-$_command")"
 
-	[[ -f "$_command_path" ]] || return
+	[[ -f "$_command_path" ]] || return 0
 
 	if [[ $_command == "commands" ]]; then
 		exec $_command_path

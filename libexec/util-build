@@ -179,19 +179,19 @@ __kill_bg_xcodebuid_task () {
 _is_distribution_profile () {
 	local mobileprovision="$1"
 
-	[[ -f "$mobileprovision" ]] || return
+	[[ -f "$mobileprovision" ]] || return 0
 
 	temp_mobileprovision=$REL_TEMP_DIR/temp_mobileprovision
 
 	dec_provisioning_profile "$mobileprovision" -o "$temp_mobileprovision"
 	result=$?
-	[[ $result = 0 ]] || return
+	[[ $result = 0 ]] || return 0
 
 	# Ref https://devforums.apple.com/message/84647#84647
 	get_task_allow=$REL_TEMP_DIR/get-task-allow
 	/usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" $temp_mobileprovision > $get_task_allow
 	result=$?
-	[[ $result = 0 ]] || return
+	[[ $result = 0 ]] || return 0
 
 	if cat "$get_task_allow" | grep -q false; then
 		echo true
@@ -507,7 +507,7 @@ setup_build () {
 		PRODUCT_BUILD_ROOT="$REL_RELEASE_ROOT/$release"
 		logi "Distribution path: $PRODUCT_BUILD_ROOT"
 		mkdir -p "$PRODUCT_BUILD_ROOT"
-		return
+		return 0
 	fi
 	cp "$INFO_PLIST_PATH" "$INFO_PLIST_PATH.$REL_BAK_EXT"
 
@@ -645,7 +645,7 @@ update_archived_entitlements_xcent () {
 	local _entitlements_xcent=$REL_TEMP_DIR/entitlements_xcent
 
 	if [[ ! -f "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" ]]; then
-		return
+		return 0
 	fi
 
 	#codesign -dv "${app_path}" 2>&1 | grep -e "Format\|Identifier\|Signed Time" > $REL_TEMP_DIR/codesign_info
@@ -654,7 +654,7 @@ update_archived_entitlements_xcent () {
 	local app_id=$(/usr/libexec/PlistBuddy -c "Print :application-identifier" "$app_path/$ARCHIVED_ENTITLEMENTS_XCENT" 2>/dev/null | grep -v "Does Not Exist")
 	if [[ -z ${app_id} ]]; then
 		logi "$WARN $ARCHIVED_ENTITLEMENTS_XCENT is empty."
-		return
+		return 0
 	fi
 
 	logi "$ARROW Update $ARCHIVED_ENTITLEMENTS_XCENT. IPA file will be exported in $export_path"

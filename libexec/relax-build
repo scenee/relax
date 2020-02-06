@@ -227,7 +227,7 @@ build_framework() {
 	# Copy framework to the current workspace
 	copy_framework "${framework_location}"
 
-	[[ $os_dsym ]] || return
+	[[ -n "$os_dsym" ]] || return 0
 
 	# Copy dSYM to the current workspace
 	if [[ $No_simulator == false ]]; then
