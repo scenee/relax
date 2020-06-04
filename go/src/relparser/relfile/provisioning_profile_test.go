@@ -88,7 +88,7 @@ func TestGetValidIdentities(t *testing.T) {
 
 	id := ids[0]
 
-	exp = "00D0F760D573CFAEBE09DB0E3E62B4F251999973"
+	exp = "CDC2696780835F48297A6CFFC0DDD04E438B0E4C"
 	if id.Sha1 != exp {
 		t.Errorf("GetValidIdentities failed: %v is not equal to %v", id.Sha1, exp)
 	}

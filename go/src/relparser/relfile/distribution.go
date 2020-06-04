@@ -5,11 +5,12 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"fmt"
-	"github.com/DHowett/go-plist"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/DHowett/go-plist"
 )
 
 /*

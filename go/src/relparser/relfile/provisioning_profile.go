@@ -8,14 +8,16 @@ import (
 	"crypto/x509"
 	"encoding/gob"
 	"fmt"
-	"github.com/DHowett/go-plist"
-	"github.com/syndtr/goleveldb/leveldb"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
+
+	"github.com/DHowett/go-plist"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
@@ -212,6 +214,23 @@ func ClearCache() error {
 
 var ppRoot string = os.Getenv("HOME") + "/Library/MobileDevice/Provisioning Profiles"
 
+// ByNameLatest implements sort.
+type ByNameLatest []*ProvisioningProfileInfo
+
+func (p ByNameLatest) Len() int      { return len(p) }
+func (p ByNameLatest) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p ByNameLatest) Less(i, j int) bool {
+	if p[i].Pp.TeamName == p[i].Pp.TeamName {
+		if p[i].Pp.Name == p[j].Pp.Name {
+			return p[i].Pp.CreationDate.Unix() >= p[j].Pp.CreationDate.Unix()
+		} else {
+			return p[i].Pp.Name < p[j].Pp.Name
+		}
+	} else {
+		return p[i].Pp.TeamName < p[i].Pp.TeamName
+	}
+}
+
 // FindProvisioningProfile ;
 func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfileInfo {
 	db, err := getCacheDB()
@@ -290,6 +309,8 @@ func FindProvisioningProfile(pattern string, team string) []*ProvisioningProfile
 		}
 		infos = append(infos, info)
 	}
+
+	sort.Sort(ByNameLatest(infos))
 
 	return infos
 }
