@@ -5,25 +5,8 @@ import (
 	"log"
 	"os"
 	"relparser/relfile"
-	"sort"
 	"strings"
 )
-
-type ByNameLatest []*relfile.ProvisioningProfileInfo
-
-func (p ByNameLatest) Len() int      { return len(p) }
-func (p ByNameLatest) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p ByNameLatest) Less(i, j int) bool {
-	if p[i].Pp.TeamName == p[i].Pp.TeamName {
-		if p[i].Pp.Name == p[j].Pp.Name {
-			return p[i].Pp.CreationDate.Unix() >= p[j].Pp.CreationDate.Unix()
-		} else {
-			return p[i].Pp.Name < p[j].Pp.Name
-		}
-	} else {
-		return p[i].Pp.TeamName < p[i].Pp.TeamName
-	}
-}
 
 var logErr *log.Logger
 
@@ -33,8 +16,6 @@ func init() {
 
 func findProvisioningProfile(pattern string, team string, isLatest bool, isVerbose bool) (outs []string) {
 	infos := relfile.FindProvisioningProfile(pattern, team)
-
-	sort.Sort(ByNameLatest(infos))
 
 	names := ""
 	var ret []string
