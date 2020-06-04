@@ -40,6 +40,7 @@ const (
 type ProvisioningProfile struct {
 	AppIDName             string       `plist:"AppIDName"`
 	CreationDate          time.Time    `plist:"CreationDate"`
+	ExpirationDate        time.Time    `plist:"ExpirationDate"`
 	DeveloperCertificates [][]byte     `plist:"DeveloperCertificates"`
 	Entitlements          Entitlements `plist:"Entitlements"`
 	Name                  string       `plist:"Name"`
