@@ -3,3 +3,4 @@
 /src/howett.net
 /pkg
 *.test
+.vscode
