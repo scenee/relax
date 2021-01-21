@@ -17,7 +17,7 @@ load test_helper
   run relax resign -k relax.keychain -i "com.scenee.SampleApp" -p "Relax AdHoc" -c "iPhone Distribution: Shin Yamamoto (J3D7L9FHSS)" "$(relax show development ipa)"
   assert_success
 
-  run relax validate "Sample App-resigned.ipa"
+  run relax validate "$(find . -name "*-resigned.ipa")"
   assert_success
 }
 
