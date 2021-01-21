@@ -34,21 +34,21 @@ jobs:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
-     - name: "Testing on Xcode 11.7"
+    - name: "Testing on Xcode 11.7"
       run: test/travis_ci.sh
       env:
         DEVELOPER_DIR: /Applications/Xcode_11.7.app
         CERTS_PASS: ${{ secrets.CERTS_PASS }}
         DECORD_KEY: ${{ secrets.DECORD_KEY }}
 
-  xcode12_3:
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v1
-     - name: "Testing on Xcode 12.3"
-      run: test/travis_ci.sh
-      env:
-        DEVELOPER_DIR: /Applications/Xcode_12.3.app
-        CERTS_PASS: ${{ secrets.CERTS_PASS }}
-        DECORD_KEY: ${{ secrets.DECORD_KEY }}
-
+#  xcode12_3:
+#    runs-on: macOS-latest
+#    steps:
+#    - uses: actions/checkout@v1
+#     - name: "Testing on Xcode 12.3"
+#      run: test/travis_ci.sh
+#      env:
+#        DEVELOPER_DIR: /Applications/Xcode_12.3.app
+#        CERTS_PASS: ${{ secrets.CERTS_PASS }}
+#        DECORD_KEY: ${{ secrets.DECORD_KEY }}
+#
